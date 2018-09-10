@@ -21,13 +21,11 @@
 package com.solace.source.connector;
 
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//import com.solace.source.connector.msgProcessors.SolSampleMessageProcessor;
-import com.solace.source.connector.SolMessageProcessor;
-//import com.solace.source.connector.msgProcessors.SolSampleMessageProcessor;
 import com.solacesystems.jcsmp.BytesXMLMessage;
 import com.solacesystems.jcsmp.JCSMPException;
 import com.solacesystems.jcsmp.XMLMessageListener;
@@ -35,12 +33,15 @@ import com.solacesystems.jcsmp.XMLMessageListener;
 public class SolMessageQueueCallbackHandler implements XMLMessageListener {
 	private static final Logger log = LoggerFactory.getLogger(SolMessageQueueCallbackHandler.class);
 
-	private BlockingQueue<SolMessageProcessor> sQueue;
-	private SolaceSourceConfig lConfig;
+	private BlockingQueue<BytesXMLMessage> sQueue;
+	private AtomicInteger msgCounter = new AtomicInteger();
+	//private SolaceSourceConfig lConfig;
 
-	public SolMessageQueueCallbackHandler(SolaceSourceConfig lConfig,BlockingQueue<SolMessageProcessor> sQueue) {
-		this.lConfig = lConfig;
+	//public SolMessageQueueCallbackHandler(SolaceSourceConfig lConfig,BlockingQueue<SolMessageProcessor> sQueue) {
+	public SolMessageQueueCallbackHandler(BlockingQueue<BytesXMLMessage> sQueue) {
+
 		this.sQueue = sQueue;
+		msgCounter.set(0);
 	}
 
 	@Override
@@ -51,16 +52,8 @@ public class SolMessageQueueCallbackHandler implements XMLMessageListener {
 
 	@Override
 	public void onReceive(BytesXMLMessage msg) {
-		log.debug("=================Received Message");
-
-		this.sQueue.add(
-
-				lConfig.getConfiguredInstance(SolaceSourceConstants.SOL_MESSAGE_PROCESSOR,
-						SolMessageProcessor.class)
-				.process(lConfig.getString(SolaceSourceConstants.SOL_KAFKA_MESSAGE_KEY), msg)
-				);
-
-		msg.ackMessage();
+		log.debug("=================Received Queue Message");
+		sQueue.add(msg);
 
 	}
 

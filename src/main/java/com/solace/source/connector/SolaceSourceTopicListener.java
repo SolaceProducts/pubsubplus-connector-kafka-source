@@ -24,7 +24,7 @@ import java.util.concurrent.BlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+import com.solacesystems.jcsmp.BytesXMLMessage;
 import com.solacesystems.jcsmp.JCSMPException;
 import com.solacesystems.jcsmp.JCSMPFactory;
 import com.solacesystems.jcsmp.JCSMPSession;
@@ -43,9 +43,11 @@ public class SolaceSourceTopicListener  {
 	private String topics[];
 	private XMLMessageConsumer cons;
 
-	public BlockingQueue<SolMessageProcessor> sQueue;
+	//public BlockingQueue<SolMessageProcessor> sQueue;
+	public BlockingQueue<BytesXMLMessage> sQueue;
 
-	public SolaceSourceTopicListener(SolaceSourceConfig lConfig, BlockingQueue<SolMessageProcessor> sQueue) {
+	//public SolaceSourceTopicListener(SolaceSourceConfig lConfig, BlockingQueue<SolMessageProcessor> sQueue) {
+	public SolaceSourceTopicListener(SolaceSourceConfig lConfig, BlockingQueue<BytesXMLMessage> sQueue) {
 		this.lConfig = lConfig;
 		this.sQueue = sQueue;
 

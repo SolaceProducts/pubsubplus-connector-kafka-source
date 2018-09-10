@@ -29,6 +29,7 @@ import org.slf4j.LoggerFactory;
 
 import com.solace.source.connector.SolMessageProcessor;
 import com.solacesystems.jcsmp.BytesXMLMessage;
+import com.solacesystems.jcsmp.DeliveryMode;
 import com.solacesystems.jcsmp.TextMessage;
 
 
@@ -39,11 +40,13 @@ public class SolSampleSimpleMessageProcessor implements SolMessageProcessor{
 	private String sKey;
 	private Object sDestination;
 	private byte[] messageOut;
+	private BytesXMLMessage msg;
 
 
 	@Override
 	public SolMessageProcessor process(String sKey, BytesXMLMessage msg) {
-		if (msg instanceof TextMessage) {;
+		this.sMsg = msg;
+		if (msg instanceof TextMessage) {
 		log.debug("Text Mesasge received {}", ((TextMessage)msg).getText());
 		String sMsg = ((TextMessage) msg).getText();
 		messageOut = sMsg.getBytes(StandardCharsets.UTF_8);
@@ -67,6 +70,8 @@ public class SolSampleSimpleMessageProcessor implements SolMessageProcessor{
 
 	@Override
 	public SourceRecord[] getRecords(String kafkaTopic) {
+		if(msg.getDeliveryMode() == DeliveryMode.PERSISTENT || msg.getDeliveryMode() == DeliveryMode.NON_PERSISTENT)
+			this.msg.ackMessage();//closest we can get to actual write to Kafka, now ack to remove message from Solace Queue since we are done.
 		return new SourceRecord[]{new SourceRecord(null, null, kafkaTopic, null,
 				Schema.STRING_SCHEMA, sDestination,
 				Schema.BYTES_SCHEMA, sMsg)};

@@ -24,7 +24,9 @@ import java.util.concurrent.BlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.solacesystems.jcsmp.BytesXMLMessage;
 import com.solacesystems.jcsmp.ConsumerFlowProperties;
+import com.solacesystems.jcsmp.EndpointProperties;
 import com.solacesystems.jcsmp.FlowReceiver;
 import com.solacesystems.jcsmp.JCSMPException;
 import com.solacesystems.jcsmp.JCSMPProperties;
@@ -36,13 +38,15 @@ import com.solacesystems.jcsmp.JCSMPFactory;
 public class SolaceSourceQueueConsumer {
 	private static final Logger log = LoggerFactory.getLogger(SolaceSourceQueueConsumer.class);
 	private SolaceSourceConfig lConfig;
-	private BlockingQueue<SolMessageProcessor> sQueue;
+	private BlockingQueue<BytesXMLMessage> sQueue;
 	private Queue solQueue;
 	private FlowReceiver recv;
 
-	public SolaceSourceQueueConsumer(SolaceSourceConfig lConfig, BlockingQueue<SolMessageProcessor> sQueue) {
+
+	// SolaceSourceQueueConsumer(SolaceSourceConfig lConfig, BlockingQueue<SolMessageProcessor> sQueue) {
+	SolaceSourceQueueConsumer(SolaceSourceConfig lConfig, BlockingQueue<BytesXMLMessage> sQueue) {
 		this.lConfig = lConfig;
-		this.sQueue = sQueue;
+		this.sQueue =sQueue;
 	}
 
 	public boolean init(JCSMPSession session) {		
@@ -50,11 +54,15 @@ public class SolaceSourceQueueConsumer {
 		final ConsumerFlowProperties flow_prop = new ConsumerFlowProperties();
 		flow_prop.setEndpoint(solQueue);
 		flow_prop.setAckMode(JCSMPProperties.SUPPORTED_MESSAGE_ACK_CLIENT);
+		flow_prop.setStartState(true);
+		EndpointProperties endpointProps = new EndpointProperties();
+		endpointProps.setAccessType(EndpointProperties.ACCESSTYPE_NONEXCLUSIVE);
 		try {
-			recv = session.createFlow(new SolMessageQueueCallbackHandler(lConfig, sQueue), flow_prop);
+			
+			recv = session.createFlow(new SolMessageQueueCallbackHandler(sQueue), flow_prop, endpointProps, new SolFlowEventCallBackHandler());
 			recv.start();
 		} catch (JCSMPException je) {
-			log.info("JCSMP Exception in SolaceSourceQueueConsumer {} \n", je.getLocalizedMessage());
+			log.info("===========JCSMP Exception while creating Solace Flow to Queue in SolaceSourceQueueConsumer {} \n", je.getLocalizedMessage());
 		}
 
 

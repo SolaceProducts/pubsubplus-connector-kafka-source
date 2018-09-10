@@ -32,7 +32,8 @@ import org.apache.kafka.connect.source.SourceTask;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
+import com.solacesystems.jcsmp.BytesXMLMessage;
+import com.solacesystems.jcsmp.DeliveryMode;
 import com.solacesystems.jcsmp.JCSMPProperties;
 import com.solacesystems.jcsmp.JCSMPSession;
 import com.solacesystems.jcsmp.JCSMPSessionStats;
@@ -40,20 +41,30 @@ import com.solacesystems.jcsmp.statistics.StatType;
 
 public class SolaceSourceTask extends SourceTask { //implements XMLMessageListener{
 
-	private static final Logger log = LoggerFactory.getLogger(SolaceSourceTopicListener.class);
+	private static final Logger log = LoggerFactory.getLogger(SolaceSourceTask.class);
 
 	final JCSMPProperties properties = new JCSMPProperties();
 
 	SolaceSourceConfig sConfig;
 	SolaceSourceTopicListener listener;
 	SolaceSourceQueueConsumer consumer;
-	BlockingQueue<SolMessageProcessor> sQueue = new LinkedBlockingQueue<>();
+	BlockingQueue<BytesXMLMessage> sQueue = new LinkedBlockingQueue<>(); //LinkedBlockingQueue for Solace Topic subscription messages
+	BlockingQueue<BytesXMLMessage> fQueue = new LinkedBlockingQueue<>(); //LinkedBlockingQueue for Solace Flow messages from Solace Queue
 	String sKafkaTopic;
 	boolean topicListenStarted = true;
 	boolean queueConsumerStarted = true;
 
 	private SolSessionCreate sessionRef;
 	private JCSMPSession session;
+
+	//private Class<?> cProcessor;
+	private SolMessageProcessor processor;
+
+	private static int BATCH_SIZE = 500;
+	private int processed = 0;
+	private int fMsgProcessed = 0;
+
+
 
 
 	@Override
@@ -63,12 +74,17 @@ public class SolaceSourceTask extends SourceTask { //implements XMLMessageListen
 
 	@Override
 	public void start(Map<String, String> props) {
+
 		sConfig = new SolaceSourceConfig(props);
 		sKafkaTopic = sConfig.getString(SolaceSourceConstants.KAFKA_TOPIC);
 
 		sessionRef = new SolSessionCreate(sConfig);
 		sessionRef.configureSession();
-		sessionRef.connectSession();
+		boolean connected = sessionRef.connectSession();
+		if(!connected) {
+			log.info("============Failed to create Solace Session");
+			stop();
+		}
 		session = sessionRef.getSession();
 		if(session != null) {
 			log.info("======================JCSMPSession Connected");
@@ -100,17 +116,83 @@ public class SolaceSourceTask extends SourceTask { //implements XMLMessageListen
 	}
 
 	@Override
-	public List<SourceRecord> poll() throws InterruptedException {
+	public  List<SourceRecord> poll() throws InterruptedException {
+
 
 		List<SourceRecord> records = new ArrayList<>();
-		SolMessageProcessor message = sQueue.take();
-		log.debug("[{}] Polling new data from queue for '{}' topic.",
-				sConfig.getString(SolaceSourceConstants.SOL_USERNAME), sKafkaTopic);
+		int arraySize = sQueue.size() ;
+		
+		//Block waiting for a record to arrive or process in batches depending on the number of records in array to process
+		if (sQueue.size() == 0 ) {
+			BytesXMLMessage msg = sQueue.take(); //Blocks here until there is a message
+			processor = sConfig.getConfiguredInstance(SolaceSourceConstants.SOL_MESSAGE_PROCESSOR,SolMessageProcessor.class)
+					.process(sConfig.getString(SolaceSourceConstants.SOL_KAFKA_MESSAGE_KEY), msg);
+			Collections.addAll(records, processor.getRecords(sKafkaTopic));
+			processed++;
+			if(msg.getDeliveryMode() == DeliveryMode.NON_PERSISTENT || msg.getDeliveryMode() == DeliveryMode.PERSISTENT)
+			{
+				fQueue.add(msg);
+				fMsgProcessed ++;
+			}
+			
+		} else if( sQueue.size() < BATCH_SIZE ) {
+			int count = 0;
+			arraySize = sQueue.size();
+			while (count < arraySize) {
+				BytesXMLMessage msg = sQueue.take();
+				processor = sConfig.getConfiguredInstance(SolaceSourceConstants.SOL_MESSAGE_PROCESSOR,SolMessageProcessor.class)
+						.process(sConfig.getString(SolaceSourceConstants.SOL_KAFKA_MESSAGE_KEY), msg);
+				Collections.addAll(records, processor.getRecords(sKafkaTopic));
+				count++;
+				processed++;
+				if(msg.getDeliveryMode() == DeliveryMode.NON_PERSISTENT || msg.getDeliveryMode() == DeliveryMode.PERSISTENT)
+				{
+					fQueue.add(msg);
+					fMsgProcessed ++;
+				}
+			}
+		} else if(sQueue.size() >= BATCH_SIZE){
+			int count = 0;
+			int currentLoad = sQueue.size();
+			while (count < currentLoad) {
+				BytesXMLMessage msg = sQueue.take();
+				processor = sConfig.getConfiguredInstance(SolaceSourceConstants.SOL_MESSAGE_PROCESSOR,SolMessageProcessor.class)
+						.process(sConfig.getString(SolaceSourceConstants.SOL_KAFKA_MESSAGE_KEY), msg);
+				Collections.addAll(records, processor.getRecords(sKafkaTopic));
+				count++;
+				processed++;
+				if(msg.getDeliveryMode() == DeliveryMode.NON_PERSISTENT || msg.getDeliveryMode() == DeliveryMode.PERSISTENT)
+				{
+					fQueue.add(msg);
+					fMsgProcessed ++;
+				}
+			}
 
-		Collections.addAll(records, message.getRecords(sKafkaTopic));
+		}
+		
+		if(fMsgProcessed > 0) {
+			commit();
+		
+		}
+			
 
+		log.debug("Processed {} records in this batch.", processed);
+		processed = 0;
 		return records;
 
+	}
+
+	public synchronized void commit() throws InterruptedException {
+		log.trace("Committing records");
+		int currentLoad = fQueue.size();
+		int count = 0;
+		while(count != currentLoad)
+		{
+			fQueue.take().ackMessage();
+			count++;
+		}
+		fMsgProcessed = 0;
+		
 	}
 
 	@Override

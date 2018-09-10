@@ -35,7 +35,7 @@ public class SolaceSourceConfig extends AbstractConfig {
 	public SolaceSourceConfig(Map<String, String> properties) {
 		super(config, properties);
 
-		log.info("==================Initialize transform process properties");
+		log.info("==================Initialize Connnector properties");
 	}
 
 	public static ConfigDef solaceConfigDef() {

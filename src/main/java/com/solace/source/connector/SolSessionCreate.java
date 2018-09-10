@@ -107,9 +107,9 @@ public class SolSessionCreate {
 		//}
 	}
 
-	public void connectSession() {
+	public boolean connectSession() {
 
-		boolean connected = true;
+		boolean connected = false;
 		try {
 			session = JCSMPFactory.onlyInstance().createSession(properties, null, new SolSessionEventCallbackHandler());
 		} catch (InvalidPropertiesException e) {
@@ -118,20 +118,17 @@ public class SolSessionCreate {
 		}	
 		try {
 			session.connect();
+			connected = true;
 		} catch (JCSMPException e) {
 			log.info("Received Solace excepetion {}, with the following: {} ", e.getCause(), e.getStackTrace());
 			connected = false;
 		}
-
-
-		if(connected) {
-			log.info("================Session is Connected");
-		} else {
-			log.info("================Session FAILED to Connect");
-		}
+		return connected;
 
 
 	}
+	
+
 
 	public JCSMPSession getSession() {
 		return session;

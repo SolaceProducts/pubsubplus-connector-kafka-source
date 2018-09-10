@@ -32,14 +32,18 @@ import com.solacesystems.jcsmp.XMLMessageListener;
 public class SolMessageTopicCallbackHandler implements XMLMessageListener {
 	private static final Logger log = LoggerFactory.getLogger(SolMessageTopicCallbackHandler.class);
 
-	private BlockingQueue<SolMessageProcessor> sQueue;
-	private SolaceSourceConfig lConfig;
+	//private BlockingQueue<SolMessageProcessor> sQueue;
+	private BlockingQueue<BytesXMLMessage> sQueue;
+	//private SolaceSourceConfig lConfig;
+	//private SolMessageProcessor processor;
 
 
-	public SolMessageTopicCallbackHandler(SolaceSourceConfig lConfig,BlockingQueue<SolMessageProcessor> sQueue) {
+	//public SolMessageTopicCallbackHandler(SolaceSourceConfig lConfig,BlockingQueue<SolMessageProcessor> sQueue) {
+	public SolMessageTopicCallbackHandler(SolaceSourceConfig lConfig,BlockingQueue<BytesXMLMessage> sQueue) {
 		this.sQueue = sQueue;
-		this.lConfig = lConfig;
+		//this.lConfig = lConfig;
 		log.debug("===Constructor for SolMessageTopicProcessor");
+		//this.processor = lConfig.getConfiguredInstance(SolaceSourceConstants.SOL_MESSAGE_PROCESSOR, SolMessageProcessor.class);
 
 	}
 
@@ -53,12 +57,15 @@ public class SolMessageTopicCallbackHandler implements XMLMessageListener {
 	public void onReceive(BytesXMLMessage msg) {
 		log.debug("=================Received Message");
 
-		this.sQueue.add(
+		//this.sQueue.add(
+				/*
 				lConfig.getConfiguredInstance(SolaceSourceConstants.SOL_MESSAGE_PROCESSOR,
 						SolMessageProcessor.class)
 				.process(lConfig.getString(SolaceSourceConstants.SOL_KAFKA_MESSAGE_KEY), msg)
-				);
-
+				)
+				*/
+				//processor.process(lConfig.getString(SolaceSourceConstants.SOL_KAFKA_MESSAGE_KEY), msg));
+		sQueue.add(msg);
 
 	}
 

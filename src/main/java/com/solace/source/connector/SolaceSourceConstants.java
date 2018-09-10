@@ -71,7 +71,7 @@ public class SolaceSourceConstants {
 	public static final String SOL_SSL_TRUST_STORE = "sol.ssl_trust_store";
 	public static final String SOL_SSL_TRUST_STORE_PASSWORD = "sol.ssl_trust_store_pasword";
 	public static final String SOL_SSL_TRUST_STORE_FORMAT = "sol.ssl_trust_store_format";
-	public static final String SOL_SSL_TRUSTED_COMMON_NAME_LIST = "sol.ssl_trusted_command_name_list";
+	public static final String SOL_SSL_TRUSTED_COMMON_NAME_LIST = "sol.ssl_trusted_common_name_list";
 	public static final String SOL_SSL_KEY_STORE = "sol.ssl_key_store";
 	public static final String SOL_SSL_KEY_STORE_PASSWORD = "sol.ssl_key_store_password";
 	public static final String SOL_SSL_KEY_STORE_FORMAT = "sol.ssl_key_store_format";
