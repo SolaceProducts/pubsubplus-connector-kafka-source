@@ -285,8 +285,8 @@ The Solace Source Connector consumes messages from the queue and streams the rec
   
 When the Kafka consumers require the highest level of QoS, it is recommended to use the Solace Source Connector against Solace Queues. If the throughput
 through the Connect is not high enough, and messages are starting to accumulate in the Solace Queue, scaling of the Connector is recommended
-as discussed above. If the Source Connctor has not been scaled to a required level to deal with bursts  the Solace Queue can act as a "shock absorber"
-to deal with micro bursts or sustained periods of heavy event generation in the Event Mesh. Data events will no be lost of the connector is under-scaled due to 
+as discussed above. If the Source Connector has not been scaled to a required level to deal with bursts  the Solace Queue can act as a "shock absorber"
+to deal with micro-bursts or sustained periods of heavy event generation in the Event Mesh. Data events will no be lost of the connector is under-scaled due to 
 an unforeseen burst event.
 
 
