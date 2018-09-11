@@ -2,7 +2,7 @@
 
 ## Synopsis
 
-This project provides a Solace/Kafka Source Connector (adapter) that makes use of the Kafka Connect libraries.
+This project provides a Solace/Kafka Source Connector (adapter) that makes use of the Kafka Connect API.
 The Solace/Kafka adapter consumes Solace real-time queue or topic data events and streams the Solace events to a Kafka topic. 
 
 The Solace Source Connector was created using Solace's high performance Java API to move Solace data events to the Kafka Broker. 
@@ -157,9 +157,9 @@ There is a bare minimum requirement to configure access to the Solace PubSub+ br
  reference are mandatory configuration details. An example of the required configuration file entries is as follows:
 
 ```ini
-sol.username=heinz1
-sol.password=heinz1
-sol.vpn_name=heinzvpn
+sol.username=user1
+sol.password=password1
+sol.vpn_name=kafkavpn
 sol.host=160.101.136.33
 ```
 
@@ -245,7 +245,9 @@ then it will require two deployments of the connector if scaling is required.
 One connector will include the topics where DTO is used by the message producers. 
 A second connector will use a queue and the non-DTO producer topics will be bridged to the referenced queue. 
  
-For more detail on DTO and Topic-to-Queue bridging is available in the Solace documentation.
+For more detail on DTO and Topic-to-Queue bridging is available in the Solace documentation:
+
+[Solace DTO](https://docs.solace.com/Features/Direct-Messages.htm?Highlight=deliver%20to%20one#Load-Balance-DTO)
 
 It is also important to note that the Solace Sink Connector can be configured to send DTO flagged messages. Therefore, when new record are placed into
 Kakfa, the Solace Sink Connector can be used to generate DTO tagged messages.  
@@ -273,9 +275,11 @@ However, in some application requirements this QoS is required. In this case, th
 of events from the Event Mesh.
 
 The Solace Source Connector consumes messages from the queue and streams the records to the Kafka Topic. A timed process (which is configurable in the
- in the Worker's configuration file), flushes the records and offset to to disk. The Solace connector will consume the messages from the queue
- and when 500 messages are consumed or the current connector "poll()" method completes, it will force the Kafka commit to flush records and the offset and only then will the processed Solace Queue data event messages
-  be acknowledged and removed from the Solace Queue. If the Connector or Kafka fail before the timed or forced commit, the Solace messages are
+ in the Worker's configuration file), flushes the records and offset to to disk. The Solace Connector will consume/process the messages from the queue
+ and when 500 messages are processed or the current connector "poll()" method completes, it will force the Kafka to flush records and the offset. The poll() method will also acknowledge all the  Solace Queue data event messages that were committed to the Kafka Topic. Acknowledging the Solace Queue messages that were processed
+ removes these event messages from the Solace Queue. 
+ 
+ If the Connector or Kafka fail before the timed or forced commit, the Solace messages are
   not lost, they will be retransmitted as soon as the connector or Kafka are restarted. It is important to note that while connector or the
   Kafka Broker are offline, the Solace Queue will continue to add event messages, so there will be no loss of new data from the Solace Event Mesh.
   
