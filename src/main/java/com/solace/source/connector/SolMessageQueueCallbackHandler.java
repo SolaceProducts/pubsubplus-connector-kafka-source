@@ -17,8 +17,11 @@
  * under the License.
  */
 
-
 package com.solace.source.connector;
+
+import com.solacesystems.jcsmp.BytesXMLMessage;
+import com.solacesystems.jcsmp.JCSMPException;
+import com.solacesystems.jcsmp.XMLMessageListener;
 
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -26,35 +29,35 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.solacesystems.jcsmp.BytesXMLMessage;
-import com.solacesystems.jcsmp.JCSMPException;
-import com.solacesystems.jcsmp.XMLMessageListener;
 
 public class SolMessageQueueCallbackHandler implements XMLMessageListener {
-	private static final Logger log = LoggerFactory.getLogger(SolMessageQueueCallbackHandler.class);
+  private static final Logger log = LoggerFactory.getLogger(SolMessageQueueCallbackHandler.class);
 
-	private BlockingQueue<BytesXMLMessage> sQueue;
-	private AtomicInteger msgCounter = new AtomicInteger();
-	//private SolaceSourceConfig lConfig;
+  private BlockingQueue<BytesXMLMessage> squeue;
+  private AtomicInteger msgCounter = new AtomicInteger();
 
-	//public SolMessageQueueCallbackHandler(SolaceSourceConfig lConfig,BlockingQueue<SolMessageProcessor> sQueue) {
-	public SolMessageQueueCallbackHandler(BlockingQueue<BytesXMLMessage> sQueue) {
+  /**
+   * Asynchronously Save records to Blocking Queue when a new Persistent Message arrives.
+   * 
+   * @param squeue Blocking Queue to hold message events
+   */
+  public SolMessageQueueCallbackHandler(BlockingQueue<BytesXMLMessage> squeue) {
 
-		this.sQueue = sQueue;
-		msgCounter.set(0);
-	}
+    this.squeue = squeue;
+    msgCounter.set(0);
+  }
 
-	@Override
-	public void onException(JCSMPException je) {
-		log.info("JCSMP Exception in SolMessageQueueProcessorCallback {} \n", je.getLocalizedMessage());
+  @Override
+  public void onException(JCSMPException je) {
+    log.info("JCSMP Exception in SolMessageQueueProcessorCallback {} \n", je.getLocalizedMessage());
 
-	}
+  }
 
-	@Override
-	public void onReceive(BytesXMLMessage msg) {
-		log.debug("=================Received Queue Message");
-		sQueue.add(msg);
+  @Override
+  public void onReceive(BytesXMLMessage msg) {
+    log.debug("=================Received Queue Message");
+    squeue.add(msg);
 
-	}
+  }
 
 }

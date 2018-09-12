@@ -19,11 +19,6 @@
 
 package com.solace.source.connector;
 
-import java.util.concurrent.BlockingQueue;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.solacesystems.jcsmp.BytesXMLMessage;
 import com.solacesystems.jcsmp.JCSMPException;
 import com.solacesystems.jcsmp.JCSMPFactory;
@@ -32,84 +27,89 @@ import com.solacesystems.jcsmp.Topic;
 import com.solacesystems.jcsmp.TopicProperties;
 import com.solacesystems.jcsmp.XMLMessageConsumer;
 
-public class SolaceSourceTopicListener  {
+import java.util.concurrent.BlockingQueue;
 
-	private static final Logger log = LoggerFactory.getLogger(SolaceSourceTopicListener.class);
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-	private SolaceSourceConfig lConfig;
+public class SolaceSourceTopicListener {
 
+  private static final Logger log = LoggerFactory.getLogger(SolaceSourceTopicListener.class);
 
-	private String solaceTopics;
-	private String topics[];
-	private XMLMessageConsumer cons;
+  private SolaceSourceConfig lconfig;
 
-	//public BlockingQueue<SolMessageProcessor> sQueue;
-	public BlockingQueue<BytesXMLMessage> sQueue;
-
-	//public SolaceSourceTopicListener(SolaceSourceConfig lConfig, BlockingQueue<SolMessageProcessor> sQueue) {
-	public SolaceSourceTopicListener(SolaceSourceConfig lConfig, BlockingQueue<BytesXMLMessage> sQueue) {
-		this.lConfig = lConfig;
-		this.sQueue = sQueue;
+  private String solaceTopics;
+  private String[] topics;
+  private XMLMessageConsumer cons;
 
 
-	}
+  public BlockingQueue<BytesXMLMessage> squeue;
 
+  /**
+   * Constructor.
+   */
+  public SolaceSourceTopicListener(SolaceSourceConfig lconfig, 
+      BlockingQueue<BytesXMLMessage> squeue) {
+    this.lconfig = lconfig;
+    this.squeue = squeue;
 
+  }
 
-	public boolean init(JCSMPSession session) {
+  /**
+   * Initializes JCSMPSession.
+   */
+  public boolean init(JCSMPSession session) {
 
-		boolean topicListenerStarted = true;
-		solaceTopics = lConfig.getString(SolaceSourceConstants.SOL_TOPICS);
-		topics = solaceTopics.split(",");
+    boolean topicListenerStarted = true;
+    solaceTopics = lconfig.getString(SolaceSourceConstants.SOL_TOPICS);
+    topics = solaceTopics.split(",");
 
-		try {
-			cons = session.getMessageConsumer(new SolReconnectCallbackHandler(), new SolMessageTopicCallbackHandler(lConfig, sQueue));
-		} catch (JCSMPException je) {
-			log.info("JCSMP Exception in SolaceSourceTopicListener {} \n", je.getLocalizedMessage());
-		} 
-		try {
-			Topic topic;
-			int counter = 0;
-			log.info("Number of topics to add: {} ", topics.length);
-			while(topics.length > counter) {
-				log.info("Adding subscription for topic {} ", topics[counter].trim());
-				TopicProperties tProperties = new TopicProperties();
-				tProperties.setRxAllDeliverToOne(lConfig.getBoolean(SolaceSourceConstants.SOL_SUBSCRIBER_DTO_OVERRIDE));
-				tProperties.setName(topics[counter].trim());
-				topic = JCSMPFactory.onlyInstance().createTopic(tProperties);
-				session.addSubscription(topic, true);
-				counter++;
-			}
-		} catch (JCSMPException je) {
-			log.info("JCSMP Exception in SolaceSourceTopicListener {} \n", je.getLocalizedMessage());
-		}
+    try {
+      cons = session.getMessageConsumer(new SolReconnectCallbackHandler(),
+          new SolMessageTopicCallbackHandler(lconfig, squeue));
+    } catch (JCSMPException je) {
+      log.info("JCSMP Exception in SolaceSourceTopicListener {} \n", je.getLocalizedMessage());
+    }
+    try {
+      Topic topic;
+      int counter = 0;
+      log.info("Number of topics to add: {} ", topics.length);
+      while (topics.length > counter) {
+        log.info("Adding subscription for topic {} ", topics[counter].trim());
+        TopicProperties tproperties = new TopicProperties();
+        tproperties.setRxAllDeliverToOne(lconfig
+            .getBoolean(SolaceSourceConstants.SOL_SUBSCRIBER_DTO_OVERRIDE));
+        tproperties.setName(topics[counter].trim());
+        topic = JCSMPFactory.onlyInstance().createTopic(tproperties);
+        session.addSubscription(topic, true);
+        counter++;
+      }
+    } catch (JCSMPException je) {
+      log.info("JCSMP Exception in SolaceSourceTopicListener {} \n", je.getLocalizedMessage());
+    }
 
-		try {
-			cons.start();
-		} catch (JCSMPException je) {
-			log.info("JCSMP Exception in SolaceSourceTopicListener {} \n", je.getLocalizedMessage());
-			topicListenerStarted = false;
-		}
+    try {
+      cons.start();
+    } catch (JCSMPException je) {
+      log.info("JCSMP Exception in SolaceSourceTopicListener {} \n", je.getLocalizedMessage());
+      topicListenerStarted = false;
+    }
 
+    log.info("================Session is Connected");
+    return topicListenerStarted;
 
-		log.info("================Session is Connected");
-		return topicListenerStarted;
+  }
 
+  /**
+   * Stops JCSMPSession.
+   * @return
+   */
+  public boolean shutdown() {
+    if (cons != null) {
+      cons.close();
+    }
+    return true;
 
-	}
-
-	public boolean shutdown() {
-		if (cons != null) {
-			cons.close();
-		}
-		return true;
-
-
-	}
-
-
-
-
-
+  }
 
 }

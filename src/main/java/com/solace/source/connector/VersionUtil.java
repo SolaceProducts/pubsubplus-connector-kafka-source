@@ -1,10 +1,14 @@
 package com.solace.source.connector;
 
 public class VersionUtil {
-	public static String getVersion() {
+  
+  /**
+   * Returns the projects version number for the connector.
+   */
+  public static String getVersion() {
 
-		return "1.0.0";
+    return "1.0.0";
 
-	}
+  }
 
 }

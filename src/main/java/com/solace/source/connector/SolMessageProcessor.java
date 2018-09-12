@@ -19,13 +19,12 @@
 
 package com.solace.source.connector;
 
-import org.apache.kafka.connect.source.SourceRecord;
-
 import com.solacesystems.jcsmp.BytesXMLMessage;
 
+import org.apache.kafka.connect.source.SourceRecord;
 
 public interface SolMessageProcessor {
-	SolMessageProcessor process(String sKey, BytesXMLMessage message);
+  SolMessageProcessor process(String skey, BytesXMLMessage message);
 
-	SourceRecord[] getRecords(String kafkaTopic);
+  SourceRecord[] getRecords(String kafkaTopic);
 }

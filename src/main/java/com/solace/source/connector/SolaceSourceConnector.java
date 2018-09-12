@@ -30,55 +30,53 @@ import org.apache.kafka.connect.source.SourceConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+public class SolaceSourceConnector extends SourceConnector {
 
-public class SolaceSourceConnector extends SourceConnector{
+  private static final Logger log = LoggerFactory.getLogger(SolaceSourceConnector.class);
 
-	private static final Logger log = LoggerFactory.getLogger(SolaceSourceConnector.class);
+  SolaceSourceConfig mconfig;
+  private Map<String, String> mconfigProperties;
 
-	SolaceSourceConfig mConfig;
-	private Map<String, String> mConfigProperties;
+  @Override
+  public String version() {
+    return VersionUtil.getVersion();
+  }
 
-	@Override
-	public String version() {
-		return VersionUtil.getVersion();
-	}
+  @Override
+  public void start(Map<String, String> props) {
+    log.info("==================== Start a SolaceSourceConnector");
+    mconfigProperties = props;
+    mconfig = new SolaceSourceConfig(props);
 
-	@Override
-	public void start(Map<String, String> props) {
-		log.info("==================== Start a SolaceSourceConnector");
-		mConfigProperties = props;
-		mConfig = new SolaceSourceConfig(props);
+  }
 
-	}
+  @Override
+  public Class<? extends Task> taskClass() {
+    log.info("==================== Requesting SolaceSourceTask");
+    return SolaceSourceTask.class;
+  }
 
-	@Override
-	public Class<? extends Task> taskClass() {
-		log.info("==================== Requesting SolaceSourceTask");
-		return SolaceSourceTask.class;
-	}
+  @Override
+  public List<Map<String, String>> taskConfigs(int maxTasks) {
+    log.info("==================== Requesting taskConfigs SolaceSourceTask");
+    List<Map<String, String>> taskConfigs = new ArrayList<>(maxTasks);
+    Map<String, String> taskProps = new HashMap<>(mconfigProperties);
+    for (int i = 0; i < maxTasks; i++) {
+      taskConfigs.add(taskProps);
+    }
+    return taskConfigs;
+  }
 
-	@Override
-	public List<Map<String, String>> taskConfigs(int maxTasks) {
-		log.info("==================== Requesting taskConfigs SolaceSourceTask");
-		List<Map<String, String>> taskConfigs = new ArrayList<>(maxTasks);
-		Map<String, String> taskProps = new HashMap<>(mConfigProperties);
-		for (int i = 0; i < maxTasks; i++)
-		{
-			taskConfigs.add(taskProps);
-		}
-		return taskConfigs;
-	}
+  @Override
+  public void stop() {
+    log.info("SolaceSourceConnector is shutting down");
 
-	@Override
-	public void stop() {
-		log.info("SolaceSourceConnector is shutting down");
+  }
 
-	}
-
-	@Override
-	public ConfigDef config() {
-		log.info("==================== Requesting Config for  SolaceSourceConnector");
-		return SolaceSourceConfig.config;
-	}
+  @Override
+  public ConfigDef config() {
+    log.info("==================== Requesting Config for  SolaceSourceConnector");
+    return SolaceSourceConfig.config;
+  }
 
 }

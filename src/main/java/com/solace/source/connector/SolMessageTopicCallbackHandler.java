@@ -19,54 +19,46 @@
 
 package com.solace.source.connector;
 
+import com.solacesystems.jcsmp.BytesXMLMessage;
+import com.solacesystems.jcsmp.JCSMPException;
+import com.solacesystems.jcsmp.XMLMessageListener;
+
 import java.util.concurrent.BlockingQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-//import com.solace.source.connector.msgProcessors.SolSampleMessageProcessor;
-import com.solacesystems.jcsmp.BytesXMLMessage;
-import com.solacesystems.jcsmp.JCSMPException;
-import com.solacesystems.jcsmp.XMLMessageListener;
-
 public class SolMessageTopicCallbackHandler implements XMLMessageListener {
-	private static final Logger log = LoggerFactory.getLogger(SolMessageTopicCallbackHandler.class);
+  private static final Logger log = LoggerFactory.getLogger(SolMessageTopicCallbackHandler.class);
 
-	//private BlockingQueue<SolMessageProcessor> sQueue;
-	private BlockingQueue<BytesXMLMessage> sQueue;
-	//private SolaceSourceConfig lConfig;
-	//private SolMessageProcessor processor;
+  private BlockingQueue<BytesXMLMessage> squeue;
 
+  /**
+   * Asynchronous Callback for processing Solace Topic data events.
+   * 
+   * @param lconfig Connector Configuration
+   * @param squeue Blocking Queue
+   */
+  public SolMessageTopicCallbackHandler(SolaceSourceConfig lconfig, 
+      BlockingQueue<BytesXMLMessage> squeue) {
+    this.squeue = squeue;
+    log.debug("===Constructor for SolMessageTopicProcessor");
 
-	//public SolMessageTopicCallbackHandler(SolaceSourceConfig lConfig,BlockingQueue<SolMessageProcessor> sQueue) {
-	public SolMessageTopicCallbackHandler(SolaceSourceConfig lConfig,BlockingQueue<BytesXMLMessage> sQueue) {
-		this.sQueue = sQueue;
-		//this.lConfig = lConfig;
-		log.debug("===Constructor for SolMessageTopicProcessor");
-		//this.processor = lConfig.getConfiguredInstance(SolaceSourceConstants.SOL_MESSAGE_PROCESSOR, SolMessageProcessor.class);
+  }
 
-	}
+  @Override
+  public void onException(JCSMPException je) {
+    log.info("JCSMP Exception in SolaceMessageTopicProcessorCallback "
+        + "{} \n", je.getLocalizedMessage());
 
-	@Override
-	public void onException(JCSMPException je) {
-		log.info("JCSMP Exception in SolaceMessageTopicProcessorCallback {} \n", je.getLocalizedMessage());
+  }
 
-	}
+  @Override
+  public void onReceive(BytesXMLMessage msg) {
+    log.debug("=================Received Message");
 
-	@Override
-	public void onReceive(BytesXMLMessage msg) {
-		log.debug("=================Received Message");
+    squeue.add(msg);
 
-		//this.sQueue.add(
-				/*
-				lConfig.getConfiguredInstance(SolaceSourceConstants.SOL_MESSAGE_PROCESSOR,
-						SolMessageProcessor.class)
-				.process(lConfig.getString(SolaceSourceConstants.SOL_KAFKA_MESSAGE_KEY), msg)
-				)
-				*/
-				//processor.process(lConfig.getString(SolaceSourceConstants.SOL_KAFKA_MESSAGE_KEY), msg));
-		sQueue.add(msg);
-
-	}
+  }
 
 }

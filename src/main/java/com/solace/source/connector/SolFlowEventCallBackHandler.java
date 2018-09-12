@@ -19,19 +19,20 @@
 
 package com.solace.source.connector;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.solacesystems.jcsmp.FlowEventArgs;
 import com.solacesystems.jcsmp.FlowEventHandler;
 
-public class SolFlowEventCallBackHandler implements FlowEventHandler{
-	final Logger log = LoggerFactory.getLogger(SolFlowEventCallBackHandler.class);
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-	@Override
-	public void handleEvent(Object obj, FlowEventArgs event) {
-		log.info("Received Flow (Queue) Event {} with info {} with exception {}\n", event.getEvent(), event.getInfo(), event.getException());
-		log.info("Source of the Flow (Queue) event: {}\n", obj.getClass().getName());
-	}
+public class SolFlowEventCallBackHandler implements FlowEventHandler {
+  final Logger log = LoggerFactory.getLogger(SolFlowEventCallBackHandler.class);
+
+  @Override
+  public void handleEvent(Object obj, FlowEventArgs event) {
+    log.info("Received Flow (Queue) Event {} with info {} with exception "
+        + "{}\n", event.getEvent(), event.getInfo(), event.getException());
+    log.info("Source of the Flow (Queue) event: {}\n", obj.getClass().getName());
+  }
 
 }

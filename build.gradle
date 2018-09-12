@@ -76,6 +76,7 @@ dependencies {
     compile 'org.slf4j:slf4j-api:1.7.14'
     testCompile 'org.slf4j:slf4j-simple:1.7.14'
     compile group: 'com.solacesystems', name: 'sol-jcsmp', version: '10.4.0'
+    //compile 'com.puppycrawl.tools:checkstyle:8.12'
 }
 
 tasks.withType(FindBugs) {
@@ -98,7 +99,9 @@ checkstyle {
         checkstyle
     }
     dependencies {
-        checkstyle 'com.puppycrawl.tools:checkstyle:6.12.1'
+        //checkstyle 'com.puppycrawl.tools:checkstyle:6.12.1'
+        checkstyle 'com.puppycrawl.tools:checkstyle:8.12'
+
     }
 }
 

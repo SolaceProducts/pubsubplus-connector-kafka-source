@@ -19,23 +19,26 @@
 
 package com.solace.source.connector;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.solacesystems.jcsmp.JCSMPException;
 import com.solacesystems.jcsmp.JCSMPReconnectEventHandler;
 
-public class SolReconnectCallbackHandler implements JCSMPReconnectEventHandler {
-	final Logger log = LoggerFactory.getLogger(SolReconnectCallbackHandler.class);
-	@Override
-	public void postReconnect() throws JCSMPException {
-		log.info("========Solace client now Reconnected after Solace HA or DR fail-over");
-	}
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-	@Override
-	public boolean preReconnect() throws JCSMPException {
-		log.info("=========Solace client now in Pre Reconnect state, trying to re-establish a connection -- possibly due to Solace HA or DR fail-over");
-		return true;
-	}
+public class SolReconnectCallbackHandler implements JCSMPReconnectEventHandler {
+  final Logger log = LoggerFactory.getLogger(SolReconnectCallbackHandler.class);
+
+  @Override
+  public void postReconnect() throws JCSMPException {
+    log.info("========Solace client now Reconnected after Solace HA or DR fail-over");
+  }
+
+  @Override
+  public boolean preReconnect() throws JCSMPException {
+    log.info(
+        "=========Solace client now in Pre Reconnect state, trying to re-establish a connection"
+        + " -- possibly due to Solace HA or DR fail-over");
+    return true;
+  }
 
 }
