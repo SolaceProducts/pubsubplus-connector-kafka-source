@@ -291,6 +291,22 @@ an unforeseen burst event.
 
 
 
+## Contributing
+
+Please read [CONTRIBUTING.md](CONTRIBUTING.md) for details on our code of conduct, and the process for submitting pull requests to us.
+
+## Authors
+
+See the list of [contributors](../../graphs/contributors) who participated in this project.
+
 ## License
 
-This project is licensed under the Apache License, Version 2.0. - See the [LICENSE](https://github.com/SolaceLabs/solace-messaging-demo/blob/master/LICENSE) file for details.
+This project is licensed under the Apache License, Version 2.0. - See the [LICENSE](LICENSE) file for details.
+
+## Resources
+
+For more information about Solace technology in general please visit these resources:
+
+- The Solace Developer Portal website at: http://dev.solace.com
+- Understanding [Solace technology.](http://dev.solace.com/tech/)
+- Ask the [Solace community](http://dev.solace.com/community/).
