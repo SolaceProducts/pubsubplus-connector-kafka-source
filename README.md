@@ -12,7 +12,7 @@ any message that reaches the Solace broker, regardless of the many Solace suppor
 
 Consider the following diagram:
 
-![Architecture Overview](resources/SolaceAPI.png)
+![Architecture Overview](resources/KSource3.png)
 
 It does not matter if the ingress message to the Solace broker (appliance, software or cloud) is from an iPhone, a REST POST or an AMQP, JMS or MQTT message, it can be sent automatically to the Kafka Topic via the Solace Source Connector.
 

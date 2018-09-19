@@ -1,0 +1,6 @@
+# Do not include gradle working files
+/.gradle
+
+# Do not include build infra or artifacts
+/bin/*
+/build/*
