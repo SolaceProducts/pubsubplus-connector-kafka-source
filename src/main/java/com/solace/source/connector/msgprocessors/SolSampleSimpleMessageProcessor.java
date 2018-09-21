@@ -73,8 +73,8 @@ public class SolSampleSimpleMessageProcessor implements SolMessageProcessor {
   public SourceRecord[] getRecords(String kafkaTopic) {
    
     return new SourceRecord[] {
-        new SourceRecord(null, null, kafkaTopic, null, Schema.STRING_SCHEMA, 
-            sdestination, Schema.BYTES_SCHEMA, smsg) };
+        new SourceRecord(null, null, kafkaTopic, null, null, 
+            null, Schema.BYTES_SCHEMA, smsg) };
   }
 
 }
