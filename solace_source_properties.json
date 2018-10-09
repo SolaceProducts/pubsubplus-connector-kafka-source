@@ -12,7 +12,7 @@
 		"sol.queue": "testQ",
 		"sol.message_processor_class": "com.solace.source.connector.msgProcessors.SolaceSampleKeyedMessageProcessor",
 		"sol.generate_send_timestamps": "true",
-		"sol.sol_generate_rcv_timestamps": "true",
+		"sol.generate_rcv_timestamps": "true",
 		"sol.sub_ack_window_size": "255",
 		"sol.generate_sequence_numbers": "true",
 		"sol.calculate_message_expiration": "true",
