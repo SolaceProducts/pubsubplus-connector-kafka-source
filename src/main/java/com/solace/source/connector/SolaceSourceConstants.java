@@ -47,7 +47,7 @@ public class SolaceSourceConstants {
   public static final String SOL_LOCALHOST = "sol.localhost";
   public static final String SOL_CLIENT_NAME = "sol.client_name";
   public static final String SOL_GENERATE_SENDER_ID = "sol.generate_sender_id";
-  public static final String SOL_GENERATE_RCV_TIMESTAMPS = "sol.sol_generate_rcv_timestamps";
+  public static final String SOL_GENERATE_RCV_TIMESTAMPS = "sol.generate_rcv_timestamps";
   public static final String SOL_GENERATE_SEND_TIMESTAMPS = "sol.generate_send_timestamps";
   public static final String SOL_GENERATE_SEQUENCE_NUMBERS = "sol.generate_sequence_numbers";
   public static final String SOL_CALCULATE_MESSAGE_EXPIRATION = "sol.calculate_message_expiration";

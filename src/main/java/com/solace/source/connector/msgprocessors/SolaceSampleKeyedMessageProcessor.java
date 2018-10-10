@@ -22,7 +22,6 @@ package com.solace.source.connector.msgprocessors;
 import com.solace.source.connector.SolMessageProcessor;
 
 import com.solacesystems.jcsmp.BytesXMLMessage;
-import com.solacesystems.jcsmp.DeliveryMode;
 import com.solacesystems.jcsmp.TextMessage;
 
 import java.nio.charset.Charset;

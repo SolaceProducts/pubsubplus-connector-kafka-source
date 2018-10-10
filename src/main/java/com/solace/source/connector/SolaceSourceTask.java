@@ -223,9 +223,9 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
     if (consumer != null) {
       ok = consumer.shutdown();
     }
-    if (session != null) {
-      ok = sessionRef.shutdown();
-    }
+
+    ok = sessionRef.shutdown();
+
     if (!(ok)) {
       log.info("Solace session failed to shutdown");
     }

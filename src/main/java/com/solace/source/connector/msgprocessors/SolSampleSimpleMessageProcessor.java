@@ -22,7 +22,7 @@ package com.solace.source.connector.msgprocessors;
 import com.solace.source.connector.SolMessageProcessor;
 
 import com.solacesystems.jcsmp.BytesXMLMessage;
-import com.solacesystems.jcsmp.DeliveryMode;
+//import com.solacesystems.jcsmp.DeliveryMode;
 import com.solacesystems.jcsmp.TextMessage;
 
 import java.nio.charset.Charset;
@@ -41,7 +41,7 @@ public class SolSampleSimpleMessageProcessor implements SolMessageProcessor {
   private String skey;
   private Object sdestination;
   private byte[] messageOut;
-  private BytesXMLMessage msg;
+
 
   @Override
   public SolMessageProcessor process(String skey, BytesXMLMessage msg) {
