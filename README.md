@@ -293,6 +293,9 @@ as discussed above. If the Source Connector has not been scaled to a required le
 to deal with micro-bursts or sustained periods of heavy event generation in the Event Mesh. Data events will no be lost of the connector is under-scaled due to 
 an unforeseen burst event.
 
+## Additional Information
+
+For additional information, use cases and explanatory videos, please visit the [Solace/Kafka Integration Guide](https://dev.solace.com/integration-guides/kafka-integration/).
 
 
 ## Contributing
