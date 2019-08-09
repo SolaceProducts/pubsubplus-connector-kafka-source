@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/SolaceLabs/solace-kafka-connector-source.svg?branch=development)](https://travis-ci.org/SolaceLabs/solace-kafka-connector-source)
+[![Build Status](https://travis-ci.org/SolaceLabs/pubsubplus-connector-kafka-sink.svg?branch=development)](https://travis-ci.org/SolaceLabs/pubsubplus-connector-kafka-sink)
 
 
 
