@@ -2,7 +2,7 @@
 
 
 
-# Solace Source Kafka Connector v1.0
+# PubSub+ Connector Kafka Source v1.0
 
 ## Synopsis
 
