@@ -314,6 +314,6 @@ This project is licensed under the Apache License, Version 2.0. - See the [LICEN
 
 For more information about Solace technology in general please visit these resources:
 
-- The Solace Developer Portal website at: http://dev.solace.com
-- Understanding [Solace technology.](http://dev.solace.com/tech/)
-- Ask the [Solace community](http://dev.solace.com/community/).
+- The [Solace Developers website](https://www.solace.dev/)
+- Understanding [Solace technology]( https://solace.com/products/tech/)
+- Ask the [Solace Community]( https://solace.community/)
