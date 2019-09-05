@@ -50,7 +50,7 @@ repositories {
     jcenter()
     mavenCentral()
 
-    maven { url " https://mvnrepository.com/artifact/com.solacesystems/sol-jcsmp" }
+    maven { url "https://mvnrepository.com/artifact/com.solacesystems/sol-jcsmp" }
     // https://mvnrepository.com/artifact/com.solacesystems/sol-jcsmp
 
     
