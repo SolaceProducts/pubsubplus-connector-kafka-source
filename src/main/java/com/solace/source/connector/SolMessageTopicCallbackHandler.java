@@ -56,7 +56,7 @@ public class SolMessageTopicCallbackHandler implements XMLMessageListener {
   @Override
   public void onReceive(BytesXMLMessage msg) {
     log.debug("=================Received Message");
-    System.out.println();
+
 
     squeue.add(msg);
 
