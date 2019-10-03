@@ -4,3 +4,7 @@
 # Do not include build infra or artifacts
 /bin/*
 /build/*
+
+/.checkstyle
+/.classpath
+/.project
