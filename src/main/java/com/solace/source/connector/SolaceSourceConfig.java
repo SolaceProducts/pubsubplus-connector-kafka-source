@@ -239,8 +239,13 @@ public class SolaceSourceConfig extends AbstractConfig {
         .define(SolaceSourceConstants.SOL_SSL_PRIVATE_KEY_PASSWORD, Type.STRING, "", Importance.LOW,
             "This property is used to specify the password that deciphers the "
             + "private key from the key store.")
+        .define(SolaceSourceConstants.SOL_KERBEROS_KRB5_CONFIG, Type.STRING, "", Importance.LOW,
+            "The location of the KRB5 configuration file for the Kerberos Server Detail")
+        .define(SolaceSourceConstants.SOL_KERBEROS_LOGIN_CONFIG, Type.STRING, "", Importance.LOW,
+            "Location of the Kerberos Login Configuration File")
         .define(SolaceSourceConstants.SOL_KAFKA_MESSAGE_KEY, Type.STRING, "NONE", Importance.MEDIUM,
             "This propert determines if a Kafka key record is created and the key to be used");
+    
 
   }
 

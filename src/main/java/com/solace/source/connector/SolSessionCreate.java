@@ -161,6 +161,11 @@ public class SolSessionCreate {
    * @return boolean result
    */
   public boolean connectSession() {
+    
+    System.setProperty("java.security.auth.login.config",
+        lconfig.getString(SolaceSourceConstants.SOL_KERBEROS_LOGIN_CONFIG));
+    System.setProperty("java.security.krb5.conf",
+        lconfig.getString(SolaceSourceConstants.SOL_KERBEROS_KRB5_CONFIG));
 
     boolean connected = false;
     try {

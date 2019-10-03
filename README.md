@@ -183,6 +183,43 @@ kafka.topic=solacetest
 
 A more details example is included with this project. This project also includes a JSON configuration file.
 
+### Security Considerations
+
+The Source Connector supports both PKI and Kerberos for more secure authentication beyond the simple user name/password. The PKI/TLS support is well document in
+the Solace literature, and will not be repeated here. All the PKI required configuration parameters are part of the configuration variable for the Solace session and transport as referenced above in the Configuration Section. Sample parameters are found in the included properties and JSON configuration files. 
+
+Kerberos authentication support is also available. It requires a bit more configuration than PKI since it is not defined as part of the Solace session or transport. Typical Kerberos client applications require details about the Kerberos configuration and details for the authentication. Since the Source Connector is a server application (i.e. no direct user interaction) a Kerberos keytab file is required as part of the authentication. 
+
+The enclosed configuration files are samples that will allow automatic Kerberos authentication for the Source Connector when it is deployed to the Connect Cluster. The sample files included are
+the "krb5.conf" and "login.conf". It does not matter where the files are located, but they must be available on all Kafka Connect CLuster nodes and placed in the same location on all the nodes. The files are then referenced in the connector configuration files, for example:
+
+```ini
+sol.kerberos.login.conf=/opt/kerberos/login.conf
+sol.kerberos.krb5.conf=/opt/kerberos/krb5.conf
+```
+
+There is also one other important configuration file entry that is required to tell the Solace connector to use Kerberos Authentication, which is also part of the Solace parameters mentioned in the Configuration Section of this document. The properties is:
+
+```ini
+sol.authentication_scheme=AUTHENTICATION_SCHEME_GSS_KRB
+```
+
+Sample configuration files that include the rquires Kerberos parameters are also included with this project:
+
+```ini
+solace_source_krb5Pporoperties.json
+solace_kerberos.properties
+```
+
+Kerberos has some very specific requirements to operate correctly. If these are also not configured, the Kerberos Authentication will not operate correctly:
+* DNS must be operating correctly both in the Kafka brokers and on the Solace PS+ broker.
+* Time services are recommended for use with the Kafka Cluster nodes and the Solace PS+ broker. If there is too much drift in the time between the nodes Kerberos will fail.
+* You must use the DNS name in the Solace PS+ host URI in the Connector configuration file and not the IP address
+* You must use the full Kerberos user name (including the Realm) in the configuration property, obviously no password is required. 
+
+The secuirty setup and operation between he PS+ broker and the Source Connector and Kafka and the Source Connector operate completely independently. 
+The security setup between the Source Connector and the Kafka Brokers is controlled by the Kafka Connect Libraries. These are exposed in the configuration file as parameters based on the Kafka-documented parameters and configuration. Please refer to the Kafka documentation for details on securing the Connector to the Kafka brokers for both PKI/TLS and Kerberos. 
+
 #### Solace Message Processor
 
 The processing of the Solace message to create a Kafka Source Record is handled by an interface definition defined in `SolaceMessageProcessor.java`. This is a simple interface that is used to create the Kafka Source Records from the Solace messages. There are two examples included of classes that implement this interface:

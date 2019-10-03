@@ -127,5 +127,10 @@ public class SolaceSourceConstants {
   // Allowable values include: NONE, DESTINATION, CORRELATION_ID,
   // CORRELATION_ID_AS_BYTES
   public static final String SOL_KAFKA_MESSAGE_KEY = "sol.kafka_message_key";
+  
+  //Low importance Kerberos details
+  public static final String SOL_KERBEROS_LOGIN_CONFIG = "sol.kerberos.login.conf";
+  public static final String SOL_KERBEROS_KRB5_CONFIG = "sol.kerberos.krb5.conf";  
+  
 
 }

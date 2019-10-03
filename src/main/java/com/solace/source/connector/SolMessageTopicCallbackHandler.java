@@ -57,6 +57,7 @@ public class SolMessageTopicCallbackHandler implements XMLMessageListener {
   public void onReceive(BytesXMLMessage msg) {
     log.debug("=================Received Message");
 
+
     squeue.add(msg);
 
   }

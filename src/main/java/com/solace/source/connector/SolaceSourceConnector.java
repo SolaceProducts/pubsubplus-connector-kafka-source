@@ -47,6 +47,7 @@ public class SolaceSourceConnector extends SourceConnector {
     log.info("==================== Start a SolaceSourceConnector");
     mconfigProperties = props;
     mconfig = new SolaceSourceConfig(props);
+    
 
   }
 
