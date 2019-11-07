@@ -80,6 +80,9 @@ To actually create the  Connector Jar file use:
 ./gradlew clean jar
 ```
 
+> [!NOTE]  
+    > Make sure to set your `JAVA_HOME` to 1.8 before building it. If you want to use Java 11, you will need to update `gradle-wrapper.properties` to use the latest gradle version.
+
 ## Deployment
 
 The Solace Source Connector has been tested in three environments: Apache Kafka, Confluent Kafka and the AWS Confluent Platform. 
