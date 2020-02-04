@@ -176,11 +176,6 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
 
     }
 
-    if (fmsgProcessed > 0) {
-      commit();
-
-    }
-
     log.debug("Processed {} records in this batch.", processed);
     processed = 0;
     return records;
