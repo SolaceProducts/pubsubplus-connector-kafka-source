@@ -1,6 +1,8 @@
 apply plugin:  'java'
 apply plugin:  'distribution'
 apply plugin:  'org.unbroken-dome.test-sets'
+apply plugin:  'checkstyle'
+apply plugin:  'pmd'
 
 ext {
     kafkaVersion = '2.0.0'
@@ -41,17 +43,31 @@ dependencies {
     integrationTestImplementation 'org.slf4j:slf4j-api:1.7.30'
     integrationTestImplementation 'org.slf4j:slf4j-simple:1.7.30'
     integrationTestImplementation 'com.solace:solace-testcontainer-extension:0.0.2'
-    integrationTestImplementation 'net.lingala.zip4j:zip4j:2.3.1'
-    integrationTestImplementation 'org.apache.commons:commons-configuration2:2.6'
-    integrationTestImplementation 'commons-beanutils:commons-beanutils:1.9.4'
     compileOnly "org.apache.kafka:connect-api:$kafkaVersion"
     compile "com.solacesystems:sol-jcsmp:$solaceJavaAPIVersion"
 }
 
+//Ensure that our unit tests are run before our integration tests
+integrationTest.mustRunAfter assembleDist
+
 project.integrationTest {
-    useJUnitPlatform()
     outputs.upToDateWhen { false }
-    dependsOn assembleDist
+}
+
+checkstyle {
+    configurations {
+        checkstyle
+    }
+    dependencies {
+        checkstyle 'com.puppycrawl.tools:checkstyle:8.12'
+    }
+    toolVersion = '6.10.1'
+    checkstyleIntegrationTest.enabled = false
+}
+
+pmd {
+    pmdMain.enabled = false
+    pmdIntegrationTest.enabled = false
 }
 
 distributions {

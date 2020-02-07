@@ -57,7 +57,7 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
       = new LinkedBlockingQueue<>(); // LinkedBlockingQueue for Solace Flow messages
   // from Solace Queue
   String skafkaTopic;
-  boolean topicListenStarted = true;
+  boolean topicListenerStarted = true;
   boolean queueConsumerStarted = true;
 
   private SolSessionCreate sessionRef;
@@ -98,8 +98,8 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
 
     if (sconfig.getString(SolaceSourceConstants.SOL_TOPICS) != null) {
       listener = new SolaceSourceTopicListener(sconfig, squeue);
-      topicListenStarted = listener.init(session);
-      if (topicListenStarted == false) {
+      topicListenerStarted = listener.init(session);
+      if (topicListenerStarted == false) {
         log.info("===============Failed to start topic consumer ... shutting down");
         stop();
       }
@@ -188,7 +188,7 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
   }
 
   /**
-   * Kakfa Connect method that write records to disk.
+   * Kafka Connect method that write records to disk.
    */
   public synchronized void commit() throws InterruptedException {
     log.trace("Committing records");

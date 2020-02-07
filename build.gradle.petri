@@ -1,0 +1,102 @@
+apply plugin:  'java'
+apply plugin:  'distribution'
+apply plugin:  'checkstyle'
+apply plugin:  'pmd'
+
+ext {
+    kafkaVersion = '2.0.0'
+    solaceJavaAPIVersion = '10.6.0'
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+}
+
+buildscript {
+    repositories {
+        maven {
+           url "https://plugins.gradle.org/m2/"
+        }
+    }
+    dependencies {
+        classpath "com.github.spotbugs:spotbugs-gradle-plugin:3.0.0"
+        classpath "org.unbroken-dome.test-sets:org.unbroken-dome.test-sets.gradle.plugin:2.2.1"
+    }
+}
+
+sourceSets {
+    integrationTest {
+        java {
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+            srcDir file('src/integrationTest/java')
+        }
+        resources.srcDir file('src/integrationTest/resources')
+    }
+}
+
+configurations {
+    integrationTestCompile.extendsFrom testCompile
+    integrationTestRuntime.extendsFrom testRuntime
+}
+
+dependencies {
+    integrationTestCompile 'junit:junit:4.12'
+    integrationTestCompile 'org.junit.jupiter:junit-jupiter-api:5.5.2'
+    integrationTestCompile 'org.junit.jupiter:junit-jupiter-engine:5.5.2'
+    integrationTestCompile 'org.junit.jupiter:junit-jupiter-params:5.5.2'
+    integrationTestCompile 'org.junit.platform:junit-platform-engine:1.5.2'
+    integrationTestCompile 'org.mockito:mockito-core:3.2.4'
+    integrationTestCompile 'org.mockito:mockito-junit-jupiter:3.2.4'
+    integrationTestCompile 'org.testcontainers:testcontainers:1.12.4'
+    integrationTestCompile 'org.testcontainers:junit-jupiter:1.12.4'
+    integrationTestCompile 'org.slf4j:slf4j-api:1.7.30'
+    integrationTestCompile 'org.slf4j:slf4j-simple:1.7.30'
+    integrationTestCompile 'com.solace:solace-testcontainer-extension:0.0.2'
+    compileOnly "org.apache.kafka:connect-api:$kafkaVersion"
+    compile "com.solacesystems:sol-jcsmp:$solaceJavaAPIVersion"
+}
+
+task integrationTest(type: Test) {
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    outputs.upToDateWhen { false }
+}
+
+//Ensure that our unit tests are run before our integration tests
+//integrationTest.mustRunAfter assembleDist
+
+check.dependsOn integrationTest
+integrationTest.mustRunAfter test
+
+checkstyle {
+    configurations {
+        checkstyle
+    }
+    dependencies {
+        checkstyle 'com.puppycrawl.tools:checkstyle:8.12'
+    }
+    toolVersion = '6.10.1'
+    checkstyleIntegrationTest.enabled = false
+}
+
+pmd {
+    pmdMain.enabled = false
+    pmdIntegrationTest.enabled = false
+}
+
+distributions {
+    main {
+        contents {
+            from('etc/solace.properties') { into 'etc' }
+            from('doc/README.md') { into 'doc' }
+            from('LICENSE') { into 'doc' }
+            into('lib') {
+                // from jar
+                from(project.configurations.runtime)
+            }
+            from jar
+        }
+    }
+}

@@ -38,7 +38,7 @@ public class SolaceSourceConfig extends AbstractConfig {
   public SolaceSourceConfig(Map<String, String> properties) {
     super(config, properties);
 
-    log.info("==================Initialize Connnector properties");
+    log.info("==================Initialize Connector properties");
   }
 
   /**
