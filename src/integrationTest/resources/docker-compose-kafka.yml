@@ -1,4 +1,4 @@
-version: '3'
+version: '3.7'
 
 services:
   zookeeper:
@@ -13,6 +13,13 @@ services:
     ports:
       - 9092:9092
       - 29092:29092
+    volumes:
+       - /var/lib/docker/volumes/myvolume/_data:/etc/test
+#      - type: volume
+#        source: /var/lib/docker/volumes/myvolume/_data
+#        target: /etc/test
+#        volume:
+#          nocopy: true
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -26,7 +33,6 @@ services:
   kafka-setup:
     image: confluentinc/cp-kafka:5.1.1
     hostname: kafka-setup
-   #container_name: kafka-setup
     depends_on:
       - kafka
       - zookeeper
@@ -51,4 +57,3 @@ services:
     depends_on:
       - kafka
 
-  #  DATA PIPELINE SERVICES

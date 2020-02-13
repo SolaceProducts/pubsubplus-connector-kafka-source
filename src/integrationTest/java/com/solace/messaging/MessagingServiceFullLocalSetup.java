@@ -19,6 +19,7 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.DockerComposeContainer;
+import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -81,16 +82,6 @@ public interface MessagingServiceFullLocalSetup {
             .waitingFor("schema-registry_1",
                 Wait.forHttp("/subjects").forStatusCode(200));
 
-    
-//  @Container
-//  public static final DockerComposeContainer COMPOSE_CONTAINER_CONNECTOR =
-//        new DockerComposeContainer(
-//            new File(FULL_DOCKER_COMPOSE_FILE_PATH + "docker-compose-connector.yml"))
-//            .withLocalCompose(true);
-//
-
-  
-  
   @BeforeAll
   static void checkContainer() {
     String host = COMPOSE_CONTAINER_PUBSUBPLUS.getServiceHost("solbroker_1", 8080);
@@ -123,15 +114,13 @@ public interface MessagingServiceFullLocalSetup {
 
 	      builder.save();
 	      
-	 } catch (ZipException e) {
-	     e.printStackTrace();
-	 } catch (ConfigurationException e) {
-		e.printStackTrace();
-	}
-  }
- 
-   
+  	 } catch (ZipException e) {
+  	     e.printStackTrace();
+  	 } catch (ConfigurationException e) {
+  		e.printStackTrace();
+   	 }
 
+  }
 
 }
 
