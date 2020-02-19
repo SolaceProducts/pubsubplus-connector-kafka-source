@@ -2,12 +2,17 @@ package com.solace.messaging;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.solace.testcontainer.wait.startegy.WaitExtension;
 
 import net.lingala.zip4j.ZipFile;
 import net.lingala.zip4j.exception.ZipException;
 
 import java.io.File;
+import java.io.IOException;
 import java.time.Duration;
 
 import org.apache.commons.configuration2.Configuration;
@@ -16,10 +21,9 @@ import org.apache.commons.configuration2.PropertiesConfiguration;
 import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.ex.ConfigurationException;
+import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeAll;
-import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.DockerComposeContainer;
-import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -41,6 +45,7 @@ public interface MessagingServiceFullLocalSetup {
   public static final String CONNECTORSOURCE = "build/distributions/pubsubplus-connector-kafka-source.zip";
   public static final String CONNECTORDESTINATION = "src/integrationTest/resources/";
   public static final String CONNECTORPROPERTIESFILE = CONNECTORDESTINATION+"pubsubplus-connector-kafka-source/etc/solace.properties";
+  public static final String CONNECTORJSONPROPERTIESFILE = CONNECTORDESTINATION+"pubsubplus-connector-kafka-source/etc/solace_properties.json";
   
   public static final String SOL_ADMINUSER_NAME = "default";
   public static final String SOL_ADMINUSER_PW = "default";
@@ -91,34 +96,52 @@ public interface MessagingServiceFullLocalSetup {
   
   @BeforeAll
   static void setupConnector() {
-	  try {
-	      // Copy to resources
-		  ZipFile zipFile = new ZipFile(CONNECTORSOURCE);
-	      zipFile.extractAll(CONNECTORDESTINATION);
-	      
-	      // Configure connector params
-	      Parameters params = new Parameters();
-	      FileBasedConfigurationBuilder<FileBasedConfiguration> builder =
-	          new FileBasedConfigurationBuilder<FileBasedConfiguration>(PropertiesConfiguration.class)
-	          .configure(params.properties()
-	              .setFileName(CONNECTORPROPERTIESFILE));
-	      Configuration config = builder.getConfiguration();
-	      config.setProperty("sol.host", "tcp://" + COMPOSE_CONTAINER_PUBSUBPLUS.getServiceHost("solbroker_1", 55555) + ":55555");
-	      config.setProperty("sol.username", SOL_ADMINUSER_NAME);
-	      config.setProperty("sol.password", SOL_ADMINUSER_PW);
-	      config.setProperty("sol.vpn_name", SOL_VPN);
-	      config.setProperty("kafka.topic", KAFKA_TOPIC);
-	      config.setProperty("sol.topics", SOL_TOPICS);
-	      config.setProperty("sol.message_processor_class", CONN_MSGPROC_CLASS);
-	      config.setProperty("sol.kafka_message_key", CONN_KAFKA_MSGKEY);
+    try {
+      // Copy to resources
+      ZipFile zipFile = new ZipFile(CONNECTORSOURCE);
+      zipFile.extractAll(CONNECTORDESTINATION);
 
-	      builder.save();
-	      
-  	 } catch (ZipException e) {
-  	     e.printStackTrace();
-  	 } catch (ConfigurationException e) {
-  		e.printStackTrace();
-   	 }
+      // Configure .config connector params
+      Parameters params = new Parameters();
+      FileBasedConfigurationBuilder<FileBasedConfiguration> builder = new FileBasedConfigurationBuilder<FileBasedConfiguration>(
+          PropertiesConfiguration.class).configure(params.properties().setFileName(CONNECTORPROPERTIESFILE));
+      Configuration config = builder.getConfiguration();
+      config.setProperty("sol.host", "tcp://" + COMPOSE_CONTAINER_PUBSUBPLUS.getServiceHost("solbroker_1", 55555) + ":55555");
+      config.setProperty("sol.username", SOL_ADMINUSER_NAME);
+      config.setProperty("sol.password", SOL_ADMINUSER_PW);
+      config.setProperty("sol.vpn_name", SOL_VPN);
+      config.setProperty("kafka.topic", KAFKA_TOPIC);
+      config.setProperty("sol.topics", SOL_TOPICS);
+      config.setProperty("sol.message_processor_class", CONN_MSGPROC_CLASS);
+      config.setProperty("sol.kafka_message_key", CONN_KAFKA_MSGKEY);
+      builder.save();
+
+      // Configure .json connector params
+      File jsonFile = new File(CONNECTORJSONPROPERTIESFILE);
+      String jsonString = FileUtils.readFileToString(jsonFile);
+      JsonElement jtree = new JsonParser().parse(jsonString);
+      JsonElement jconfig = jtree.getAsJsonObject().get("config");
+      JsonObject jobject = jconfig.getAsJsonObject();
+      jobject.addProperty("sol.host", "tcp://" + COMPOSE_CONTAINER_PUBSUBPLUS.getServiceHost("solbroker_1", 55555) + ":55555");
+      jobject.addProperty("sol.username", SOL_ADMINUSER_NAME);
+      jobject.addProperty("sol.password", SOL_ADMINUSER_PW);
+      jobject.addProperty("sol.vpn_name", SOL_VPN);
+      jobject.addProperty("kafka.topic", KAFKA_TOPIC);
+      jobject.addProperty("sol.topics", SOL_TOPICS);
+      jobject.addProperty("sol.message_processor_class", CONN_MSGPROC_CLASS);
+      jobject.addProperty("sol.kafka_message_key", CONN_KAFKA_MSGKEY);
+      Gson gson = new Gson();
+      String resultingJson = gson.toJson(jtree);
+      FileUtils.writeStringToFile(jsonFile, resultingJson);
+
+    } catch (ZipException e) {
+      e.printStackTrace();
+    } catch (ConfigurationException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      // TODO Auto-generated catch block
+      e.printStackTrace();
+    }
 
   }
 

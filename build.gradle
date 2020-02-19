@@ -44,6 +44,8 @@ dependencies {
     integrationTestImplementation 'net.lingala.zip4j:zip4j:2.3.1'
     integrationTestImplementation 'org.apache.commons:commons-configuration2:2.6'
     integrationTestImplementation 'commons-beanutils:commons-beanutils:1.9.4'
+    integrationTestImplementation 'com.google.code.gson:gson:2.3.1'
+    integrationTestImplementation 'commons-io:commons-io:2.4'
     compileOnly "org.apache.kafka:connect-api:$kafkaVersion"
     compile "com.solacesystems:sol-jcsmp:$solaceJavaAPIVersion"
 }
@@ -58,13 +60,14 @@ distributions {
     main {
         contents {
             from('etc/solace.properties') { into 'etc' }
+            from('etc/solace_properties.json') { into 'etc' }
             from('doc/README.md') { into 'doc' }
             from('LICENSE') { into 'doc' }
             into('lib') {
-                // from jar
+                from jar
                 from(project.configurations.runtime)
             }
-            from jar
+            // from jar
         }
     }
 }

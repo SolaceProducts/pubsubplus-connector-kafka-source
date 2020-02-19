@@ -2,24 +2,17 @@ version: '3.7'
 
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:5.1.1
+    image: confluentinc/cp-zookeeper:5.4.0
     ports:
       - 2181:2181
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
   kafka:
-    image: confluentinc/cp-kafka:5.1.1
+    image: confluentinc/cp-kafka:5.4.0
     ports:
       - 9092:9092
       - 29092:29092
-    volumes:
-       - /var/lib/docker/volumes/myvolume/_data:/etc/test
-#      - type: volume
-#        source: /var/lib/docker/volumes/myvolume/_data
-#        target: /etc/test
-#        volume:
-#          nocopy: true
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -31,7 +24,7 @@ services:
     depends_on:
       - zookeeper
   kafka-setup:
-    image: confluentinc/cp-kafka:5.1.1
+    image: confluentinc/cp-kafka:5.4.0
     hostname: kafka-setup
     depends_on:
       - kafka
@@ -47,7 +40,7 @@ services:
       KAFKA_ZOOKEEPER_CONNECT: ignored
 
   schema-registry:
-    image: confluentinc/cp-schema-registry:5.1.1
+    image: confluentinc/cp-schema-registry:5.4.0
     ports:
       - 8081:8081
     environment:
@@ -57,3 +50,21 @@ services:
     depends_on:
       - kafka
 
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:latest
+    hostname: control-center
+    depends_on:
+      - zookeeper
+      - kafka
+      - schema-registry
+    ports:
+      - "9021:9021"
+    environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: 'kafka:9092'
+      CONTROL_CENTER_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      CONTROL_CENTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+      CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
+      CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
+      CONFLUENT_METRICS_TOPIC_REPLICATION: 1
+      PORT: 9021
