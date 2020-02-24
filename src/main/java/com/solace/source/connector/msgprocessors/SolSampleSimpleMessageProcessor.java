@@ -47,7 +47,7 @@ public class SolSampleSimpleMessageProcessor implements SolMessageProcessor {
   public SolMessageProcessor process(String skey, BytesXMLMessage msg) {
     this.smsg = msg;
     if (msg instanceof TextMessage) {
-      log.debug("Text Mesasge received {}", ((TextMessage) msg).getText());
+      log.debug("Text Message received {}", ((TextMessage) msg).getText());
       String smsg = ((TextMessage) msg).getText();
       messageOut = smsg.getBytes(StandardCharsets.UTF_8);
     } else {
@@ -57,7 +57,6 @@ public class SolSampleSimpleMessageProcessor implements SolMessageProcessor {
       } else { // Binary attachment pay load
         messageOut = msg.getAttachmentByteBuffer().array();
       }
-
     }
     log.debug("Message Dump:{}", msg.dump());
 
