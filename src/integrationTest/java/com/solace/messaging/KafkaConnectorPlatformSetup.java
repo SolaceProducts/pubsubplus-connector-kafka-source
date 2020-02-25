@@ -14,7 +14,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 
-public class MessagingServiceConnectionIT implements MessagingServiceFullLocalSetup {
+public class KafkaConnectorPlatformSetup implements MessagingServiceFullLocalSetup {
 
     @DisplayName("Local MessagingService connection tests")
     @Nested
@@ -25,8 +25,11 @@ public class MessagingServiceConnectionIT implements MessagingServiceFullLocalSe
                         .withEnv("CONNECT_BOOTSTRAP_SERVERS",
                                         COMPOSE_CONTAINER_KAFKA.getServiceHost("kafka_1", 39092) + ":39092")
                         .withFixedExposedPort(28083,28083)
-                        .withExposedPorts(28083)
+                        .withFixedExposedPort(5005,5005)
+                        .withExposedPorts(28083,5005)
                         .withEnv("CONNECT_REST_PORT", "28083")
+                        .withEnv("KAFKA_DEBUG", "y")
+                        .withEnv("DEBUG_SUSPEND_FLAG", "y")
 //                        
                         .withEnv("CONNECT_GROUP_ID", "quickstart-avro")
                         .withEnv("CONNECT_CONFIG_STORAGE_TOPIC", "quickstart-avro-config")
@@ -51,14 +54,20 @@ public class MessagingServiceConnectionIT implements MessagingServiceFullLocalSe
                         .withEnv("CONNECT_PLUGIN_PATH", "/usr/share/java,/etc/kafka-connect/jars")
                         .withClasspathResourceMapping("pubsubplus-connector-kafka-source/lib",
                                         "/etc/kafka-connect/jars/pubsubplus-connector-kafka", BindMode.READ_ONLY)
-                        .waitingFor( Wait.forHealthcheck() );
-//                        .waitingFor( Wait.forLogMessage(".*Kafka Connect started.*", 1) );
+//                        .waitingFor( Wait.forHealthcheck() );
+                        .waitingFor( Wait.forLogMessage(".*Kafka Connect started.*", 1) );
 
-        @DisplayName("Connect to a broker using local defaults")
+        @DisplayName("Setup the dockerized platform")
         @Test
-        void connectToRunningBrokerUsingLocalDefaultsIntegrationTest() {
+        void setupDockerizedPlatformTest() {
             String host = COMPOSE_CONTAINER_PUBSUBPLUS.getServiceHost("solbroker_1", 8080);
             assertNotNull(host);
+            try {
+                Thread.sleep(36000000l);
+            } catch (InterruptedException e) {
+                // TODO Auto-generated catch block
+                e.printStackTrace();
+            }
 
         }
     }

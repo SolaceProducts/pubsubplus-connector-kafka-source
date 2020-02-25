@@ -3,6 +3,7 @@ package com.solace.messaging;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.solacesystems.jcsmp.BytesMessage;
 import com.solacesystems.jcsmp.DeliveryMode;
 import com.solacesystems.jcsmp.EndpointProperties;
 import com.solacesystems.jcsmp.JCSMPException;
@@ -47,6 +48,18 @@ public class TestSolaceProducer {
         }
     }
     
+    public TextMessage createTextMessage(String contents) {
+        TextMessage textMessage = JCSMPFactory.onlyInstance().createMessage(TextMessage.class);
+        textMessage.setText(contents);
+        return textMessage;
+    }
+
+    public BytesMessage createBytesMessage(byte[] contents) {
+        BytesMessage bytesMessage = JCSMPFactory.onlyInstance().createMessage(BytesMessage.class);
+        bytesMessage.setData(contents);
+        return bytesMessage;
+    }
+    
     public void sendMessageToTopic(String topicName, Message msg) throws JCSMPException {
         final Topic topic = JCSMPFactory.onlyInstance().createTopic(topicName);
         producer.send(msg,topic);
@@ -60,7 +73,7 @@ public class TestSolaceProducer {
         endpointProps.setPermission(EndpointProperties.PERMISSION_CONSUME);
         endpointProps.setAccessType(EndpointProperties.ACCESSTYPE_EXCLUSIVE);
         session.provision(queue, endpointProps, JCSMPSession.FLAG_IGNORE_ALREADY_EXISTS);
-        logger.info("Ensured Solace queue " + queueName + "exists.");
+        logger.info("Ensured Solace queue " + queueName + " exists.");
     }
     
     public void sendMessageToQueue(String queueName, Message msg) throws JCSMPException {

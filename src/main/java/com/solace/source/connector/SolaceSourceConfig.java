@@ -45,6 +45,11 @@ public class SolaceSourceConfig extends AbstractConfig {
    * Returns a ConfigDef to be used for Source Task.
    */
   public static ConfigDef solaceConfigDef() {
+      
+      
+      // TODO: Revise defaults to JCSMP defaults
+      
+      
     return new ConfigDef()
         .define(SolaceSourceConstants.KAFKA_TOPIC, Type.STRING, "default", Importance.HIGH,
             "Kafka topic to consume from")
