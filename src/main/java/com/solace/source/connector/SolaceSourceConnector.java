@@ -44,6 +44,11 @@ public class SolaceSourceConnector extends SourceConnector {
 
   @Override
   public void start(Map<String, String> props) {
+      
+      
+    // TODO: consider AbstractConfig parsedConfig = new AbstractConfig(CONFIG_DEF, props);
+    //  filename = parsedConfig.getString(FILE_CONFIG);
+      
     log.info("==================== Start a SolaceSourceConnector");
     mconfigProperties = props;
     mconfig = new SolaceSourceConfig(props);

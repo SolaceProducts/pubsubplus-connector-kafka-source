@@ -192,6 +192,10 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
    */
   public synchronized void commit() throws InterruptedException {
     log.trace("Committing records");
+    
+    // TODO: What if new messages arrived in the meantime?
+    
+    
     int currentLoad = gqueue.size();
     int count = 0;
     while (count != currentLoad) {
@@ -204,6 +208,9 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
 
   @Override
   public void stop() {
+    
+    // TODO: Stats may be incomplete - REview!  
+      
     if (session != null) {
       JCSMPSessionStats lastStats = session.getSessionStats();
       Enumeration<StatType> estats = StatType.elements();

@@ -1,1 +1,32 @@
-{"name":"solaceConnector","config":{"name":"solaceConnector","connector.class":"com.solace.source.connector.SolaceSourceConnector","tasks.max":"1","kafka.topic":"kafka-test-topic","sol.host":"tcp://192.168.99.113:55555","sol.username":"default","sol.password":"default","sol.vpn_name":"default","sol.topics":"TestTopic1/SubTopic,TestTopic2/*,TestTopic3/\u003e","sol.queue":"pubsubplus-test-queue","sol.message_callback_on_reactor":"false","sol.message_processor_class":"com.solace.source.connector.msgprocessors.SolaceSampleKeyedMessageProcessor","sol.generate_send_timestamps":"false","sol.generate_rcv_timestamps":"false","sol.sub_ack_window_size":"255","sol.generate_sequence_numbers":"true","sol.calculate_message_expiration":"true","sol.subscriber_dto_override":"false","sol.channel_properties.connect_retries":"-1","sol.channel_properties.reconnect_retries":"-1","sol.kafka_message_key":"CORRELATION_ID_AS_BYTES","sol.ssl_validate_certificate":"false","sol.ssl_validate_certicate_date":"false","key.converter.schemas.enable":"true","value.converter.schemas.enable":"true","value.converter":"org.apache.kafka.connect.converters.ByteArrayConverter","key.converter":"org.apache.kafka.connect.storage.StringConverter"}}
+{
+	"name": "solaceConnector",
+	"config": {
+    "name": "solaceConnector",
+    "connector.class": "com.solace.source.connector.SolaceSourceConnector",
+    "tasks.max": "1",
+    "kafka.topic": "kafka-test-topic",
+    "sol.host": "tcp://192.168.99.113:55555",
+    "sol.username": "default",
+    "sol.password": "default",
+    "sol.vpn_name": "default",
+    "sol.topics": "pubsubplus-test-topic",
+    "sol.queue": "testQ",
+    "sol.message_callback_on_reactor": "false",
+    "sol.message_processor_class": "com.solace.source.connector.msgprocessors.SolSampleSimpleMessageProcessor",
+    "sol.generate_send_timestamps": "false",
+    "sol.generate_rcv_timestamps": "false",
+    "sol.sub_ack_window_size": "255",
+    "sol.generate_sequence_numbers": "true",
+    "sol.calculate_message_expiration": "true",
+    "sol.subscriber_dto_override": "false",
+    "sol.channel_properties.connect_retries": "-1",
+    "sol.channel_properties.reconnect_retries": "-1",
+    "sol.kafka_message_key": "DESTINATION",
+    "sol.ssl_validate_certificate": "false",
+    "sol.ssl_validate_certicate_date": "false",
+    "key.converter.schemas.enable": "true",
+    "value.converter.schemas.enable": "true",
+    "value.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
+    "key.converter": "org.apache.kafka.connect.storage.StringConverter"	}
+
+}

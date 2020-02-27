@@ -37,7 +37,10 @@ public class SolaceSourceConstants {
   public static final String SOL_HOST = "sol.host";
   public static final String SOL_USERNAME = "sol.username";
   public static final String SOL_PASSWORD = "sol.password";
+  
+  // TODO: SOL_MESSAGE_ACK_MODE is not used!
   public static final String SOL_MESSAGE_ACK_MODE = "sol.message_ack_mode";
+  
   public static final String SOL_VPN_NAME = "sol.vpn_name";
   public static final String SOL_TOPICS = "sol.topics";
   public static final String SOl_QUEUE = "sol.queue";

@@ -8,6 +8,8 @@ import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.io.FileUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.connect.data.Schema;
+import org.apache.kafka.connect.data.SchemaAndValue;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.DisplayName;
@@ -82,7 +84,7 @@ public class ConnectorIT implements TestConstants {
     void messageToTopicTest(Message msg, String topic, String expectedValue, String expectedKey) {
         try {
             solaceProducer.sendMessageToTopic(topic, msg);
-            ConsumerRecord<String, String> record = TestKafkaConsumer.kafkaReceivedMessages.poll(5,TimeUnit.SECONDS);
+            ConsumerRecord<String, String> record = TestKafkaConsumer.kafkaReceivedMessages.poll(500,TimeUnit.SECONDS);
             assert(record != null);
             assert record.value().contentEquals(expectedValue);
             assert(expectedKey == null ? record.key() == null : record.key().contentEquals(expectedKey));
@@ -142,6 +144,11 @@ public class ConnectorIT implements TestConstants {
                             // expected value & key:
                             "Hello Topic world!", null);
         }
+
+        
+        // TODO: Binary attachment pay load
+        // messageOut = msg.getAttachmentByteBuffer().array()
+        
         
         @DisplayName("TextMessage-Queue-SolSampleSimpleMessageProcessor")
         @Test
@@ -375,9 +382,11 @@ public class ConnectorIT implements TestConstants {
         void kafkaConsumerTextMessageToTopicTest() {
             TextMessage msg = solaceProducer.createTextMessage("Hello TextMessageToTopicTest1 world!");
             msg.setCorrelationId(new String(new char[] { 1,2,3,4 }));
+            String expectedKey = new SchemaAndValue(Schema.OPTIONAL_BYTES_SCHEMA,
+                            new byte[] { 1,2,3,4 }).value().toString();
             messageToTopicTest(msg, "TestTopic1/SubTopic",
                             // expected value & key:
-                            "Hello TextMessageToTopicTest1 world!", "test");
+                            "Hello TextMessageToTopicTest1 world!", expectedKey );
        }
         
         @DisplayName("ByteMessage-Topic-SolSampleKeyedMessageProcessor")
