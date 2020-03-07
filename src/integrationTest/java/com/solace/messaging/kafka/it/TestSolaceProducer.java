@@ -1,4 +1,4 @@
-package com.solace.messaging;
+package com.solace.messaging.kafka.it;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +19,7 @@ import com.solacesystems.jcsmp.XMLMessageProducer;
 
 public class TestSolaceProducer {
     
-    static Logger logger = LoggerFactory.getLogger(ConnectorIT.class.getName());
+    static Logger logger = LoggerFactory.getLogger(SourceConnectorIT.class.getName());
     private JCSMPSession session;
     private XMLMessageProducer producer;
 
@@ -60,10 +60,17 @@ public class TestSolaceProducer {
         return bytesMessage;
     }
     
-    public void sendMessageToTopic(String topicName, Message msg) throws JCSMPException {
-        final Topic topic = JCSMPFactory.onlyInstance().createTopic(topicName);
+    public Topic defineTopic(String topicName) {
+        return JCSMPFactory.onlyInstance().createTopic(topicName);
+    }
+    
+    public Queue defineQueue(String queueName) {
+        return JCSMPFactory.onlyInstance().createQueue(queueName);
+    }
+    
+    public void sendMessageToTopic(Topic topic, Message msg) throws JCSMPException {
         producer.send(msg,topic);
-        logger.info("Message sent to Solace topic " + topic);
+        logger.info("Message sent to Solace topic " + topic.toString());
     }
     
     public void provisionQueue(String queueName) throws JCSMPException {
@@ -76,11 +83,10 @@ public class TestSolaceProducer {
         logger.info("Ensured Solace queue " + queueName + " exists.");
     }
     
-    public void sendMessageToQueue(String queueName, Message msg) throws JCSMPException {
-        final Queue queue = JCSMPFactory.onlyInstance().createQueue(queueName);
+    public void sendMessageToQueue(Queue queue, Message msg) throws JCSMPException {
         msg.setDeliveryMode(DeliveryMode.PERSISTENT);
         producer.send(msg,queue);
-        logger.info("Message sent to Solace queue " + queueName);
+        logger.info("Message sent to Solace queue " + queue.toString());
     }
     
     public void close() {

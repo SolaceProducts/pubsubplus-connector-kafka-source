@@ -1,4 +1,4 @@
-package com.solace.messaging;
+package com.solace.messaging.kafka.it;
 
 import java.io.File;
 import java.io.IOException;
@@ -55,6 +55,9 @@ public class SolaceConnectorDeployment  implements TestConstants {
             config.setProperty("sol.queue", SOL_QUEUE);
             config.setProperty("sol.message_processor_class", CONN_MSGPROC_CLASS);
             config.setProperty("sol.kafka_message_key", CONN_KAFKA_MSGKEY);
+            config.setProperty("value.converter", "org.apache.kafka.connect.converters.ByteArrayConverter");
+            config.setProperty("key.converter", "org.apache.kafka.connect.storage.StringConverter");
+
             // Override properties if provided
             if (props != null) {
                 props.forEach((key, value) -> {
@@ -81,6 +84,8 @@ public class SolaceConnectorDeployment  implements TestConstants {
             jobject.addProperty("sol.queue", SOL_QUEUE);
             jobject.addProperty("sol.message_processor_class", CONN_MSGPROC_CLASS);
             jobject.addProperty("sol.kafka_message_key", CONN_KAFKA_MSGKEY);
+            jobject.addProperty("value.converter", "org.apache.kafka.connect.converters.ByteArrayConverter");
+            jobject.addProperty("key.converter", "org.apache.kafka.connect.storage.StringConverter");
             // Override properties if provided
             if (props != null) {
                 props.forEach((key, value) -> {
@@ -105,8 +110,7 @@ public class SolaceConnectorDeployment  implements TestConstants {
             // check presence of Solace plugin: curl
             // http://18.218.82.209:8083/connector-plugins | jq
             Request request = new Request.Builder().url("http://" + connectorAddress + "/connector-plugins").build();
-            Response response;
-                response = client.newCall(request).execute();
+            Response response = client.newCall(request).execute();
             assert (response.isSuccessful());
             String results = response.body().string();
             logger.info("Available connector plugins: " + results);
@@ -131,8 +135,17 @@ public class SolaceConnectorDeployment  implements TestConstants {
             // + configresponse);
             String configresults = configresponse.body().string();
             logger.info("Connector config results: " + configresults);
+
             // check success
-            Thread.sleep(5000); // Give some time to start
+            Request statusrequest = new Request.Builder().url("http://" + connectorAddress + "/connectors/solaceConnector/status").build();
+            Response statusresponse;
+            long starttime=System.currentTimeMillis();
+            do {
+                statusresponse = client.newCall(statusrequest).execute();
+                assert (System.currentTimeMillis()-starttime < 10000l); // don't wait forever
+            } while (!statusresponse.body().string().contains("state\":\"RUNNING"));
+            Thread.sleep(10000); // Give some extra time to start
+            logger.info("Connector is now RUNNING");
         } catch (IOException e) {
             e.printStackTrace();
         } catch (InterruptedException e) {

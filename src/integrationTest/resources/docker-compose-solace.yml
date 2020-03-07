@@ -2,7 +2,7 @@ version: '3.5'
 
 services:
   solbroker:
-    image: solace-pubsub-standard:$PUBSUB_TAG
+    image: solace/solace-pubsub-standard:$PUBSUB_TAG
     hostname: $PUBSUB_HOSTNAME
     env_file:
       - ./solace.env

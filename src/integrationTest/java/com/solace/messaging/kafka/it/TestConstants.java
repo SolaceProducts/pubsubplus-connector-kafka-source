@@ -1,8 +1,8 @@
-package com.solace.messaging;
+package com.solace.messaging.kafka.it;
 
 public interface TestConstants {
 
-    public static final String PUBSUB_TAG = "9.4.0.24";
+    public static final String PUBSUB_TAG = "latest";
     public static final String PUBSUB_HOSTNAME = "solbroker";
     public static final String PUBSUB_NETWORK_NAME = "solace_msg_network";
     public static final String FULL_DOCKER_COMPOSE_FILE_PATH = "src/integrationTest/resources/";

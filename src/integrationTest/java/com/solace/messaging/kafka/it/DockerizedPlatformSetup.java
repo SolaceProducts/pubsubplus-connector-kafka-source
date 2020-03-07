@@ -1,4 +1,4 @@
-package com.solace.messaging;
+package com.solace.messaging.kafka.it;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -14,7 +14,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 
-public class KafkaConnectorDockerizedPlatformSetup implements MessagingServiceFullLocalSetup {
+public class DockerizedPlatformSetup implements MessagingServiceFullLocalSetup {
 
     @DisplayName("Local MessagingService connection tests")
     @Nested

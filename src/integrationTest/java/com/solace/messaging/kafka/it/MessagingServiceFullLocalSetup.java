@@ -1,4 +1,4 @@
-package com.solace.messaging;
+package com.solace.messaging.kafka.it;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
