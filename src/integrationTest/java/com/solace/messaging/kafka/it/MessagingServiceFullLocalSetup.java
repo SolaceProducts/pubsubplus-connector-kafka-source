@@ -57,7 +57,7 @@ public interface MessagingServiceFullLocalSetup  extends TestConstants {
   public static final DockerComposeContainer COMPOSE_CONTAINER_KAFKA =
         new DockerComposeContainer(
             new File(FULL_DOCKER_COMPOSE_FILE_PATH + "docker-compose-kafka.yml"))
-            .withEnv("KAFKA_TOPIC", KAFKA_TOPIC)
+            .withEnv("KAFKA_TOPIC", KAFKA_SOURCE_TOPIC)
             .withEnv("KAFKA_HOST", COMPOSE_CONTAINER_PUBSUBPLUS.getServiceHost("solbroker_1", 8080))
             .withLocalCompose(true)
             .waitingFor("schema-registry_1",

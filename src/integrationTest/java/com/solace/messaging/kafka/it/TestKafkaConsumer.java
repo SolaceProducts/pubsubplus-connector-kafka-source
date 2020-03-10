@@ -23,21 +23,24 @@ public class TestKafkaConsumer {
     public static BlockingQueue<ConsumerRecord<Object, Object>> kafkaReceivedMessages  = new ArrayBlockingQueue<>(10);
     
     private Runnable myConsumerRunnable;
+    private String kafkaTopic;
     Logger logger = LoggerFactory.getLogger(TestKafkaConsumer.class.getName());
     CountDownLatch latch = new CountDownLatch(1);
+    
+    public TestKafkaConsumer(String kafkaTestTopic) {
+        kafkaTopic = kafkaTestTopic;
+    }
 
     public void run() {
-
         String bootstrapServers = MessagingServiceFullLocalSetup.COMPOSE_CONTAINER_KAFKA.getServiceHost("kafka_1", 39092)
                         + ":39092";
         String groupId = "test";
-        String topic = MessagingServiceFullLocalSetup.KAFKA_TOPIC;
 
         // latch for dealing with multiple threads
 
         // create the consumer runnable
         logger.info("Creating the consumer thread");
-        myConsumerRunnable = new ConsumerRunnable(bootstrapServers, groupId, topic, latch);
+        myConsumerRunnable = new ConsumerRunnable(bootstrapServers, groupId, kafkaTopic, latch);
 
         // start the thread
         Thread myThread = new Thread(myConsumerRunnable);
@@ -47,7 +50,6 @@ public class TestKafkaConsumer {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
     }
 
     public void stop() {

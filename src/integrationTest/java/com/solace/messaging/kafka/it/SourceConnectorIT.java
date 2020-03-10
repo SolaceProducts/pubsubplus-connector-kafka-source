@@ -26,10 +26,11 @@ import java.util.concurrent.TimeUnit;
 public class SourceConnectorIT implements TestConstants {
 
     static Logger logger = LoggerFactory.getLogger(SourceConnectorIT.class.getName());
-    static TestKafkaConsumer kafkaConsumer = new TestKafkaConsumer();
-    static TestSolaceProducer solaceProducer = new TestSolaceProducer("tcp://" + MessagingServiceFullLocalSetup.COMPOSE_CONTAINER_PUBSUBPLUS
-                            .getServiceHost("solbroker_1", 55555) + ":55555", "default", "default", "default");
+    // Connectordeployment creates a Kafka topic "kafkaTestTopic", which is used next
     static SolaceConnectorDeployment connectorDeployment = new SolaceConnectorDeployment();
+    static TestKafkaConsumer kafkaConsumer = new TestKafkaConsumer(SolaceConnectorDeployment.kafkaTestTopic);
+    static TestSolaceProducer solaceProducer = new TestSolaceProducer("tcp://" + MessagingServiceFullLocalSetup.COMPOSE_CONTAINER_PUBSUBPLUS
+                    .getServiceHost("solbroker_1", 55555) + ":55555", "default", "default", "default");
     
     ////////////////////////////////////////////////////
     // Main setup/teardown

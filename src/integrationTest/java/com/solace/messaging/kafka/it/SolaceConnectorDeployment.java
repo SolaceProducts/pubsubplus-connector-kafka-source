@@ -4,6 +4,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Properties;
 
 import org.apache.commons.configuration2.Configuration;
@@ -13,6 +16,9 @@ import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
 import org.apache.commons.configuration2.builder.fluent.Parameters;
 import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.io.FileUtils;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.NewTopic;
+import org.apache.kafka.clients.producer.ProducerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +36,22 @@ import okhttp3.Response;
 public class SolaceConnectorDeployment  implements TestConstants {
 
     static Logger logger = LoggerFactory.getLogger(SolaceConnectorDeployment.class.getName());
+
+    static String kafkaTestTopic = KAFKA_SOURCE_TOPIC + "-" + Instant.now().getEpochSecond();
+
+    public SolaceConnectorDeployment() {
+        // Create a new kafka test topic to use
+        String bootstrapServers = MessagingServiceFullLocalSetup.COMPOSE_CONTAINER_KAFKA.getServiceHost("kafka_1", 39092)
+                        + ":39092";
+        Properties properties = new Properties();
+        properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
+        AdminClient adminClient = AdminClient.create(properties);
+        NewTopic newTopic = new NewTopic(kafkaTestTopic, 1, (short)1); //new NewTopic(topicName, numPartitions, replicationFactor)
+        List<NewTopic> newTopics = new ArrayList<NewTopic>();
+        newTopics.add(newTopic);
+        adminClient.createTopics(newTopics);
+        adminClient.close();
+    }
 
     void startConnector() {
         startConnector(null); // Defaults only, no override
@@ -50,7 +72,7 @@ public class SolaceConnectorDeployment  implements TestConstants {
             config.setProperty("sol.username", SOL_ADMINUSER_NAME);
             config.setProperty("sol.password", SOL_ADMINUSER_PW);
             config.setProperty("sol.vpn_name", SOL_VPN);
-            config.setProperty("kafka.topic", KAFKA_TOPIC);
+            config.setProperty("kafka.topic", kafkaTestTopic);
             config.setProperty("sol.topics", SOL_TOPICS);
             config.setProperty("sol.queue", SOL_QUEUE);
             config.setProperty("sol.message_processor_class", CONN_MSGPROC_CLASS);
@@ -79,7 +101,7 @@ public class SolaceConnectorDeployment  implements TestConstants {
             jobject.addProperty("sol.username", SOL_ADMINUSER_NAME);
             jobject.addProperty("sol.password", SOL_ADMINUSER_PW);
             jobject.addProperty("sol.vpn_name", SOL_VPN);
-            jobject.addProperty("kafka.topic", KAFKA_TOPIC);
+            jobject.addProperty("kafka.topic", kafkaTestTopic);
             jobject.addProperty("sol.topics", SOL_TOPICS);
             jobject.addProperty("sol.queue", SOL_QUEUE);
             jobject.addProperty("sol.message_processor_class", CONN_MSGPROC_CLASS);

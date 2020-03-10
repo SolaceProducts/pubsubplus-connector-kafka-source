@@ -21,7 +21,7 @@ public interface TestConstants {
     public static final String SOL_ADMINUSER_NAME = "default";
     public static final String SOL_ADMINUSER_PW = "default";
     public static final String SOL_VPN = "default";
-    public static final String KAFKA_TOPIC = "kafka-test-topic";
+    public static final String KAFKA_SOURCE_TOPIC = "kafka-source-test-topic";
     public static final String SOL_TOPICS = "pubsubplus-test-topic";
     public static final String SOL_QUEUE = "pubsubplus-test-queue";
     public static final String CONN_MSGPROC_CLASS = "com.solace.source.connector.msgprocessors.SolSampleSimpleMessageProcessor";
