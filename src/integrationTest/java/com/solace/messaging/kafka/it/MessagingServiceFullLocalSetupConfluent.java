@@ -29,7 +29,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.containers.wait.strategy.Wait;
 
 @Testcontainers
-public interface MessagingServiceFullLocalSetup  extends TestConstants {
+public interface MessagingServiceFullLocalSetupConfluent  extends TestConstants {
 
   @Container
   public static final DockerComposeContainer COMPOSE_CONTAINER_PUBSUBPLUS =
@@ -56,7 +56,7 @@ public interface MessagingServiceFullLocalSetup  extends TestConstants {
   @Container
   public static final DockerComposeContainer COMPOSE_CONTAINER_KAFKA =
         new DockerComposeContainer(
-            new File(FULL_DOCKER_COMPOSE_FILE_PATH + "docker-compose-kafka.yml"))
+            new File(FULL_DOCKER_COMPOSE_FILE_PATH + "docker-compose-kafka-confluent.yml"))
             .withEnv("KAFKA_TOPIC", KAFKA_SOURCE_TOPIC)
             .withEnv("KAFKA_HOST", COMPOSE_CONTAINER_PUBSUBPLUS.getServiceHost("solbroker_1", 8080))
             .withLocalCompose(true)

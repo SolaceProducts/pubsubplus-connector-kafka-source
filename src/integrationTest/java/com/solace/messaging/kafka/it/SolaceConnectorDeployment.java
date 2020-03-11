@@ -41,7 +41,7 @@ public class SolaceConnectorDeployment  implements TestConstants {
 
     public SolaceConnectorDeployment() {
         // Create a new kafka test topic to use
-        String bootstrapServers = MessagingServiceFullLocalSetup.COMPOSE_CONTAINER_KAFKA.getServiceHost("kafka_1", 39092)
+        String bootstrapServers = MessagingServiceFullLocalSetupConfluent.COMPOSE_CONTAINER_KAFKA.getServiceHost("kafka_1", 39092)
                         + ":39092";
         Properties properties = new Properties();
         properties.setProperty(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, bootstrapServers);
@@ -67,7 +67,7 @@ public class SolaceConnectorDeployment  implements TestConstants {
                                             .configure(params.properties().setFileName(CONNECTORPROPERTIESFILE));
             Configuration config = builder.getConfiguration();
             // Set properties defaults
-            config.setProperty("sol.host", "tcp://" + MessagingServiceFullLocalSetup.COMPOSE_CONTAINER_PUBSUBPLUS
+            config.setProperty("sol.host", "tcp://" + MessagingServiceFullLocalSetupConfluent.COMPOSE_CONTAINER_PUBSUBPLUS
                             .getServiceHost("solbroker_1", 55555) + ":55555");
             config.setProperty("sol.username", SOL_ADMINUSER_NAME);
             config.setProperty("sol.password", SOL_ADMINUSER_PW);
@@ -96,7 +96,7 @@ public class SolaceConnectorDeployment  implements TestConstants {
             JsonElement jconfig = jtree.getAsJsonObject().get("config");
             JsonObject jobject = jconfig.getAsJsonObject();
             // Set properties defaults
-            jobject.addProperty("sol.host", "tcp://" + MessagingServiceFullLocalSetup.COMPOSE_CONTAINER_PUBSUBPLUS
+            jobject.addProperty("sol.host", "tcp://" + MessagingServiceFullLocalSetupConfluent.COMPOSE_CONTAINER_PUBSUBPLUS
                             .getServiceHost("solbroker_1", 55555) + ":55555");
             jobject.addProperty("sol.username", SOL_ADMINUSER_NAME);
             jobject.addProperty("sol.password", SOL_ADMINUSER_PW);
@@ -127,7 +127,7 @@ public class SolaceConnectorDeployment  implements TestConstants {
         try {
             OkHttpClient client = new OkHttpClient();
             // TODO: Fix to correct way to determine host! 
-            String connectorAddress = MessagingServiceFullLocalSetup.COMPOSE_CONTAINER_KAFKA
+            String connectorAddress = MessagingServiceFullLocalSetupConfluent.COMPOSE_CONTAINER_KAFKA
                                 .getServiceHost("kafka_1", 9092) + ":28083";
             // check presence of Solace plugin: curl
             // http://18.218.82.209:8083/connector-plugins | jq

@@ -29,7 +29,7 @@ public class SourceConnectorIT implements TestConstants {
     // Connectordeployment creates a Kafka topic "kafkaTestTopic", which is used next
     static SolaceConnectorDeployment connectorDeployment = new SolaceConnectorDeployment();
     static TestKafkaConsumer kafkaConsumer = new TestKafkaConsumer(SolaceConnectorDeployment.kafkaTestTopic);
-    static TestSolaceProducer solaceProducer = new TestSolaceProducer("tcp://" + MessagingServiceFullLocalSetup.COMPOSE_CONTAINER_PUBSUBPLUS
+    static TestSolaceProducer solaceProducer = new TestSolaceProducer("tcp://" + MessagingServiceFullLocalSetupConfluent.COMPOSE_CONTAINER_PUBSUBPLUS
                     .getServiceHost("solbroker_1", 55555) + ":55555", "default", "default", "default");
     
     ////////////////////////////////////////////////////

@@ -32,7 +32,7 @@ public class TestKafkaConsumer {
     }
 
     public void run() {
-        String bootstrapServers = MessagingServiceFullLocalSetup.COMPOSE_CONTAINER_KAFKA.getServiceHost("kafka_1", 39092)
+        String bootstrapServers = MessagingServiceFullLocalSetupConfluent.COMPOSE_CONTAINER_KAFKA.getServiceHost("kafka_1", 39092)
                         + ":39092";
         String groupId = "test";
 
