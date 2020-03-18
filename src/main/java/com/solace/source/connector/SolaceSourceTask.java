@@ -239,4 +239,9 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
 
   }
 
+  // For testing only
+  public JCSMPSession getSolSession() {
+    return this.session;
+  }
+  
 }
