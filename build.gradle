@@ -47,7 +47,7 @@ dependencies {
     integrationTestImplementation 'commons-io:commons-io:2.4'
     integrationTestImplementation 'com.squareup.okhttp3:okhttp:4.4.0'
     integrationTestImplementation 'org.apache.kafka:kafka-clients:2.4.1'
-    compileOnly "org.apache.kafka:connect-api:$kafkaVersion"
+    compile "org.apache.kafka:connect-api:$kafkaVersion"
     compile "com.solacesystems:sol-jcsmp:$solaceJavaAPIVersion"
 }
 
