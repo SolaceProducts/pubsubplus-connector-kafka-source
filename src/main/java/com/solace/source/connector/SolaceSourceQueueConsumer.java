@@ -38,22 +38,19 @@ import org.slf4j.LoggerFactory;
 
 public class SolaceSourceQueueConsumer {
   private static final Logger log = LoggerFactory.getLogger(SolaceSourceQueueConsumer.class);
-  private SolaceSourceConfig lconfig;
-  private BlockingQueue<BytesXMLMessage> squeue;
+  private SolaceSourceConnectorConfig lconfig;
   private Queue solQueue;
   private FlowReceiver recv;
+  private SolMessageQueueCallbackHandler callbackhandler;
 
-  // SolaceSourceQueueConsumer(SolaceSourceConfig lconfig,
-  // BlockingQueue<SolMessageProcessor> squeue) {
-  SolaceSourceQueueConsumer(SolaceSourceConfig lconfig, BlockingQueue<BytesXMLMessage> squeue) {
+  SolaceSourceQueueConsumer(SolaceSourceConnectorConfig lconfig) {
     this.lconfig = lconfig;
-    this.squeue = squeue;
   }
 
   /**
    * Initializes the JCSMP Session.
    */
-  public boolean init(JCSMPSession session) {
+  public boolean init(JCSMPSession session, BlockingQueue<BytesXMLMessage> squeue) {
     solQueue = JCSMPFactory.onlyInstance()
         .createQueue(lconfig.getString(SolaceSourceConstants.SOl_QUEUE));
     final ConsumerFlowProperties flow_prop = new ConsumerFlowProperties();
@@ -63,18 +60,17 @@ public class SolaceSourceQueueConsumer {
     EndpointProperties endpointProps = new EndpointProperties();
     endpointProps.setAccessType(EndpointProperties.ACCESSTYPE_NONEXCLUSIVE);
     try {
-
-      recv = session.createFlow(new SolMessageQueueCallbackHandler(squeue), 
-          flow_prop, 
-          endpointProps,
-          new SolFlowEventCallBackHandler());
+      callbackhandler = new SolMessageQueueCallbackHandler(squeue);
+      recv = session.createFlow(callbackhandler, 
+                                flow_prop, 
+                                endpointProps,
+                                new SolFlowEventCallBackHandler());
       recv.start();
     } catch (JCSMPException je) {
       log.info("===========JCSMP Exception while creating Solace Flow to Queue "
           + "in SolaceSourceQueueConsumer {} \n",
           je.getLocalizedMessage());
     }
-
     return true;
   }
 
@@ -87,7 +83,9 @@ public class SolaceSourceQueueConsumer {
     if (recv != null) {
       recv.close();
     }
+    if (callbackhandler != null ) {
+      callbackhandler.shutdown(); // Must remove reference to squeue
+    }
     return true;
-
   }
 }

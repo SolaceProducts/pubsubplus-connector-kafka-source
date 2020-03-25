@@ -29,8 +29,7 @@ public class SourceConnectorIT implements TestConstants {
     // Connectordeployment creates a Kafka topic "kafkaTestTopic", which is used next
     static SolaceConnectorDeployment connectorDeployment = new SolaceConnectorDeployment();
     static TestKafkaConsumer kafkaConsumer = new TestKafkaConsumer(SolaceConnectorDeployment.kafkaTestTopic);
-    static TestSolaceProducer solaceProducer = new TestSolaceProducer("tcp://" + MessagingServiceFullLocalSetupConfluent.COMPOSE_CONTAINER_PUBSUBPLUS
-                    .getServiceHost("solbroker_1", 55555) + ":55555", "default", "default", "default");
+    static TestSolaceProducer solaceProducer = new TestSolaceProducer();
     
     ////////////////////////////////////////////////////
     // Main setup/teardown
@@ -116,6 +115,8 @@ public class SourceConnectorIT implements TestConstants {
             Properties prop = new Properties();
             prop.setProperty("sol.message_processor_class", "com.solace.source.connector.msgprocessors.SolSampleSimpleMessageProcessor");
             prop.setProperty("sol.topics", "TestTopic1/SubTopic");
+            prop.setProperty("sol.username", "test");
+            prop.setProperty("sol.password", "test");
             connectorDeployment.startConnector(prop);
         }
 
@@ -123,6 +124,12 @@ public class SourceConnectorIT implements TestConstants {
         @DisplayName("TextMessage-Topic-SolSampleSimpleMessageProcessor")
         @Test
         void kafkaConsumerTextMessageToTopicTest() {
+//            try {
+//                Thread.sleep(100000000);
+//            } catch (InterruptedException e) {
+//                // TODO Auto-generated catch block
+//                e.printStackTrace();
+//            }
             TextMessage msg = solaceProducer.createTextMessage("Hello TextMessageToTopicTest world!");
             messageToKafkaTest(msg, solaceProducer.defineTopic("TestTopic1/SubTopic"),
                             // expected value & key:

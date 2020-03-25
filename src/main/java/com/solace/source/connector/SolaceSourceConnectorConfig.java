@@ -28,14 +28,14 @@ import org.apache.kafka.common.config.ConfigDef.Type;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SolaceSourceConfig extends AbstractConfig {
+public class SolaceSourceConnectorConfig extends AbstractConfig {
 
-  private static final Logger log = LoggerFactory.getLogger(SolaceSourceConfig.class);
+  private static final Logger log = LoggerFactory.getLogger(SolaceSourceConnectorConfig.class);
   
   /**
    * Constructor to create Solace Configuration details for Source Connector.
    */
-  public SolaceSourceConfig(Map<String, String> properties) {
+  public SolaceSourceConnectorConfig(Map<String, String> properties) {
     super(config, properties);
 
     log.info("==================Initialize Connector properties");

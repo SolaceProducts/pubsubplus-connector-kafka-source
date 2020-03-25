@@ -34,7 +34,7 @@ public class SolaceSourceConnector extends SourceConnector {
 
   private static final Logger log = LoggerFactory.getLogger(SolaceSourceConnector.class);
 
-  SolaceSourceConfig mconfig;
+  SolaceSourceConnectorConfig mconfig;
   private Map<String, String> mconfigProperties;
 
   @Override
@@ -51,7 +51,7 @@ public class SolaceSourceConnector extends SourceConnector {
       
     log.info("==================== Start a SolaceSourceConnector");
     mconfigProperties = props;
-    mconfig = new SolaceSourceConfig(props);
+    mconfig = new SolaceSourceConnectorConfig(props);
     
 
   }
@@ -82,7 +82,7 @@ public class SolaceSourceConnector extends SourceConnector {
   @Override
   public ConfigDef config() {
     log.info("==================== Requesting Config for  SolaceSourceConnector");
-    return SolaceSourceConfig.config;
+    return SolaceSourceConnectorConfig.config;
   }
 
 }

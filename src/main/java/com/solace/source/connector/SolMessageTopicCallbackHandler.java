@@ -39,7 +39,7 @@ public class SolMessageTopicCallbackHandler implements XMLMessageListener {
    * @param lconfig Connector Configuration
    * @param squeue Blocking Queue
    */
-  public SolMessageTopicCallbackHandler(SolaceSourceConfig lconfig, 
+  public SolMessageTopicCallbackHandler(SolaceSourceConnectorConfig lconfig, 
       BlockingQueue<BytesXMLMessage> squeue) {
     this.squeue = squeue;
     log.debug("===Constructor for SolMessageTopicProcessor");
@@ -54,12 +54,15 @@ public class SolMessageTopicCallbackHandler implements XMLMessageListener {
   }
 
   @Override
-  public void onReceive(BytesXMLMessage msg) {
+  synchronized public void onReceive(BytesXMLMessage msg) {
     log.debug("=================Received Message");
-
-
-    squeue.add(msg);
-
+    if (squeue != null) {
+      squeue.add(msg);
+    }
+  }
+  
+  synchronized public void shutdown() {
+    squeue = null;
   }
 
 }

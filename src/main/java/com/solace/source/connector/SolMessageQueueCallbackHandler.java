@@ -54,10 +54,13 @@ public class SolMessageQueueCallbackHandler implements XMLMessageListener {
   }
 
   @Override
-  public void onReceive(BytesXMLMessage msg) {
+  synchronized public void onReceive(BytesXMLMessage msg) {
     log.debug("=================Received Queue Message");
     squeue.add(msg);
+  }
 
+  synchronized public void shutdown() {
+    squeue = null;
   }
 
 }

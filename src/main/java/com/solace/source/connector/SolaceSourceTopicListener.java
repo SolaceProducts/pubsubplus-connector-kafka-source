@@ -36,37 +36,30 @@ public class SolaceSourceTopicListener {
 
   private static final Logger log = LoggerFactory.getLogger(SolaceSourceTopicListener.class);
 
-  private SolaceSourceConfig lconfig;
+  private SolaceSourceConnectorConfig lconfig;
 
   private String solaceTopics;
   private String[] topics;
   private XMLMessageConsumer cons;
+  SolMessageTopicCallbackHandler callbackhandler;
 
-
-  public BlockingQueue<BytesXMLMessage> squeue;
-
-  /**
-   * Constructor.
-   */
-  public SolaceSourceTopicListener(SolaceSourceConfig lconfig, 
-      BlockingQueue<BytesXMLMessage> squeue) {
+  public SolaceSourceTopicListener(SolaceSourceConnectorConfig lconfig) {
     this.lconfig = lconfig;
-    this.squeue = squeue;
-
   }
 
   /**
    * Initializes JCSMPSession.
    */
-  public boolean init(JCSMPSession session) {
+  public boolean init(JCSMPSession session, BlockingQueue<BytesXMLMessage> squeue) {
 
     boolean topicListenerStarted = true;
     solaceTopics = lconfig.getString(SolaceSourceConstants.SOL_TOPICS);
     topics = solaceTopics.split(",");
 
     try {
+      callbackhandler = new SolMessageTopicCallbackHandler(lconfig, squeue);
       cons = session.getMessageConsumer(new SolReconnectCallbackHandler(),
-          new SolMessageTopicCallbackHandler(lconfig, squeue));
+          callbackhandler );
     } catch (JCSMPException je) {
       log.info("JCSMP Exception in SolaceSourceTopicListener {} \n", je.getLocalizedMessage());
     }
@@ -108,8 +101,10 @@ public class SolaceSourceTopicListener {
     if (cons != null) {
       cons.close();
     }
+    if (callbackhandler != null ) {
+      callbackhandler.shutdown(); // Must remove reference to squeue
+    }
     return true;
-
   }
 
 }

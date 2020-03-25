@@ -25,6 +25,8 @@ import com.solacesystems.jcsmp.JCSMPException;
 import com.solacesystems.jcsmp.JCSMPFactory;
 import com.solacesystems.jcsmp.JCSMPProperties;
 import com.solacesystems.jcsmp.JCSMPSession;
+import com.solacesystems.jcsmp.Context;
+import com.solacesystems.jcsmp.ContextProperties;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,20 +34,18 @@ import org.slf4j.LoggerFactory;
 public class SolSessionCreate {
   private static final Logger log = LoggerFactory.getLogger(SolSessionCreate.class);
 
-  private SolaceSourceConfig lconfig;
+  private SolaceSourceConnectorConfig connectorConfig;
 
   final JCSMPProperties properties = new JCSMPProperties();
   final JCSMPChannelProperties chanProperties = new JCSMPChannelProperties();
   private JCSMPSession session;
+  private Context ctx;
 
-  private enum KeyHeader {
-    NONE, DESTINATION, CORRELATION_ID, CORRELATION_ID_AS_BYTES
-  }
-
-  protected KeyHeader keyheader = KeyHeader.NONE;
-
-  public SolSessionCreate(SolaceSourceConfig lconfig) {
-    this.lconfig = lconfig;
+  public SolSessionCreate(SolaceSourceConnectorConfig connectorConfig) {
+    this.connectorConfig = connectorConfig;
+    ContextProperties ctx_prop = new ContextProperties();
+    ctx_prop.setName(Thread.currentThread().getName());  // unique name
+    ctx = JCSMPFactory.onlyInstance().createContext(ctx_prop);
   }
 
   /**
@@ -54,104 +54,104 @@ public class SolSessionCreate {
   public void configureSession() {
     // Required Properties
     properties.setProperty(JCSMPProperties.USERNAME, 
-        lconfig.getString(SolaceSourceConstants.SOL_USERNAME));
+        connectorConfig.getString(SolaceSourceConstants.SOL_USERNAME));
     properties.setProperty(JCSMPProperties.PASSWORD, 
-        lconfig.getString(SolaceSourceConstants.SOL_PASSWORD));
+        connectorConfig.getString(SolaceSourceConstants.SOL_PASSWORD));
     properties.setProperty(JCSMPProperties.VPN_NAME, 
-        lconfig.getString(SolaceSourceConstants.SOL_VPN_NAME));
-    properties.setProperty(JCSMPProperties.HOST, lconfig.getString(SolaceSourceConstants.SOL_HOST));
+        connectorConfig.getString(SolaceSourceConstants.SOL_VPN_NAME));
+    properties.setProperty(JCSMPProperties.HOST, connectorConfig.getString(SolaceSourceConstants.SOL_HOST));
 
     // Channel Properties
-    chanProperties.setConnectTimeoutInMillis(lconfig.getInt(SolaceSourceConstants
+    chanProperties.setConnectTimeoutInMillis(connectorConfig.getInt(SolaceSourceConstants
         .SOL_CHANNEL_PROPERTY_connectTimeoutInMillis));
-    chanProperties.setReadTimeoutInMillis(lconfig
+    chanProperties.setReadTimeoutInMillis(connectorConfig
         .getInt(SolaceSourceConstants.SOL_CHANNEL_PROPERTY_readTimeoutInMillis));
-    chanProperties.setConnectRetries(lconfig.getInt(SolaceSourceConstants
+    chanProperties.setConnectRetries(connectorConfig.getInt(SolaceSourceConstants
         .SOL_CHANNEL_PROPERTY_connectRetries));
-    chanProperties.setReconnectRetries(lconfig.getInt(SolaceSourceConstants
+    chanProperties.setReconnectRetries(connectorConfig.getInt(SolaceSourceConstants
         .SOL_CHANNEL_PROPERTY_reconnectRetries));
     ;
-    chanProperties.setConnectRetriesPerHost(lconfig.getInt(SolaceSourceConstants
+    chanProperties.setConnectRetriesPerHost(connectorConfig.getInt(SolaceSourceConstants
         .SOL_CHANNEL_PROPERTY_connectRetriesPerHost));
     chanProperties.setReconnectRetryWaitInMillis(
-        lconfig.getInt(SolaceSourceConstants.SOL_CHANNEL_PROPERTY_reconnectRetryWaitInMillis));
+        connectorConfig.getInt(SolaceSourceConstants.SOL_CHANNEL_PROPERTY_reconnectRetryWaitInMillis));
     chanProperties.setKeepAliveIntervalInMillis(
-        lconfig.getInt(SolaceSourceConstants.SOL_CHANNEL_PROPERTY_keepAliveIntervalInMillis));
-    chanProperties.setKeepAliveLimit(lconfig.getInt(SolaceSourceConstants
+        connectorConfig.getInt(SolaceSourceConstants.SOL_CHANNEL_PROPERTY_keepAliveIntervalInMillis));
+    chanProperties.setKeepAliveLimit(connectorConfig.getInt(SolaceSourceConstants
         .SOL_CHANNEL_PROPERTY_keepAliveLimit));
-    chanProperties.setSendBuffer(lconfig.getInt(SolaceSourceConstants
+    chanProperties.setSendBuffer(connectorConfig.getInt(SolaceSourceConstants
         .SOL_CHANNEL_PROPERTY_sendBuffer));
-    chanProperties.setReceiveBuffer(lconfig.getInt(SolaceSourceConstants
+    chanProperties.setReceiveBuffer(connectorConfig.getInt(SolaceSourceConstants
         .SOL_CHANNEL_PROPERTY_receiveBuffer));
-    chanProperties.setTcpNoDelay(lconfig.getBoolean(SolaceSourceConstants
+    chanProperties.setTcpNoDelay(connectorConfig.getBoolean(SolaceSourceConstants
         .SOL_CHANNEL_PROPERTY_tcpNoDelay));
-    chanProperties.setCompressionLevel(lconfig.getInt(SolaceSourceConstants
+    chanProperties.setCompressionLevel(connectorConfig.getInt(SolaceSourceConstants
         .SOL_CHANNEL_PROPERTY_compressionLevel));
     // Add channel properties to Session Properties
     properties.setProperty(JCSMPProperties.CLIENT_CHANNEL_PROPERTIES, chanProperties);
 
     properties.setProperty(JCSMPProperties.REAPPLY_SUBSCRIPTIONS,
-        lconfig.getBoolean(SolaceSourceConstants.SOL_REAPPLY_SUBSCRIPTIONS));
+        connectorConfig.getBoolean(SolaceSourceConstants.SOL_REAPPLY_SUBSCRIPTIONS));
     properties.setBooleanProperty(JCSMPProperties.GENERATE_SEND_TIMESTAMPS,
-        lconfig.getBoolean(SolaceSourceConstants.SOL_GENERATE_SEND_TIMESTAMPS));
+        connectorConfig.getBoolean(SolaceSourceConstants.SOL_GENERATE_SEND_TIMESTAMPS));
     properties.setBooleanProperty(JCSMPProperties.GENERATE_RCV_TIMESTAMPS,
-        lconfig.getBoolean(SolaceSourceConstants.SOL_GENERATE_RCV_TIMESTAMPS));
+        connectorConfig.getBoolean(SolaceSourceConstants.SOL_GENERATE_RCV_TIMESTAMPS));
     properties.setIntegerProperty(JCSMPProperties.SUB_ACK_WINDOW_SIZE,
-        lconfig.getInt(SolaceSourceConstants.SOL_SUB_ACK_WINDOW_SIZE));
+        connectorConfig.getInt(SolaceSourceConstants.SOL_SUB_ACK_WINDOW_SIZE));
     properties.setBooleanProperty(JCSMPProperties.GENERATE_SEQUENCE_NUMBERS,
-        lconfig.getBoolean(SolaceSourceConstants.SOL_GENERATE_SEQUENCE_NUMBERS));
+        connectorConfig.getBoolean(SolaceSourceConstants.SOL_GENERATE_SEQUENCE_NUMBERS));
     properties.setBooleanProperty(JCSMPProperties.CALCULATE_MESSAGE_EXPIRATION,
-        lconfig.getBoolean(SolaceSourceConstants.SOL_CALCULATE_MESSAGE_EXPIRATION));
+        connectorConfig.getBoolean(SolaceSourceConstants.SOL_CALCULATE_MESSAGE_EXPIRATION));
     properties.setBooleanProperty(JCSMPProperties.PUB_MULTI_THREAD,
-        lconfig.getBoolean(SolaceSourceConstants.SOL_PUB_MULTI_THREAD));
+        connectorConfig.getBoolean(SolaceSourceConstants.SOL_PUB_MULTI_THREAD));
     properties.setBooleanProperty(JCSMPProperties.MESSAGE_CALLBACK_ON_REACTOR,
-        lconfig.getBoolean(SolaceSourceConstants.SOL_MESSAGE_CALLBACK_ON_REACTOR));
+        connectorConfig.getBoolean(SolaceSourceConstants.SOL_MESSAGE_CALLBACK_ON_REACTOR));
     properties.setBooleanProperty(JCSMPProperties.IGNORE_DUPLICATE_SUBSCRIPTION_ERROR,
-        lconfig.getBoolean(SolaceSourceConstants.SOL_IGNORE_DUPLICATE_SUBSCRIPTION_ERROR));
+        connectorConfig.getBoolean(SolaceSourceConstants.SOL_IGNORE_DUPLICATE_SUBSCRIPTION_ERROR));
     properties.setBooleanProperty(JCSMPProperties.IGNORE_SUBSCRIPTION_NOT_FOUND_ERROR,
-        lconfig.getBoolean(SolaceSourceConstants.SOL_IGNORE_SUBSCRIPTION_NOT_FOUND_ERROR));
+        connectorConfig.getBoolean(SolaceSourceConstants.SOL_IGNORE_SUBSCRIPTION_NOT_FOUND_ERROR));
     properties.setBooleanProperty(JCSMPProperties
-        .NO_LOCAL, lconfig.getBoolean(SolaceSourceConstants.SOL_NO_LOCAL));
+        .NO_LOCAL, connectorConfig.getBoolean(SolaceSourceConstants.SOL_NO_LOCAL));
     properties.setProperty(JCSMPProperties.AUTHENTICATION_SCHEME,
-        lconfig.getString(SolaceSourceConstants.SOl_AUTHENTICATION_SCHEME));
+        connectorConfig.getString(SolaceSourceConstants.SOl_AUTHENTICATION_SCHEME));
     properties.setProperty(JCSMPProperties.KRB_SERVICE_NAME,
-        lconfig.getString(SolaceSourceConstants.SOL_KRB_SERVICE_NAME));
+        connectorConfig.getString(SolaceSourceConstants.SOL_KRB_SERVICE_NAME));
     properties.setProperty(JCSMPProperties.SSL_CONNECTION_DOWNGRADE_TO,
-        lconfig.getString(SolaceSourceConstants.SOL_SSL_CONNECTION_DOWNGRADE_TO));
+        connectorConfig.getString(SolaceSourceConstants.SOL_SSL_CONNECTION_DOWNGRADE_TO));
     properties.setIntegerProperty(JCSMPProperties.SUBSCRIBER_LOCAL_PRIORITY,
-        lconfig.getInt(SolaceSourceConstants.SOL_SUBSCRIBER_LOCAL_PRIORITY));
+        connectorConfig.getInt(SolaceSourceConstants.SOL_SUBSCRIBER_LOCAL_PRIORITY));
     properties.setIntegerProperty(JCSMPProperties.SUBSCRIBER_NETWORK_PRIORITY,
-        lconfig.getInt(SolaceSourceConstants.SOL_SUBSCRIBER_NETWORK_PRIORITY));
+        connectorConfig.getInt(SolaceSourceConstants.SOL_SUBSCRIBER_NETWORK_PRIORITY));
 
     // Use SSL for connection, make sure to use the SSL port for the Solace PubSub+
     // broker connection URL
     log.info("=============Attempting to use SSL for PubSub+ connection");
-    if (!(lconfig.getString(SolaceSourceConstants.SOL_SSL_CIPHER_SUITES).equals(""))) {
+    if (!(connectorConfig.getString(SolaceSourceConstants.SOL_SSL_CIPHER_SUITES).equals(""))) {
       properties.setProperty(JCSMPProperties.SSL_CIPHER_SUITES,
-          lconfig.getString(SolaceSourceConstants.SOL_SSL_CIPHER_SUITES));
+          connectorConfig.getString(SolaceSourceConstants.SOL_SSL_CIPHER_SUITES));
     }
     properties.setProperty(JCSMPProperties.SSL_VALIDATE_CERTIFICATE,
-        lconfig.getBoolean(SolaceSourceConstants.SOL_SSL_VALIDATE_CERTIFICATE));
+        connectorConfig.getBoolean(SolaceSourceConstants.SOL_SSL_VALIDATE_CERTIFICATE));
     properties.setProperty(JCSMPProperties.SSL_VALIDATE_CERTIFICATE_DATE,
-        lconfig.getBoolean(SolaceSourceConstants.SOL_SSL_VALIDATE_CERTIFICATE_DATE));
+        connectorConfig.getBoolean(SolaceSourceConstants.SOL_SSL_VALIDATE_CERTIFICATE_DATE));
     properties.setProperty(JCSMPProperties.SSL_TRUST_STORE,
-        lconfig.getString(SolaceSourceConstants.SOL_SSL_TRUST_STORE));
+        connectorConfig.getString(SolaceSourceConstants.SOL_SSL_TRUST_STORE));
     properties.setProperty(JCSMPProperties.SSL_TRUST_STORE_PASSWORD,
-        lconfig.getString(SolaceSourceConstants.SOL_SSL_TRUST_STORE_PASSWORD));
+        connectorConfig.getString(SolaceSourceConstants.SOL_SSL_TRUST_STORE_PASSWORD));
     properties.setProperty(JCSMPProperties.SSL_TRUST_STORE_FORMAT,
-        lconfig.getString(SolaceSourceConstants.SOL_SSL_TRUST_STORE_FORMAT));
+        connectorConfig.getString(SolaceSourceConstants.SOL_SSL_TRUST_STORE_FORMAT));
     properties.setProperty(JCSMPProperties.SSL_TRUSTED_COMMON_NAME_LIST,
-        lconfig.getString(SolaceSourceConstants.SOL_SSL_TRUSTED_COMMON_NAME_LIST));
+        connectorConfig.getString(SolaceSourceConstants.SOL_SSL_TRUSTED_COMMON_NAME_LIST));
     properties.setProperty(JCSMPProperties
-        .SSL_KEY_STORE, lconfig.getString(SolaceSourceConstants.SOL_SSL_KEY_STORE));
+        .SSL_KEY_STORE, connectorConfig.getString(SolaceSourceConstants.SOL_SSL_KEY_STORE));
     properties.setProperty(JCSMPProperties.SSL_KEY_STORE_PASSWORD,
-        lconfig.getString(SolaceSourceConstants.SOL_SSL_KEY_STORE_PASSWORD));
+        connectorConfig.getString(SolaceSourceConstants.SOL_SSL_KEY_STORE_PASSWORD));
     properties.setProperty(JCSMPProperties.SSL_KEY_STORE_FORMAT,
-        lconfig.getString(SolaceSourceConstants.SOL_SSL_KEY_STORE_FORMAT));
+        connectorConfig.getString(SolaceSourceConstants.SOL_SSL_KEY_STORE_FORMAT));
     properties.setProperty(JCSMPProperties.SSL_KEY_STORE_NORMALIZED_FORMAT,
-        lconfig.getString(SolaceSourceConstants.SOL_SSL_KEY_STORE_NORMALIZED_FORMAT));
+        connectorConfig.getString(SolaceSourceConstants.SOL_SSL_KEY_STORE_NORMALIZED_FORMAT));
     properties.setProperty(JCSMPProperties.SSL_PRIVATE_KEY_PASSWORD,
-        lconfig.getString(SolaceSourceConstants.SOL_SSL_PRIVATE_KEY_PASSWORD));
+        connectorConfig.getString(SolaceSourceConstants.SOL_SSL_PRIVATE_KEY_PASSWORD));
 
     // }
   }
@@ -163,29 +163,23 @@ public class SolSessionCreate {
   public boolean connectSession() {
     
     System.setProperty("java.security.auth.login.config",
-        lconfig.getString(SolaceSourceConstants.SOL_KERBEROS_LOGIN_CONFIG));
+        connectorConfig.getString(SolaceSourceConstants.SOL_KERBEROS_LOGIN_CONFIG));
     System.setProperty("java.security.krb5.conf",
-        lconfig.getString(SolaceSourceConstants.SOL_KERBEROS_KRB5_CONFIG));
-
-    boolean connected = false;
+        connectorConfig.getString(SolaceSourceConstants.SOL_KERBEROS_KRB5_CONFIG));
+    
     try {
-      session = JCSMPFactory.onlyInstance(
-          ).createSession(properties, null, new SolSessionEventCallbackHandler());
+      session = JCSMPFactory.onlyInstance().createSession(properties, ctx, new SolSessionEventCallbackHandler());
+      session.connect();
     } catch (InvalidPropertiesException e) {
-      connected = false;
       log.info("Received Solace excepetion {}, with the "
           + "following: {} ", e.getCause(), e.getStackTrace());
-    }
-    try {
-      session.connect();
-      connected = true;
+      return false;
     } catch (JCSMPException e) {
       log.info("Received Solace excepetion {}, with the "
           + "following: {} ", e.getCause(), e.getStackTrace());
-      connected = false;
+      return false;
     }
-    return connected;
-
+    return true;
   }
 
   public JCSMPSession getSession() {
@@ -198,9 +192,14 @@ public class SolSessionCreate {
    */
   public boolean shutdown() {
     
-    session.closeSession();
+    Context context = JCSMPFactory.onlyInstance().getDefaultContext();
+    if ( session != null ) {
+      session.closeSession();
+    }
+    if ( ctx != null ) {
+      ctx.destroy();
+    }
+    session = null;
     return true;
-
   }
-
 }
