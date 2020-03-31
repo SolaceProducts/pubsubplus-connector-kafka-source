@@ -26,7 +26,6 @@ import com.solacesystems.jcsmp.FlowReceiver;
 import com.solacesystems.jcsmp.JCSMPException;
 import com.solacesystems.jcsmp.JCSMPFactory;
 import com.solacesystems.jcsmp.JCSMPProperties;
-import com.solacesystems.jcsmp.JCSMPSession;
 import com.solacesystems.jcsmp.Queue;
 
 import java.util.concurrent.BlockingQueue;
@@ -34,58 +33,51 @@ import java.util.concurrent.BlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-
-
 public class SolaceSourceQueueConsumer {
   private static final Logger log = LoggerFactory.getLogger(SolaceSourceQueueConsumer.class);
   private SolaceSourceConnectorConfig lconfig;
   private Queue solQueue;
   private FlowReceiver recv;
   private SolMessageQueueCallbackHandler callbackhandler;
+  private SolSessionHandler solSessionHandler;
 
-  SolaceSourceQueueConsumer(SolaceSourceConnectorConfig lconfig) {
+  SolaceSourceQueueConsumer(SolaceSourceConnectorConfig lconfig, SolSessionHandler solSessionHandler) {
     this.lconfig = lconfig;
+    this.solSessionHandler = solSessionHandler;
   }
 
-  /**
-   * Initializes the JCSMP Session.
-   */
-  public boolean init(JCSMPSession session, BlockingQueue<BytesXMLMessage> squeue) {
-    solQueue = JCSMPFactory.onlyInstance()
-        .createQueue(lconfig.getString(SolaceSourceConstants.SOl_QUEUE));
+  public boolean init(BlockingQueue<BytesXMLMessage> squeue) {
+    solQueue = JCSMPFactory.onlyInstance().createQueue(lconfig.getString(SolaceSourceConstants.SOl_QUEUE));
     final ConsumerFlowProperties flow_prop = new ConsumerFlowProperties();
     flow_prop.setEndpoint(solQueue);
-    flow_prop.setAckMode(JCSMPProperties.SUPPORTED_MESSAGE_ACK_CLIENT);
+    flow_prop.setAckMode(JCSMPProperties.SUPPORTED_MESSAGE_ACK_CLIENT); // Will explicitly ack at commit
     flow_prop.setStartState(true);
     EndpointProperties endpointProps = new EndpointProperties();
     endpointProps.setAccessType(EndpointProperties.ACCESSTYPE_NONEXCLUSIVE);
     try {
       callbackhandler = new SolMessageQueueCallbackHandler(squeue);
-      recv = session.createFlow(callbackhandler, 
-                                flow_prop, 
-                                endpointProps,
-                                new SolFlowEventCallBackHandler());
+      recv = solSessionHandler.getSession().createFlow(callbackhandler, flow_prop, endpointProps,
+          new SolFlowEventCallBackHandler());
       recv.start();
     } catch (JCSMPException je) {
-      log.info("===========JCSMP Exception while creating Solace Flow to Queue "
-          + "in SolaceSourceQueueConsumer {} \n",
+      log.info("=========== JCSMP Exception while creating Solace Flow to Queue " + "in SolaceSourceQueueConsumer {} \n",
           je.getLocalizedMessage());
     }
     return true;
   }
 
-  /**
-   * Shuts down the Solace Receiver.
-   * 
-   * <p>@return
-   */
-  public boolean shutdown() {
+  public void stop() {
+    if (recv != null) {
+      recv.stop();
+    }
+  }
+
+  public void shutdown() {
     if (recv != null) {
       recv.close();
     }
-    if (callbackhandler != null ) {
+    if (callbackhandler != null) {
       callbackhandler.shutdown(); // Must remove reference to squeue
     }
-    return true;
   }
 }

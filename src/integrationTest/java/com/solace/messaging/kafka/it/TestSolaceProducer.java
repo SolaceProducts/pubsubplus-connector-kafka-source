@@ -74,14 +74,20 @@ public class TestSolaceProducer {
         logger.info("Message sent to Solace topic " + topic.toString());
     }
     
-    public void provisionQueue(String queueName) throws JCSMPException {
-        final Queue queue = JCSMPFactory.onlyInstance().createQueue(queueName);
-        // Provision queue in case it doesn't exist, and do not fail if it already exists
-        final EndpointProperties endpointProps = new EndpointProperties();
-        endpointProps.setPermission(EndpointProperties.PERMISSION_CONSUME);
-        endpointProps.setAccessType(EndpointProperties.ACCESSTYPE_EXCLUSIVE);
-        session.provision(queue, endpointProps, JCSMPSession.FLAG_IGNORE_ALREADY_EXISTS);
-        logger.info("Ensured Solace queue " + queueName + " exists.");
+    public void resetQueue(String queueName) {
+        try {
+          final Queue queue = JCSMPFactory.onlyInstance().createQueue(queueName);
+          // First remove existing queue potentially containing remainings from other tests
+          session.deprovision(queue, JCSMPSession.FLAG_IGNORE_DOES_NOT_EXIST);
+          // Provision new queue
+          final EndpointProperties endpointProps = new EndpointProperties();
+          endpointProps.setPermission(EndpointProperties.PERMISSION_CONSUME);
+          endpointProps.setAccessType(EndpointProperties.ACCESSTYPE_NONEXCLUSIVE);
+          session.provision(queue, endpointProps, JCSMPSession.FLAG_IGNORE_ALREADY_EXISTS);
+          logger.info("Reset Solace queue " + queueName);
+        } catch (JCSMPException e) {
+          e.printStackTrace();
+        }
     }
     
     public void sendMessageToQueue(Queue queue, Message msg) throws JCSMPException {

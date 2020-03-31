@@ -29,9 +29,9 @@ public class DockerizedPlatformSetupConfluent implements MessagingServiceFullLoc
                         .withExposedPorts(28083,5005)
                         .withEnv("CONNECT_REST_PORT", "28083")
 //
-                        // Enable remote debug session at default port 5005
-                        .withEnv("KAFKA_DEBUG", "y")
-                        .withEnv("DEBUG_SUSPEND_FLAG", "y")
+//                        // Enable remote debug session at default port 5005
+//                        .withEnv("KAFKA_DEBUG", "y")
+//                        .withEnv("DEBUG_SUSPEND_FLAG", "y")
 //
                         .withEnv("CONNECT_GROUP_ID", "testconnect-avro")
                         .withEnv("CONNECT_CONFIG_STORAGE_TOPIC", "testconnect-avro-config")
@@ -40,6 +40,7 @@ public class DockerizedPlatformSetupConfluent implements MessagingServiceFullLoc
                         .withEnv("CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR", "1")
                         .withEnv("CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR", "1")
                         .withEnv("CONNECT_STATUS_STORAGE_REPLICATION_FACTOR", "1")
+//                       .withEnv("CONNECT_OFFSET_FLUSH_INTERVAL_MS", "100")
                         .withEnv("CONNECT_KEY_CONVERTER", "io.confluent.connect.avro.AvroConverter")
                         .withEnv("CONNECT_VALUE_CONVERTER", "io.confluent.connect.avro.AvroConverter")
                         .withEnv("CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL",

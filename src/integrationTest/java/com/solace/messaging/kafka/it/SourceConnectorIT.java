@@ -43,13 +43,6 @@ public class SourceConnectorIT implements TestConstants {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
-
-        // Ensure test queue exists on PubSub+
-        try {
-            solaceProducer.provisionQueue(SOL_QUEUE);
-        } catch (JCSMPException e1) {
-            e1.printStackTrace();
-        }
     }
 
     @AfterAll
@@ -112,6 +105,7 @@ public class SourceConnectorIT implements TestConstants {
         
         @BeforeAll
         void setUp() {
+            solaceProducer.resetQueue(SOL_QUEUE);
             Properties prop = new Properties();
             prop.setProperty("sol.message_processor_class", "com.solace.source.connector.msgprocessors.SolSampleSimpleMessageProcessor");
             prop.setProperty("sol.topics", "TestTopic1/SubTopic");
@@ -124,26 +118,20 @@ public class SourceConnectorIT implements TestConstants {
         @DisplayName("TextMessage-Topic-SolSampleSimpleMessageProcessor")
         @Test
         void kafkaConsumerTextMessageToTopicTest() {
-//            try {
-//                Thread.sleep(100000000);
-//            } catch (InterruptedException e) {
-//                // TODO Auto-generated catch block
-//                e.printStackTrace();
-//            }
-            TextMessage msg = solaceProducer.createTextMessage("Hello TextMessageToTopicTest world!");
+            TextMessage msg = solaceProducer.createTextMessage("1-Hello TextMessageToTopicTest world!");
             messageToKafkaTest(msg, solaceProducer.defineTopic("TestTopic1/SubTopic"),
                             // expected value & key:
-                            "Hello TextMessageToTopicTest world!", null);
+                            "1-Hello TextMessageToTopicTest world!", null);
         }
         
         @DisplayName("ByteMessage-Topic-SolSampleSimpleMessageProcessor")
         @Test
         void kafkaConsumerByteMessageToTopicTest() {
             BytesMessage msg = solaceProducer.createBytesMessage(
-                    new byte[] {'H','e','l','l','o',' ','T','o','p','i','c',' ','w','o','r','l','d','!'});
+                    new byte[] {'2','-','H','e','l','l','o',' ','T','o','p','i','c',' ','w','o','r','l','d','!'});
             messageToKafkaTest(msg, solaceProducer.defineTopic("TestTopic1/SubTopic"),
                             // expected value & key:
-                            "Hello Topic world!", null);
+                            "2-Hello Topic world!", null);
         }
 
         
@@ -151,40 +139,40 @@ public class SourceConnectorIT implements TestConstants {
         @Test
         void kafkaConsumerByteMessageWithAttachmentPayloadToTopicTest() {
             BytesMessage msg = solaceProducer.createBytesMessage(null);
-            msg.writeAttachment(new byte[] {'H','e','l','l','o',' ','a','t','t','a','c','h','e','d',' ','w','o','r','l','d','!'});
+            msg.writeAttachment(new byte[] {'3','-','H','e','l','l','o',' ','a','t','t','a','c','h','e','d',' ','w','o','r','l','d','!'});
             messageToKafkaTest(msg, solaceProducer.defineTopic("TestTopic1/SubTopic"),
                             // expected value & key:
-                            "Hello attached world!", null);
+                            "3-Hello attached world!", null);
         }
 
         
         @DisplayName("TextMessage-Queue-SolSampleSimpleMessageProcessor")
         @Test
         void kafkaConsumerTextmessageToKafkaTest() {
-            TextMessage msg = solaceProducer.createTextMessage("Hello TextmessageToKafkaTest world!");
+            TextMessage msg = solaceProducer.createTextMessage("4-Hello TextmessageToKafkaTest world!");
             messageToKafkaTest(msg, solaceProducer.defineQueue(SOL_QUEUE),
                             // expected value & key:
-                            "Hello TextmessageToKafkaTest world!", null);
+                            "4-Hello TextmessageToKafkaTest world!", null);
         }
         
         @DisplayName("BytesMessage-Queue-SolSampleSimpleMessageProcessor")
         @Test
         void kafkaConsumerBytesmessageToKafkaTest() {
             BytesMessage msg = solaceProducer.createBytesMessage(
-                new byte[] {'H','e','l','l','o',' ','Q','u','e','u','e',' ','w','o','r','l','d','!'});
+                new byte[] {'5','-','H','e','l','l','o',' ','Q','u','e','u','e',' ','w','o','r','l','d','!'});
             messageToKafkaTest(msg, solaceProducer.defineQueue(SOL_QUEUE),
                             // expected value & key:
-                            "Hello Queue world!", null);
+                            "5-Hello Queue world!", null);
         }
 
         @DisplayName("ByteMessage-AttachmentPayload-Queue-SolSampleSimpleMessageProcessor")
         @Test
         void kafkaConsumerByteMessageWithAttachmentPayloadToQueueTest() {
             BytesMessage msg = solaceProducer.createBytesMessage(null);
-            msg.writeAttachment(new byte[] {'H','e','l','l','o',' ','a','t','t','a','c','h','e','d',' ','w','o','r','l','d','!'});
+            msg.writeAttachment(new byte[] {'6','-','H','e','l','l','o',' ','a','t','t','a','c','h','e','d',' ','w','o','r','l','d','!'});
             messageToKafkaTest(msg, solaceProducer.defineQueue(SOL_QUEUE),
                             // expected value & key:
-                            "Hello attached world!", null);
+                            "6-Hello attached world!", null);
         }
 
     }
@@ -198,6 +186,7 @@ public class SourceConnectorIT implements TestConstants {
         
         @BeforeAll
         void setUp() {
+            solaceProducer.resetQueue(SOL_QUEUE);
             Properties prop = new Properties();
             prop.setProperty("sol.message_processor_class", "com.solace.source.connector.msgprocessors.SolaceSampleKeyedMessageProcessor");
             prop.setProperty("sol.kafka_message_key", "NONE");
@@ -275,6 +264,7 @@ public class SourceConnectorIT implements TestConstants {
         
         @BeforeAll
         void setUp() {
+            solaceProducer.resetQueue(SOL_QUEUE);
             Properties prop = new Properties();
             prop.setProperty("sol.message_processor_class", "com.solace.source.connector.msgprocessors.SolaceSampleKeyedMessageProcessor");
             prop.setProperty("sol.kafka_message_key", "DESTINATION");
@@ -349,6 +339,7 @@ public class SourceConnectorIT implements TestConstants {
         
         @BeforeAll
         void setUp() {
+            solaceProducer.resetQueue(SOL_QUEUE);
             Properties prop = new Properties();
             prop.setProperty("sol.message_processor_class", "com.solace.source.connector.msgprocessors.SolaceSampleKeyedMessageProcessor");
             prop.setProperty("sol.kafka_message_key", "CORRELATION_ID");
@@ -409,6 +400,7 @@ public class SourceConnectorIT implements TestConstants {
         
         @BeforeAll
         void setUp() {
+            solaceProducer.resetQueue(SOL_QUEUE);
             Properties prop = new Properties();
             prop.setProperty("sol.message_processor_class", "com.solace.source.connector.msgprocessors.SolaceSampleKeyedMessageProcessor");
             prop.setProperty("sol.kafka_message_key", "CORRELATION_ID_AS_BYTES");
@@ -471,9 +463,11 @@ public class SourceConnectorIT implements TestConstants {
         
         @BeforeAll
         void setUp() {
+            solaceProducer.resetQueue(SOL_QUEUE);
             Properties prop = new Properties();
             prop.setProperty("sol.message_processor_class", "com.solace.source.connector.msgprocessors.SolSampleSimpleMessageProcessor");
             prop.setProperty("sol.topics", "#share/group1/TestTopic1/SubTopic");
+            prop.setProperty("tasks.max", "5");
             connectorDeployment.startConnector(prop);
         }
     

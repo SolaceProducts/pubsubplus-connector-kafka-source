@@ -25,14 +25,18 @@ import com.solacesystems.jcsmp.JCSMPException;
 import com.solacesystems.jcsmp.JCSMPFactory;
 import com.solacesystems.jcsmp.JCSMPProperties;
 import com.solacesystems.jcsmp.JCSMPSession;
+import com.solacesystems.jcsmp.JCSMPSessionStats;
+import com.solacesystems.jcsmp.statistics.StatType;
 import com.solacesystems.jcsmp.Context;
 import com.solacesystems.jcsmp.ContextProperties;
+
+import java.util.Enumeration;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SolSessionCreate {
-  private static final Logger log = LoggerFactory.getLogger(SolSessionCreate.class);
+public class SolSessionHandler {
+  private static final Logger log = LoggerFactory.getLogger(SolSessionHandler.class);
 
   private SolaceSourceConnectorConfig connectorConfig;
 
@@ -41,7 +45,7 @@ public class SolSessionCreate {
   private JCSMPSession session;
   private Context ctx;
 
-  public SolSessionCreate(SolaceSourceConnectorConfig connectorConfig) {
+  public SolSessionHandler(SolaceSourceConnectorConfig connectorConfig) {
     this.connectorConfig = connectorConfig;
     ContextProperties ctx_prop = new ContextProperties();
     ctx_prop.setName(Thread.currentThread().getName());  // unique name
@@ -159,33 +163,35 @@ public class SolSessionCreate {
   /**
    * Connect JCSMPSession.
    * @return boolean result
+   * @throws JCSMPException 
    */
-  public boolean connectSession() {
+  public void connectSession() throws JCSMPException {
     
     System.setProperty("java.security.auth.login.config",
         connectorConfig.getString(SolaceSourceConstants.SOL_KERBEROS_LOGIN_CONFIG));
     System.setProperty("java.security.krb5.conf",
         connectorConfig.getString(SolaceSourceConstants.SOL_KERBEROS_KRB5_CONFIG));
     
-    try {
-      session = JCSMPFactory.onlyInstance().createSession(properties, ctx, new SolSessionEventCallbackHandler());
-      session.connect();
-    } catch (InvalidPropertiesException e) {
-      log.info("Received Solace excepetion {}, with the "
-          + "following: {} ", e.getCause(), e.getStackTrace());
-      return false;
-    } catch (JCSMPException e) {
-      log.info("Received Solace excepetion {}, with the "
-          + "following: {} ", e.getCause(), e.getStackTrace());
-      return false;
-    }
-    return true;
+    session = JCSMPFactory.onlyInstance().createSession(properties, ctx, new SolSessionEventCallbackHandler());
+    session.connect();
   }
 
   public JCSMPSession getSession() {
     return session;
   }
 
+  public void printStats() {
+    if (session != null) {
+      JCSMPSessionStats lastStats = session.getSessionStats();
+      Enumeration<StatType> estats = StatType.elements();
+      while (estats.hasMoreElements()) {
+        StatType statName = estats.nextElement();
+        log.info("\t" + statName.getLabel() + ": " + lastStats.getStat(statName));
+      }
+      log.info("\n");
+    }
+  }
+  
   /**
    * Shutdown the session.
    * @return return shutdown boolean result

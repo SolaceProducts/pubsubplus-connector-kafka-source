@@ -21,6 +21,7 @@ package com.solace.source.connector;
 
 import com.solacesystems.jcsmp.BytesXMLMessage;
 import com.solacesystems.jcsmp.DeliveryMode;
+import com.solacesystems.jcsmp.JCSMPException;
 import com.solacesystems.jcsmp.JCSMPProperties;
 import com.solacesystems.jcsmp.JCSMPSession;
 import com.solacesystems.jcsmp.JCSMPSessionStats;
@@ -34,6 +35,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.apache.kafka.connect.source.SourceRecord;
 import org.apache.kafka.connect.source.SourceTask;
@@ -49,23 +51,19 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
   final JCSMPProperties properties = new JCSMPProperties();
 
   SolaceSourceConnectorConfig connectorConfig;
-  BlockingQueue<BytesXMLMessage> ingressQueue 
+  private SolSessionHandler solSessionHandler = null;
+  BlockingQueue<BytesXMLMessage> ingressMessages 
       = new LinkedBlockingQueue<>(); // LinkedBlockingQueue for any incoming message from PS+ topics and queue
   BlockingQueue<BytesXMLMessage> outstandingAckList 
       = new LinkedBlockingQueue<>(); // LinkedBlockingQueue for Solace Flow messages
   String skafkaTopic;
-  SolaceSourceTopicListener listener = null;
-  SolaceSourceQueueConsumer consumer = null;
-  boolean shuttingDown = false;
-
-  private SolSessionCreate sessionRef = null;
+  SolaceSourceTopicListener topicListener = null;
+  SolaceSourceQueueConsumer queueConsumer = null;
+  
+  private volatile boolean shuttingDown = false;
 
   // private Class<?> cProcessor;
   private SolMessageProcessor processor;
-
-  private static int BATCH_SIZE = 500;
-  private int processed = 0;
-  private int fmsgProcessed = 0;
 
   @Override
   public String version() {
@@ -77,77 +75,60 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
 
     connectorConfig = new SolaceSourceConnectorConfig(props);
     skafkaTopic = connectorConfig.getString(SolaceSourceConstants.KAFKA_TOPIC);
-    sessionRef = new SolSessionCreate(connectorConfig);
-    sessionRef.configureSession();
-    boolean connected = sessionRef.connectSession();
-    if (!connected || sessionRef.getSession() == null) {
-      log.info("============Failed to create JCSMPSession Session");
+    solSessionHandler = new SolSessionHandler(connectorConfig);
+    try {
+      solSessionHandler.configureSession();
+      solSessionHandler.connectSession();
+    } catch (JCSMPException e) {
+      log.info("Received Solace exception {}, with the "
+          + "following: {} ", e.getCause(), e.getStackTrace());
+      log.info("================ Failed to create JCSMPSession Session");
       stop();
     }
-    log.info("======================JCSMPSession Connected");
-
+    log.info("================ JCSMPSession Connected");
     if (connectorConfig.getString(SolaceSourceConstants.SOL_TOPICS) != null) {
-      listener = new SolaceSourceTopicListener(connectorConfig);
-      boolean topicListenerStarted = listener.init(sessionRef.getSession(), ingressQueue);
-      if (topicListenerStarted == false) {
-        log.info("===============Failed to start topic consumer ... shutting down");
+      topicListener = new SolaceSourceTopicListener(connectorConfig, solSessionHandler);
+      if (!topicListener.init(ingressMessages)) {
+        log.info("================ Failed to start topic consumer ... shutting down");
         stop();
       }
     }
-
     if (connectorConfig.getString(SolaceSourceConstants.SOl_QUEUE) != null) {
-      consumer = new SolaceSourceQueueConsumer(connectorConfig);
-      boolean queueConsumerStarted = consumer.init(sessionRef.getSession(), ingressQueue);
-      if (queueConsumerStarted == false) {
-        log.info("===============Failed to start queue consumer ... shutting down");
+      queueConsumer = new SolaceSourceQueueConsumer(connectorConfig, solSessionHandler);
+      if (!queueConsumer.init(ingressMessages)) {
+        log.info("================ Failed to start queue consumer ... shutting down");
         stop();
       }
     }
-
   }
 
   @Override
-  public List<SourceRecord> poll() throws InterruptedException {
+  public synchronized List<SourceRecord> poll() throws InterruptedException {
 
-    /*
-     * Return null if shutting down
-     * Interrupt if waiting for messages (probably should return null anyway)
-     * 
-     */
-      
-    // Block waiting for a record to arrive or process in batches depending on the
-    // number of records in array to process
-    if (ingressQueue.size() == 0) {
-        return null;
+    if (shuttingDown || ingressMessages.size() == 0) {
+        return null;  // Nothing to do, return control
     }
-    
     // There is at least one message to process
     List<SourceRecord> records = new ArrayList<>();
+    int processedInIhisBatch = 0;
     int count = 0;
-    int arraySize = ingressQueue.size();
+    int arraySize = ingressMessages.size();
     while (count < arraySize) {
-      BytesXMLMessage msg = ingressQueue.take();
+      BytesXMLMessage msg = ingressMessages.take();
       processor = connectorConfig
           .getConfiguredInstance(SolaceSourceConstants
               .SOL_MESSAGE_PROCESSOR, SolMessageProcessor.class)
           .process(connectorConfig.getString(SolaceSourceConstants.SOL_KAFKA_MESSAGE_KEY), msg);
       Collections.addAll(records, processor.getRecords(skafkaTopic));
       count++;
-      processed++;
+      processedInIhisBatch++;
       if (msg.getDeliveryMode() == DeliveryMode.NON_PERSISTENT 
           || msg.getDeliveryMode() == DeliveryMode.PERSISTENT) {
-        outstandingAckList.add(msg);
-        fmsgProcessed++;
+        outstandingAckList.add(msg);  // enqueue messages received from guaranteed messaging endpoint for later ack 
       }
     }
-
-    if (fmsgProcessed > 0) {
-      commit();
-    }
-    log.debug("Processed {} records in this batch.", processed);
-    processed = 0;
+    log.debug("Processed {} records in this batch.", processedInIhisBatch);
     return records;
-
   }
 
   /**
@@ -155,71 +136,37 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
    */
   public synchronized void commit() throws InterruptedException {
     log.trace("Committing records");
-    
     int currentLoad = outstandingAckList.size();
     int count = 0;
     while (count != currentLoad) {
       outstandingAckList.take().ackMessage();
       count++;
     }
-    fmsgProcessed = 0;
-
   }
 
   @Override
-  public void stop() {
-    
-    // TODO: 
-    /*
-     * shuttingDown = true
-     * Waiting for all received messages to be acknowledged
-     * Terminate listener / consumer
-     * Terminate session
-     * 
-     */
-    log.info("==================Shutting down Solace Source Connector");
+  public synchronized void stop() {
+    log.info("================ Shutting down PubSub+ Source Connector");
     shuttingDown = true;
-    if (fmsgProcessed > 0) {
-      try {
-        commit();
-      } catch (InterruptedException e) {
-        e.printStackTrace();
-      }
+    if (topicListener != null) {
+      topicListener.shutdown();
     }
-    
-    // TODO: Stats may be incomplete - REview!  
-    JCSMPSession session = sessionRef.getSession();  
-    if (session != null) {
-      JCSMPSessionStats lastStats = session.getSessionStats();
-      Enumeration<StatType> estats = StatType.elements();
-      log.info("Final Statistics summary:");
-
-      while (estats.hasMoreElements()) {
-        StatType statName = estats.nextElement();
-        System.out.println("\t" + statName.getLabel() + ": " + lastStats.getStat(statName));
-      }
-      log.info("\n");
+    if (queueConsumer != null) {
+      queueConsumer.shutdown();
     }
-    
-    boolean ok = true;
-    if (listener != null) {
-      ok &= listener.shutdown();
+    if (solSessionHandler != null) {
+      log.info("Final Statistics summary:\n");
+      solSessionHandler.printStats();
+      solSessionHandler.shutdown();
     }
-    if (consumer != null) {
-      ok &= consumer.shutdown();
-    }
-    if (sessionRef != null) {
-      ok &= sessionRef.shutdown();
-    }
-    if (!(ok)) {
-      log.info("Solace session failed to shutdown");
-    }
-    sessionRef = null; // At this point filling the ingress queue is stopped
+    solSessionHandler = null; // At this point filling the ingress queue is stopped
+    ingressMessages.clear();  // Remove all remaining ingressed messages, these will be no longer imported to Kafka
+    log.info("PubSub+ Source Connector stopped");
   }
 
   // For testing only
   public JCSMPSession getSolSession() {
-    return sessionRef.getSession();
+    return solSessionHandler.getSession();
   }
   
 }

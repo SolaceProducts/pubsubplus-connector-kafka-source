@@ -43,23 +43,21 @@ public class SolaceSourceTopicListener {
   private XMLMessageConsumer cons;
   SolMessageTopicCallbackHandler callbackhandler;
 
-  public SolaceSourceTopicListener(SolaceSourceConnectorConfig lconfig) {
+  private SolSessionHandler solSessionHandler;
+
+  public SolaceSourceTopicListener(SolaceSourceConnectorConfig lconfig, SolSessionHandler solSessionHandler) {
     this.lconfig = lconfig;
+    this.solSessionHandler = solSessionHandler;
   }
 
-  /**
-   * Initializes JCSMPSession.
-   */
-  public boolean init(JCSMPSession session, BlockingQueue<BytesXMLMessage> squeue) {
-
+  public boolean init(BlockingQueue<BytesXMLMessage> squeue) {
     boolean topicListenerStarted = true;
     solaceTopics = lconfig.getString(SolaceSourceConstants.SOL_TOPICS);
     topics = solaceTopics.split(",");
 
     try {
       callbackhandler = new SolMessageTopicCallbackHandler(lconfig, squeue);
-      cons = session.getMessageConsumer(new SolReconnectCallbackHandler(),
-          callbackhandler );
+      cons = solSessionHandler.getSession().getMessageConsumer(new SolReconnectCallbackHandler(), callbackhandler);
     } catch (JCSMPException je) {
       log.info("JCSMP Exception in SolaceSourceTopicListener {} \n", je.getLocalizedMessage());
     }
@@ -70,11 +68,11 @@ public class SolaceSourceTopicListener {
       while (topics.length > counter) {
         log.info("Adding subscription for topic {} ", topics[counter].trim());
         TopicProperties tproperties = new TopicProperties();
-        tproperties.setRxAllDeliverToOne(lconfig
-            .getBoolean(SolaceSourceConstants.SOL_SUBSCRIBER_DTO_OVERRIDE));
         tproperties.setName(topics[counter].trim());
+        // Only used for legacy PubSub+ versions
+        tproperties.setRxAllDeliverToOne(lconfig.getBoolean(SolaceSourceConstants.SOL_SUBSCRIBER_DTO_OVERRIDE));
         topic = JCSMPFactory.onlyInstance().createTopic(tproperties);
-        session.addSubscription(topic, true);
+        solSessionHandler.getSession().addSubscription(topic, true);
         counter++;
       }
     } catch (JCSMPException je) {
@@ -93,18 +91,13 @@ public class SolaceSourceTopicListener {
 
   }
 
-  /**
-   * Stops JCSMPSession.
-   * @return
-   */
-  public boolean shutdown() {
+  public void shutdown() {
     if (cons != null) {
       cons.close();
     }
-    if (callbackhandler != null ) {
+    if (callbackhandler != null) {
       callbackhandler.shutdown(); // Must remove reference to squeue
     }
-    return true;
   }
 
 }
