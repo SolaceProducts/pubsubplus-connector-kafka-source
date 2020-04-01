@@ -51,10 +51,21 @@ dependencies {
     compile "com.solacesystems:sol-jcsmp:$solaceJavaAPIVersion"
 }
 
+task('prepDistForIntegrationTesting') {
+    dependsOn assembleDist
+    doLast {
+        copy { 
+            from zipTree(file('build/distributions').listFiles().findAll {it.name.endsWith('.zip')}[0])
+            into (file('src/integrationTest/resources'))
+            into (file('build/resources/integrationTest'))
+        }
+    }
+}
+
 project.integrationTest {
     useJUnitPlatform()
     outputs.upToDateWhen { false }
-    dependsOn assembleDist
+    dependsOn prepDistForIntegrationTesting
 }
 
 distributions {

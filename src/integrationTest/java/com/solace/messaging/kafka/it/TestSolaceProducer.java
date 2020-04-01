@@ -23,7 +23,7 @@ public class TestSolaceProducer {
     private JCSMPSession session;
     private XMLMessageProducer producer;
 
-    public TestSolaceProducer() {
+    public void start() {
         TestConfigProperties configProps = new TestConfigProperties();
         final JCSMPProperties properties = new JCSMPProperties();
         properties.setProperty(JCSMPProperties.HOST, "tcp://" + configProps.getProperty("sol.host") + ":55555");     // host:port

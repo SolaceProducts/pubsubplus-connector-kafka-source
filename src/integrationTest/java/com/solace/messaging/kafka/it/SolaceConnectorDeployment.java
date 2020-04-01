@@ -38,8 +38,24 @@ public class SolaceConnectorDeployment  implements TestConstants {
     static Logger logger = LoggerFactory.getLogger(SolaceConnectorDeployment.class.getName());
 
     static String kafkaTestTopic = KAFKA_SOURCE_TOPIC + "-" + Instant.now().getEpochSecond();
+    OkHttpClient client = new OkHttpClient();
+    String connectorAddress = new TestConfigProperties().getProperty("kafka.connect_rest_url");
 
-    public SolaceConnectorDeployment() {
+    public void waitForConnectorRestIFUp() {
+      Request request = new Request.Builder().url("http://" + connectorAddress + "/connector-plugins").build();
+      Response response = null;
+      do {
+        try {
+          Thread.sleep(1000l);
+          response = client.newCall(request).execute();
+        } catch (IOException | InterruptedException e) {
+          // Continue looping
+        }
+      } while (response == null || !response.isSuccessful());
+    }
+    
+    
+    public void provisionKafkaTestTopic() {
         // Create a new kafka test topic to use
         String bootstrapServers = new TestConfigProperties().getProperty("kafka.bootstrap_servers");
         Properties properties = new Properties();
@@ -124,8 +140,6 @@ public class SolaceConnectorDeployment  implements TestConstants {
 
         // Configure and start the solace connector
         try {
-            OkHttpClient client = new OkHttpClient();
-            String connectorAddress = new TestConfigProperties().getProperty("kafka.connect_rest_url");
             // check presence of Solace plugin: curl
             // http://18.218.82.209:8083/connector-plugins | jq
             Request request = new Request.Builder().url("http://" + connectorAddress + "/connector-plugins").build();
