@@ -33,9 +33,16 @@ import org.testcontainers.containers.wait.strategy.Wait;
 @Testcontainers
 public interface MessagingServiceFullLocalSetupApache  extends TestConstants {
 
-  @Container
-  public final static GenericContainer<?> PILOT = new GenericContainer<>("alpine");
-  
+  class LocalHost {
+    static public String getIpAddress() {
+        try {
+          return InetAddress.getLocalHost().getHostAddress();
+        } catch (UnknownHostException e) {
+           e.printStackTrace();
+           return null;
+        }
+    }   
+  }
   
   @Container
   public static final DockerComposeContainer COMPOSE_CONTAINER_PUBSUBPLUS =
@@ -50,12 +57,15 @@ public interface MessagingServiceFullLocalSetupApache  extends TestConstants {
               .waitingFor("solbroker_1",
                   Wait.forLogMessage(".*System startup complete.*", 1) );
 
+  public static final String dockerIpAddress = (COMPOSE_CONTAINER_PUBSUBPLUS.getServiceHost("solbroker_1", 8080) == "localhost" ? 
+      LocalHost.getIpAddress() : COMPOSE_CONTAINER_PUBSUBPLUS.getServiceHost("solbroker_1", 8080));
+  
   @Container
   public static final DockerComposeContainer COMPOSE_CONTAINER_KAFKA =
         new DockerComposeContainer(
             new File(FULL_DOCKER_COMPOSE_FILE_PATH + "docker-compose-kafka-apache.yml"))
             .withEnv("KAFKA_TOPIC", KAFKA_SOURCE_TOPIC)
-            .withEnv("KAFKA_HOST", PILOT.getContainerIpAddress())
+            .withEnv("KAFKA_HOST", dockerIpAddress)
             .withLocalCompose(true)
             .waitingFor("schema-registry_1",
                 Wait.forHttp("/subjects").forStatusCode(200));

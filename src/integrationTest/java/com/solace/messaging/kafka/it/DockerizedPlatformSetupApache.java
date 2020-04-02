@@ -17,10 +17,10 @@ public class DockerizedPlatformSetupApache implements MessagingServiceFullLocalS
 
   @Container
   public final static GenericContainer<?> KAFKA_CONNECT_REST = new FixedHostPortGenericContainer<>("bitnami/kafka:2")
-                  .withEnv("KAFKA_CFG_ZOOKEEPER_CONNECT", PILOT.getContainerIpAddress() + ":2181")
+                  .withEnv("KAFKA_CFG_ZOOKEEPER_CONNECT", dockerIpAddress + ":2181")
                   .withEnv("ALLOW_PLAINTEXT_LISTENER", "yes")
                   .withCommand("/bin/sh", "-c", //"sleep 10000")
-                      "sed -i 's/bootstrap.servers=.*/bootstrap.servers=" + PILOT.getContainerIpAddress() 
+                      "sed -i 's/bootstrap.servers=.*/bootstrap.servers=" + dockerIpAddress 
                           + ":39092/g' /opt/bitnami/kafka/config/connect-distributed.properties; "
                           + "echo 'plugin.path=/opt/bitnami/kafka/jars' >> /opt/bitnami/kafka/config/connect-distributed.properties; "
                           + "echo 'rest.port=28083' >> /opt/bitnami/kafka/config/connect-distributed.properties; "
@@ -50,7 +50,6 @@ public class DockerizedPlatformSetupApache implements MessagingServiceFullLocalS
     @Test
 //    @Disabled
     void setupDockerizedPlatformTest() {
-      String pilot = PILOT.getContainerIpAddress();
       String host = COMPOSE_CONTAINER_PUBSUBPLUS.getServiceHost("solbroker_1", 8080);
       assertNotNull(host);
       try {
