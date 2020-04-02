@@ -12,8 +12,9 @@ public class TestConfigProperties {
     // This class helps determine the docker host's IP address and avoids getting "localhost"
     static class DockerHost {
       static public String getIpAddress() {
-        if (MessagingServiceFullLocalSetupConfluent.COMPOSE_CONTAINER_KAFKA
-              .getServiceHost("kafka_1", 9092) == "localhost") {
+        String dockerReportedAddress = MessagingServiceFullLocalSetupConfluent.COMPOSE_CONTAINER_KAFKA
+            .getServiceHost("kafka_1", 9092);
+        if (dockerReportedAddress == "localhost" || dockerReportedAddress == "127.0.0.1") {
           try {
             return InetAddress.getLocalHost().getHostAddress();
           } catch (UnknownHostException e) {

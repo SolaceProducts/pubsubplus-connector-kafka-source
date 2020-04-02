@@ -57,8 +57,9 @@ public interface MessagingServiceFullLocalSetupApache  extends TestConstants {
               .waitingFor("solbroker_1",
                   Wait.forLogMessage(".*System startup complete.*", 1) );
 
-  public static final String dockerIpAddress = (COMPOSE_CONTAINER_PUBSUBPLUS.getServiceHost("solbroker_1", 8080) == "localhost" ? 
-      LocalHost.getIpAddress() : COMPOSE_CONTAINER_PUBSUBPLUS.getServiceHost("solbroker_1", 8080));
+  public static final String dockerReportedAddress = COMPOSE_CONTAINER_PUBSUBPLUS.getServiceHost("solbroker_1", 8080);
+  public static final String dockerIpAddress = (dockerReportedAddress == "localhost" || dockerReportedAddress == "127.0.0.1" ? 
+      LocalHost.getIpAddress() : dockerReportedAddress);
   
   @Container
   public static final DockerComposeContainer COMPOSE_CONTAINER_KAFKA =
