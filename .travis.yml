@@ -3,8 +3,10 @@ install: true
 sudo: required
 services:
   - docker
+  - docker-compose
 jdk:
   - openjdk8
 
 script:
+  - docker-compose
   - ./gradlew clean integrationTest --tests com.solace.messaging.kafka.it.SourceConnectorIT
