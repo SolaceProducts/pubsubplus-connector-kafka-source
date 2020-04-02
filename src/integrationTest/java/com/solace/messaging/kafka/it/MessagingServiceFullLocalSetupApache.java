@@ -11,6 +11,8 @@ import net.lingala.zip4j.exception.ZipException;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.time.Duration;
 
 import org.apache.commons.configuration2.Configuration;
@@ -22,6 +24,8 @@ import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.DockerComposeContainer;
+import org.testcontainers.containers.FixedHostPortGenericContainer;
+import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.containers.wait.strategy.Wait;
@@ -29,6 +33,10 @@ import org.testcontainers.containers.wait.strategy.Wait;
 @Testcontainers
 public interface MessagingServiceFullLocalSetupApache  extends TestConstants {
 
+  @Container
+  public final static GenericContainer<?> PILOT = new GenericContainer<>("alpine");
+  
+  
   @Container
   public static final DockerComposeContainer COMPOSE_CONTAINER_PUBSUBPLUS =
       new DockerComposeContainer(
@@ -47,7 +55,7 @@ public interface MessagingServiceFullLocalSetupApache  extends TestConstants {
         new DockerComposeContainer(
             new File(FULL_DOCKER_COMPOSE_FILE_PATH + "docker-compose-kafka-apache.yml"))
             .withEnv("KAFKA_TOPIC", KAFKA_SOURCE_TOPIC)
-            .withEnv("KAFKA_HOST", COMPOSE_CONTAINER_PUBSUBPLUS.getServiceHost("solbroker_1", 8080))
+            .withEnv("KAFKA_HOST", PILOT.getContainerIpAddress())
             .withLocalCompose(true)
             .waitingFor("schema-registry_1",
                 Wait.forHttp("/subjects").forStatusCode(200));
@@ -57,18 +65,5 @@ public interface MessagingServiceFullLocalSetupApache  extends TestConstants {
     String host = COMPOSE_CONTAINER_PUBSUBPLUS.getServiceHost("solbroker_1", 8080);
     assertNotNull(host);
   }
-  
-  
-  @BeforeAll
-  static void setupBrokerConnectorProperties() {
-    try {
-      // Copy built artifacts to resources
-      ZipFile zipFile = new ZipFile(CONNECTORSOURCE);
-      zipFile.extractAll(CONNECTORDESTINATION);
-    } catch (ZipException e) {
-      e.printStackTrace();
-    }
-  }
-
 }
 
