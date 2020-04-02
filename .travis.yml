@@ -7,5 +7,4 @@ jdk:
   - openjdk8
 
 script:
-  - watch docker ps &
   - ./gradlew clean integrationTest --tests com.solace.messaging.kafka.it.SourceConnectorIT
