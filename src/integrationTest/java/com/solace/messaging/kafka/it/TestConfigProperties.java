@@ -2,11 +2,31 @@ package com.solace.messaging.kafka.it;
 
 import java.io.FileReader;
 import java.io.IOException;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.Properties;
 
 public class TestConfigProperties {
 
     static String testConfigPropertiesFile = "src/integrationTest/resources/manual-setup.properties";
+    // This class helps determine the docker host's IP address and avoids getting "localhost"
+    static class DockerHost {
+      static public String getIpAddress() {
+        if (MessagingServiceFullLocalSetupConfluent.COMPOSE_CONTAINER_KAFKA
+              .getServiceHost("kafka_1", 9092) == "localhost") {
+          try {
+            return InetAddress.getLocalHost().getHostAddress();
+          } catch (UnknownHostException e) {
+             e.printStackTrace();
+             return null;
+          }
+        } else {
+          return MessagingServiceFullLocalSetupConfluent.COMPOSE_CONTAINER_KAFKA
+              .getServiceHost("kafka_1", 9092);
+        }
+      }   
+    }
+    
     
     private Properties properties = new Properties();
 
@@ -26,8 +46,7 @@ public class TestConfigProperties {
         switch(name) {
             case "sol.host":
                 // No port here
-                return MessagingServiceFullLocalSetupConfluent.COMPOSE_CONTAINER_PUBSUBPLUS
-                                .getServiceHost("solbroker_1", 55555);
+                return DockerHost.getIpAddress();
                 
             case "sol.username":
                 return "default";
@@ -39,12 +58,10 @@ public class TestConfigProperties {
                 return "default";
                 
             case "kafka.connect_rest_url":
-                return MessagingServiceFullLocalSetupConfluent.COMPOSE_CONTAINER_KAFKA
-                                .getServiceHost("kafka_1", 9092) + ":28083";
+                return (DockerHost.getIpAddress() + ":28083");
 
             case "kafka.bootstrap_servers":
-                return MessagingServiceFullLocalSetupConfluent.COMPOSE_CONTAINER_KAFKA
-                                .getServiceHost("kafka_1", 39092) + ":39092";
+                return (DockerHost.getIpAddress() + ":39092");
 
             default:
                 return null;

@@ -48,7 +48,7 @@ public class DockerizedPlatformSetupApache implements MessagingServiceFullLocalS
   class MessagingServiceConnectionTests {
     @DisplayName("Setup the dockerized platform")
     @Test
-//    @Disabled
+    @Disabled
     void setupDockerizedPlatformTest() {
       String host = COMPOSE_CONTAINER_PUBSUBPLUS.getServiceHost("solbroker_1", 8080);
       assertNotNull(host);
