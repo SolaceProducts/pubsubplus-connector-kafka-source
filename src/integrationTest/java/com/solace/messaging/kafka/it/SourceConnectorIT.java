@@ -38,8 +38,8 @@ public class SourceConnectorIT extends DockerizedPlatformSetupApache implements 
   @BeforeAll
   static void setUp() {
     connectorDeployment.waitForConnectorRestIFUp();
-    solaceProducer.start();
     connectorDeployment.provisionKafkaTestTopic();
+    solaceProducer.setup();
     kafkaConsumer.run();
     try {
       Thread.sleep(1000l);
