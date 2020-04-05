@@ -15,7 +15,7 @@ public class TestConfigProperties {
         String dockerReportedAddress = MessagingServiceFullLocalSetupConfluent.COMPOSE_CONTAINER_KAFKA
             .getServiceHost("kafka_1", 9092);
         if (dockerReportedAddress == "localhost" || dockerReportedAddress == "127.0.0.1") {
-          return RoutableHost.getIpAddress();
+          return Tools.getIpAddress();
         } else {
           return MessagingServiceFullLocalSetupConfluent.COMPOSE_CONTAINER_KAFKA
               .getServiceHost("kafka_1", 9092);

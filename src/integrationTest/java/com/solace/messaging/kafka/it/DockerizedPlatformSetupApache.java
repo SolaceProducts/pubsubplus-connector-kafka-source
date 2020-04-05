@@ -32,7 +32,7 @@ public class DockerizedPlatformSetupApache implements MessagingServiceFullLocalS
 //                  .withEnv("KAFKA_DEBUG", "y")
 //                  .withEnv("DEBUG_SUSPEND_FLAG", "y")
 ////
-                  .withClasspathResourceMapping("pubsubplus-connector-kafka-source/lib",
+                  .withClasspathResourceMapping(Tools.getUnzippedConnectorDirName() + "/lib",
                                   "/opt/bitnami/kafka/jars/pubsubplus-connector-kafka", BindMode.READ_ONLY)
 //                  .withStartupTimeout(Duration.ofSeconds(120))
                   .waitingFor( Wait.forLogMessage(".*Finished starting connectors and tasks.*", 1) )

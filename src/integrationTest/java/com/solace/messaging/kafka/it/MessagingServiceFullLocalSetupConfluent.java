@@ -57,18 +57,5 @@ public interface MessagingServiceFullLocalSetupConfluent  extends TestConstants 
     String host = COMPOSE_CONTAINER_PUBSUBPLUS.getServiceHost("solbroker_1", 8080);
     assertNotNull(host);
   }
-  
-  
-  @BeforeAll
-  static void setupBrokerConnectorProperties() {
-    try {
-      // Copy built artifacts to resources
-      ZipFile zipFile = new ZipFile(CONNECTORSOURCE);
-      zipFile.extractAll(CONNECTORDESTINATION);
-    } catch (ZipException e) {
-      e.printStackTrace();
-    }
-  }
-
 }
 

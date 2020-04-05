@@ -35,3 +35,6 @@ local.properties
 # Locally stored "Eclipse launch configurations"
 *.launch
 /build/
+
+# Unzipped test connector
+src/integrationTest/resources/pubsubplus-connector-kafka*/

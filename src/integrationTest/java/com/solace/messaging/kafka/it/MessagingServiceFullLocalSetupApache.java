@@ -27,7 +27,7 @@ public interface MessagingServiceFullLocalSetupApache  extends TestConstants {
 
   public static final String dockerReportedAddress = COMPOSE_CONTAINER_PUBSUBPLUS.getServiceHost("solbroker_1", 8080);
   public static final String dockerIpAddress = (dockerReportedAddress == "localhost" || dockerReportedAddress == "127.0.0.1" ? 
-      RoutableHost.getIpAddress() : dockerReportedAddress);
+      Tools.getIpAddress() : dockerReportedAddress);
   
   @Container
   public static final DockerComposeContainer COMPOSE_CONTAINER_KAFKA =
