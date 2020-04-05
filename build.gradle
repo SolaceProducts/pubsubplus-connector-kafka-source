@@ -62,10 +62,6 @@ task('prepDistForIntegrationTesting') {
             from zipTree(file('build/distributions').listFiles().findAll {it.name.endsWith('.zip')}[0])
             into (file('build/resources/integrationTest'))
         }
-        copy {
-            from (file('build/distributions'))
-            into (file('downloads'))
-        }
     }
 }
 

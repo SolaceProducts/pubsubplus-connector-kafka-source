@@ -15,8 +15,8 @@ public interface TestConstants {
 
     public static final String CONNECTORSOURCE = "build/distributions/pubsubplus-connector-kafka-source.zip";
     public static final String UNZIPPEDCONNECTORDESTINATION = "src/integrationTest/resources";
-    public static final String CONNECTORPROPERTIESFILE = "etc/solace.properties";
-    public static final String CONNECTORJSONPROPERTIESFILE = "etc/solace_properties.json";
+    public static final String CONNECTORPROPERTIESFILE = "etc/solace_source.properties";
+    public static final String CONNECTORJSONPROPERTIESFILE = "etc/solace_source_properties.json";
     
     public static final String SOL_ADMINUSER_NAME = "default";
     public static final String SOL_ADMINUSER_PW = "default";
