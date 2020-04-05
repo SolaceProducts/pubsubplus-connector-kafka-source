@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html>
+<head>
+ <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+ <title>PubSub+ Kafka Source Connector</title>
+</head>
+<body>
+	<h1>PubSub+ Kafka Source Connector Downloads</h1><p>
+─ <a href="./CONNECTOR_NAME.tar">CONNECTOR_NAME.tar</a><br>
+       Download link: https://solacedev.github.io/pubsubplus-connector-kafka-source/CONNECTOR_NAME.tar<br>
+─ <a href="./CONNECTOR_NAME.zip">CONNECTOR_NAME.zip</a><br>
+       Download link: https://solacedev.github.io/pubsubplus-connector-kafka-source/CONNECTOR_NAME.zip<br>
+	<br><br>
+	</p>
+	<p>
+	<br><br>
+	</p>
+	<hr>
+</body>
+</html>
