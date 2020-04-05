@@ -16,7 +16,8 @@ after_success:
     git config --global user.name "travis-ci";
     mkdir gh-pages; # Now update gh-pages
     git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com/SolaceDev/pubsubplus-connector-kafka-source gh-pages > /dev/null 2>&1;
-    mv build/distributions gh-pages
+    rm gh-pages/pubsubplus-connector-kafka-source*
+    mv build/distributions/pubsubplus-connector-kafka-source* gh-pages
     pushd gh-pages;
     git add -f .;
     git commit -m "Latest connector distribution on successful travis build $TRAVIS_BUILD_NUMBER auto-pushed to gh-pages";
