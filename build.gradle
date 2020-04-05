@@ -74,8 +74,8 @@ project.integrationTest {
 distributions {
     main {
         contents {
-            from('etc/solace.properties') { into 'etc' }
-            from('etc/solace_properties.json') { into 'etc' }
+            from('etc/solace_source.properties') { into 'etc' }
+            from('etc/solace_source_properties.json') { into 'etc' }
             from('doc/README.md') { into 'doc' }
             from('LICENSE') { into 'doc' }
             into('lib') {
