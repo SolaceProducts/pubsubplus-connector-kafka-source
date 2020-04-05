@@ -19,6 +19,7 @@ after_success:
     rm gh-pages/pubsubplus-connector-kafka-source*
     mv build/distributions/pubsubplus-connector-kafka-source* gh-pages
     pushd gh-pages;
+    cp index.template index.html; FILENAME=`find . | grep *.zip | cut -d'/' -f2 | sed 's/.\{4\}$//'`;  sed -i "s/CONNECTOR_NAME/$FILENAME/g" index.html
     git add -f .;
     git commit -m "Latest connector distribution on successful travis build $TRAVIS_BUILD_NUMBER auto-pushed to gh-pages";
     git remote add origin-pages https://${GH_TOKEN}@github.com/SolaceDev/pubsubplus-connector-kafka-source.git > /dev/null 2>&1;
