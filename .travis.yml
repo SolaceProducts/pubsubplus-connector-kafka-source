@@ -10,6 +10,7 @@ script:
   - ./gradlew clean integrationTest --tests com.solace.messaging.kafka.it.SourceConnectorIT
 
 after_success:
+- >
   if [ "$TRAVIS_BRANCH" = "SourceConnectorProductization" ]; then
     git config --global user.email "travis@travis-ci.org";
     git config --global user.name "travis-ci";
