@@ -19,7 +19,7 @@
 
 package com.solace.source.connector.msgprocessors;
 
-import com.solace.source.connector.SolMessageProcessor;
+import com.solace.source.connector.SolMessageProcessorIF;
 
 import com.solacesystems.jcsmp.BytesXMLMessage;
 //import com.solacesystems.jcsmp.DeliveryMode;
@@ -34,7 +34,7 @@ import org.apache.kafka.connect.source.SourceRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SolSampleSimpleMessageProcessor implements SolMessageProcessor {
+public class SolSampleSimpleMessageProcessor implements SolMessageProcessorIF {
 
   private static final Logger log = LoggerFactory.getLogger(SolSampleSimpleMessageProcessor.class);
   private Object smsg;
@@ -44,7 +44,7 @@ public class SolSampleSimpleMessageProcessor implements SolMessageProcessor {
 
 
   @Override
-  public SolMessageProcessor process(String skey, BytesXMLMessage msg) {
+  public SolMessageProcessorIF process(String skey, BytesXMLMessage msg) {
     this.smsg = msg;
     if (msg instanceof TextMessage) {
       log.debug("Text Message received {}", ((TextMessage) msg).getText());

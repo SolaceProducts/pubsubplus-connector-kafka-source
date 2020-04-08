@@ -63,7 +63,7 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
   private volatile boolean shuttingDown = false;
 
   // private Class<?> cProcessor;
-  private SolMessageProcessor processor;
+  private SolMessageProcessorIF processor;
 
   @Override
   public String version() {
@@ -93,7 +93,7 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
         stop();
       }
     }
-    if (connectorConfig.getString(SolaceSourceConstants.SOl_QUEUE) != null) {
+    if (connectorConfig.getString(SolaceSourceConstants.SOL_QUEUE) != null) {
       queueConsumer = new SolaceSourceQueueConsumer(connectorConfig, solSessionHandler);
       if (!queueConsumer.init(ingressMessages)) {
         log.info("================ Failed to start queue consumer ... shutting down");
@@ -117,7 +117,7 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
       BytesXMLMessage msg = ingressMessages.take();
       processor = connectorConfig
           .getConfiguredInstance(SolaceSourceConstants
-              .SOL_MESSAGE_PROCESSOR, SolMessageProcessor.class)
+              .SOL_MESSAGE_PROCESSOR, SolMessageProcessorIF.class)
           .process(connectorConfig.getString(SolaceSourceConstants.SOL_KAFKA_MESSAGE_KEY), msg);
       Collections.addAll(records, processor.getRecords(skafkaTopic));
       count++;

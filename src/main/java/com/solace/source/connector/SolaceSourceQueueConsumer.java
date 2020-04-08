@@ -47,7 +47,7 @@ public class SolaceSourceQueueConsumer {
   }
 
   public boolean init(BlockingQueue<BytesXMLMessage> squeue) {
-    solQueue = JCSMPFactory.onlyInstance().createQueue(lconfig.getString(SolaceSourceConstants.SOl_QUEUE));
+    solQueue = JCSMPFactory.onlyInstance().createQueue(lconfig.getString(SolaceSourceConstants.SOL_QUEUE));
     final ConsumerFlowProperties flow_prop = new ConsumerFlowProperties();
     flow_prop.setEndpoint(solQueue);
     flow_prop.setAckMode(JCSMPProperties.SUPPORTED_MESSAGE_ACK_CLIENT); // Will explicitly ack at commit

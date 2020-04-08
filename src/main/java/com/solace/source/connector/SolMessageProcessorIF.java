@@ -23,8 +23,8 @@ import com.solacesystems.jcsmp.BytesXMLMessage;
 
 import org.apache.kafka.connect.source.SourceRecord;
 
-public interface SolMessageProcessor {
-  SolMessageProcessor process(String skey, BytesXMLMessage message);
+public interface SolMessageProcessorIF {
+  SolMessageProcessorIF process(String skey, BytesXMLMessage message);
 
   SourceRecord[] getRecords(String kafkaTopic);
 }

@@ -43,10 +43,10 @@ public class SolaceSourceConstants {
   
   public static final String SOL_VPN_NAME = "sol.vpn_name";
   public static final String SOL_TOPICS = "sol.topics";
-  public static final String SOl_QUEUE = "sol.queue";
+  public static final String SOL_QUEUE = "sol.queue";
 
   // Low Importance General Properties
-  public static final String SOl_SESSION_NAME = "sol.session_name";
+  public static final String SOL_SESSION_NAME = "sol.session_name";
   public static final String SOL_LOCALHOST = "sol.localhost";
   public static final String SOL_CLIENT_NAME = "sol.client_name";
   public static final String SOL_GENERATE_SENDER_ID = "sol.generate_sender_id";
@@ -65,7 +65,7 @@ public class SolaceSourceConstants {
       = "sol.ignore_subscription_not_found_error";
   public static final String SOL_NO_LOCAL = "sol.no_local";
   public static final String SOL_ACK_EVENT_MODE = "sol.ack_event_mode";
-  public static final String SOl_AUTHENTICATION_SCHEME = "sol.authentication_scheme";
+  public static final String SOL_AUTHENTICATION_SCHEME = "sol.authentication_scheme";
   public static final String SOL_KRB_SERVICE_NAME = "sol.krb_service_name";
   public static final String SOL_SSL_CONNECTION_DOWNGRADE_TO = "sol.ssl_connection_downgrade_to";
 
@@ -106,7 +106,7 @@ public class SolaceSourceConstants {
       = "sol.channel_properties.keep_alive_limit";
   public static final String SOL_CHANNEL_PROPERTY_sendBuffer = "sol.channel_properties.send_buffer";
   public static final String SOL_CHANNEL_PROPERTY_receiveBuffer 
-      = "sol.channle_properties.receive_buffer";
+      = "sol.channel_properties.receive_buffer";
   public static final String SOL_CHANNEL_PROPERTY_tcpNoDelay 
       = "sol.channel_properties.tcp_no_delay";
   public static final String SOL_CHANNEL_PROPERTY_compressionLevel 
@@ -114,7 +114,7 @@ public class SolaceSourceConstants {
 
   // Low Importance Persistent Message Properties
   public static final String SOL_SUB_ACK_WINDOW_SIZE = "sol.sub_ack_window_size";
-  public static final String SOL_PUB_ACK_WINDOW_SIZE = "sol.sub_ack_window_size";
+  public static final String SOL_PUB_ACK_WINDOW_SIZE = "sol.pub_ack_window_size";
   public static final String SOL_SUB_ACK_TIME = "sol.sub_ack_time";
   public static final String SOL_PUB_ACK_TIME = "sol.pub_ack_time";
   public static final String SOL_SUB_ACK_WINDOW_THRESHOLD = "sol.sub_ack_window_threshold";

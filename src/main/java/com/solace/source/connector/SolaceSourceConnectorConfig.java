@@ -63,9 +63,9 @@ public class SolaceSourceConnectorConfig extends AbstractConfig {
             "Solace VPN to connect with ")
         .define(SolaceSourceConstants.SOL_TOPICS, Type.STRING, null, Importance.MEDIUM,
             "Solace topic or list of topics to subscribe from")
-        .define(SolaceSourceConstants.SOl_QUEUE, Type.STRING, null, 
+        .define(SolaceSourceConstants.SOL_QUEUE, Type.STRING, null,
             Importance.MEDIUM, "Solace queue to consume from")
-        .define(SolaceSourceConstants.SOL_MESSAGE_PROCESSOR, Type.CLASS, SolMessageProcessor.class, 
+        .define(SolaceSourceConstants.SOL_MESSAGE_PROCESSOR, Type.CLASS, SolMessageProcessorIF.class,
             Importance.HIGH,
             "default Solace message processor to use")
         .define(SolaceSourceConstants.SOL_LOCALHOST, Type.STRING, null, Importance.LOW,
@@ -123,7 +123,7 @@ public class SolaceSourceConnectorConfig extends AbstractConfig {
             + "if the client has a subscription that matches the published topic.")
         .define(SolaceSourceConstants.SOL_SUB_ACK_WINDOW_SIZE, Type.INT, 255, Importance.LOW,
             "The size of the sliding subscriber ACK window. The valid range is 1-255")
-        .define(SolaceSourceConstants.SOl_AUTHENTICATION_SCHEME, Type.STRING, 
+        .define(SolaceSourceConstants.SOL_AUTHENTICATION_SCHEME, Type.STRING,
             "AUTHENTICATION_SCHEME_BASIC",
             Importance.MEDIUM, "String property specifying the authentication scheme.")
         .define(SolaceSourceConstants.SOL_KRB_SERVICE_NAME, Type.STRING, "solace", 
