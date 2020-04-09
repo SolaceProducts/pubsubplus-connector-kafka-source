@@ -2,24 +2,7 @@ package com.solace.messaging.kafka.it;
 
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import net.lingala.zip4j.ZipFile;
-import net.lingala.zip4j.exception.ZipException;
-
 import java.io.File;
-import java.io.IOException;
-import java.time.Duration;
-
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.FileBasedConfiguration;
-import org.apache.commons.configuration2.PropertiesConfiguration;
-import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
-import org.apache.commons.configuration2.builder.fluent.Parameters;
-import org.apache.commons.configuration2.ex.ConfigurationException;
-import org.apache.commons.io.FileUtils;
 import org.junit.jupiter.api.BeforeAll;
 import org.testcontainers.containers.DockerComposeContainer;
 import org.testcontainers.junit.jupiter.Container;

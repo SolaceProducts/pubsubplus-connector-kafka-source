@@ -2,19 +2,11 @@ package com.solace.messaging.kafka.it;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
 
-import org.apache.commons.configuration2.Configuration;
-import org.apache.commons.configuration2.FileBasedConfiguration;
-import org.apache.commons.configuration2.PropertiesConfiguration;
-import org.apache.commons.configuration2.builder.FileBasedConfigurationBuilder;
-import org.apache.commons.configuration2.builder.fluent.Parameters;
-import org.apache.commons.configuration2.ex.ConfigurationException;
 import org.apache.commons.io.FileUtils;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
