@@ -112,7 +112,7 @@ public class SolaceConnectorDeployment implements TestConstants {
       assert (results.contains("solace"));
 
       // Delete a running connector, if any
-      Request deleterequest = new Request.Builder().url("http://" + connectorAddress + "/connectors/solaceConnector")
+      Request deleterequest = new Request.Builder().url("http://" + connectorAddress + "/connectors/solaceSourceConnector")
           .delete().build();
       Response deleteresponse = client.newCall(deleterequest).execute();
       logger.info("Delete response: " + deleteresponse);
@@ -129,7 +129,7 @@ public class SolaceConnectorDeployment implements TestConstants {
 
       // check success
       Request statusrequest = new Request.Builder()
-          .url("http://" + connectorAddress + "/connectors/solaceConnector/status").build();
+          .url("http://" + connectorAddress + "/connectors/solaceSourceConnector/status").build();
       Response statusresponse;
       long starttime = System.currentTimeMillis();
       do {

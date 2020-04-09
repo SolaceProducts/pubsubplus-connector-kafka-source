@@ -75,7 +75,7 @@ distributions {
         contents {
             from('etc/solace_source.properties') { into 'etc' }
             from('etc/solace_source_properties.json') { into 'etc' }
-            from('doc/README.md') { into 'doc' }
+            from('doc/distribution-readme.md') { into 'doc' }
             from('LICENSE') { into 'doc' }
             into('lib') {
                 from jar

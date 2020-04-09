@@ -117,7 +117,7 @@ public class SolSessionHandler {
     properties.setBooleanProperty(JCSMPProperties
         .NO_LOCAL, connectorConfig.getBoolean(SolaceSourceConstants.SOL_NO_LOCAL));
     properties.setProperty(JCSMPProperties.AUTHENTICATION_SCHEME,
-        connectorConfig.getString(SolaceSourceConstants.SOl_AUTHENTICATION_SCHEME));
+        connectorConfig.getString(SolaceSourceConstants.SOL_AUTHENTICATION_SCHEME));
     properties.setProperty(JCSMPProperties.KRB_SERVICE_NAME,
         connectorConfig.getString(SolaceSourceConstants.SOL_KRB_SERVICE_NAME));
     properties.setProperty(JCSMPProperties.SSL_CONNECTION_DOWNGRADE_TO,

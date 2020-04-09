@@ -19,7 +19,7 @@
 
 package com.solace.source.connector.msgprocessors;
 
-import com.solace.source.connector.SolMessageProcessor;
+import com.solace.source.connector.SolMessageProcessorIF;
 
 import com.solacesystems.jcsmp.BytesXMLMessage;
 import com.solacesystems.jcsmp.TextMessage;
@@ -34,7 +34,7 @@ import org.apache.kafka.connect.source.SourceRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-public class SolaceSampleKeyedMessageProcessor implements SolMessageProcessor {
+public class SolaceSampleKeyedMessageProcessor implements SolMessageProcessorIF {
 
   private static final Logger log 
       = LoggerFactory.getLogger(SolaceSampleKeyedMessageProcessor.class);
@@ -51,7 +51,7 @@ public class SolaceSampleKeyedMessageProcessor implements SolMessageProcessor {
   protected KeyHeader keyheader = KeyHeader.NONE;
 
   @Override
-  public SolMessageProcessor process(String skey, BytesXMLMessage msg) {
+  public SolMessageProcessorIF process(String skey, BytesXMLMessage msg) {
     this.msg = msg;
     this.skey = skey.toUpperCase();
 

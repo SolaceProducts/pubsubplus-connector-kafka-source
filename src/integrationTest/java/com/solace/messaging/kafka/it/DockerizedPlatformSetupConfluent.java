@@ -44,7 +44,7 @@ public class DockerizedPlatformSetupConfluent implements MessagingServiceFullLoc
 //                        
           .withEnv("CONNECT_REST_ADVERTISED_HOST_NAME", "localhost").withEnv("CONNECT_LOG4J_ROOT_LOGLEVEL", "INFO")
           .withEnv("CONNECT_PLUGIN_PATH", "/usr/share/java,/etc/kafka-connect/jars")
-          .withClasspathResourceMapping("pubsubplus-connector-kafka-source/lib",
+          .withClasspathResourceMapping(Tools.getUnzippedConnectorDirName() + "/lib",
               "/etc/kafka-connect/jars/pubsubplus-connector-kafka", BindMode.READ_ONLY)
 //                        .waitingFor( Wait.forHealthcheck() );
           .waitingFor(Wait.forLogMessage(".*Kafka Connect started.*", 1));
@@ -59,7 +59,7 @@ public class DockerizedPlatformSetupConfluent implements MessagingServiceFullLoc
   class MessagingServiceConnectionTests {
     @DisplayName("Setup the dockerized platform")
     @Test
-    @Disabled
+//    @Disabled
     void setupDockerizedPlatformTest() {
       String host = COMPOSE_CONTAINER_PUBSUBPLUS.getServiceHost("solbroker_1", 8080);
       assertNotNull(host);
