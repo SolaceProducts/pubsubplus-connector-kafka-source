@@ -332,7 +332,7 @@ an unforeseen burst event.
 
 ## Additional Information
 
-For additional information, use cases and explanatory videos, please visit the [Solace/Kafka Integration Guide](https://dev.solace.com/integration-guides/kafka-integration/).
+For additional information, use cases and explanatory videos, please visit the [Solace/Kafka Integration Guide](https://docs.solace.com/Developer-Tools/Integration-Guides/Kafka-Connect.htm).
 
 
 ## Contributing
