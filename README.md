@@ -126,7 +126,7 @@ Refer to the in-line documentation of the [sample PubSub+ Kafka Source Connector
 
 ### Deployment
 
-The PubSub+ Source Connector deployment has been tested on Apache Kafka 2.12 and Confluent Kafka 5.4 platforms. The Kafka software is typically placed under the root directory: `/opt/<provider>/<kafka or confluent-version>`.
+The PubSub+ Source Connector deployment has been tested on Apache Kafka 2.4 and Confluent Kafka 5.4 platforms. The Kafka software is typically placed under the root directory: `/opt/<provider>/<kafka or confluent-version>`.
 
 Kafka distributions may be available as install bundles, Docker images, Kubernetes deployments, etc. They all support Kafka Connect which includes the scripts, tools and sample properties for Kafka connectors.
 
@@ -221,7 +221,7 @@ Refer to the [Developers Guide](#developers-guide) for more information about bu
 
 #### Ingesting from PubSub+ Topics
 
-The event broker uses a "best effort" approach to deliver the events from PubSub+ Topics to the Source Connector. If the connector is down, or messages are constantly generated at a rate faster than can be written to Kafka, there is a potential for data loss. Even if Kafka is configured for its highest throughput, it is still susceptible to loss and, obviously, the connector cannot add records if the Kafka broker is unavailable.
+The event broker uses a "best effort" approach to deliver the events from PubSub+ Topics to the Source Connector. If the connector is down, or messages are constantly generated at a rate faster than can be written to Kafka, there is a potential for data loss. When Kafka is configured for its highest throughput, it is susceptible to loss and, obviously, the connector cannot add records if the Kafka broker is unavailable.
 
 When a Kafka Topic is configured for high throughput the use of topics to receive data event messages is acceptable and recommended.
 
@@ -303,7 +303,7 @@ sol.authentication_scheme=AUTHENTICATION_SCHEME_GSS_KRB
 Kerberos has some very specific requirements to operate correctly. Some additional tips are as follows:
 * DNS must be operating correctly both in the Kafka brokers and on the Solace PS+ broker.
 * Time services are recommended for use with the Kafka Cluster nodes and the Solace PS+ broker. If there is too much drift in the time between the nodes, Kerberos will fail.
-* You must use the DNS name and not the IP addressin the Solace PS+ host URI in the Connector configuration file
+* You must use the DNS name and not the IP address in the Solace PS+ host URI in the Connector configuration file
 * You must use the full Kerberos user name (including the Realm) in the configuration property; obviously, no password is required. 
 
 ## Developers Guide
@@ -342,6 +342,10 @@ You can use these examples as starting points for implementing your own custom m
 More information on Kafka source connector development can be found here:
 - [Apache Kafka Connect](https://kafka.apache.org/documentation/)
 - [Confluent Kafka Connect](https://docs.confluent.io/current/connect/index.html)
+
+## Additional Information
+
+For additional information, use cases and explanatory videos, please visit the [PubSub+/Kafka Integration Guide](https://docs.solace.com/Developer-Tools/Integration-Guides/Kafka-Connect.htm).
 
 ## Contributing
 
