@@ -11,11 +11,11 @@ script:
 
 after_success:
 - >
-  if [ "$TRAVIS_BRANCH" = "SourceConnectorProductization" ]; then
+  if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ "$TRAVIS_BRANCH" = "master" ]; then
     git config --global user.email "travis@travis-ci.org";
     git config --global user.name "travis-ci";
     mkdir gh-pages; # Now update gh-pages
-    git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com/SolaceDev/pubsubplus-connector-kafka-source gh-pages > /dev/null 2>&1;
+    git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com/SolaceProducts/pubsubplus-connector-kafka-source gh-pages > /dev/null 2>&1;
     rm gh-pages/downloads/pubsubplus-connector-kafka-source*
     mv build/distributions/pubsubplus-connector-kafka-source* gh-pages/downloads
     cd gh-pages;
@@ -24,7 +24,7 @@ after_success:
     popd;
     git add -f .;
     git commit -m "Latest connector distribution on successful travis build $TRAVIS_BUILD_NUMBER auto-pushed to gh-pages";
-    git remote add origin-pages https://${GH_TOKEN}@github.com/SolaceDev/pubsubplus-connector-kafka-source.git > /dev/null 2>&1;
+    git remote add origin-pages https://${GH_TOKEN}@github.com/SolaceProducts/pubsubplus-connector-kafka-source.git > /dev/null 2>&1;
     git push --quiet --set-upstream origin-pages gh-pages;
     echo "Updated and pushed GH pages!";
   fi
