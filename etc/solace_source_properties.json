@@ -2,7 +2,7 @@
 	"name": "solaceSourceConnector",
 	"config": {
     "name": "solaceSourceConnector",
-    "connector.class": "com.solace.source.connector.SolaceSourceConnector",
+    "connector.class": "com.solace.connector.kafka.connect.source.SolaceSourceConnector",
     "tasks.max": "1",
     "kafka.topic": "test",
     "sol.host": "tcp://192.168.99.113:55555",
@@ -10,7 +10,7 @@
     "sol.password": "default",
     "sol.vpn_name": "default",
     "sol.topics": "sourcetest",
-    "sol.message_processor_class": "com.solace.source.connector.msgprocessors.SolSampleSimpleMessageProcessor",
+    "sol.message_processor_class": "com.solace.connector.kafka.connect.source.msgprocessors.SolSampleSimpleMessageProcessor",
     "value.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
     "key.converter": "org.apache.kafka.connect.storage.StringConverter"	}
 }

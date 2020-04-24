@@ -7,7 +7,7 @@ jdk:
   - openjdk8
 
 script:
-  - ./gradlew clean integrationTest --tests com.solace.messaging.kafka.it.SourceConnectorIT
+  - ./gradlew clean integrationTest --tests com.solace.connector.kafka.connect.source.it.SourceConnectorIT
 
 after_success:
 - >

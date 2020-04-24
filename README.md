@@ -151,7 +151,7 @@ In this case the IP address is one of the nodes running the distributed mode wor
 
 ```
   {
-    "class": "com.solace.source.connector.SolaceSourceConnector",
+    "class": "com.solace.connector.kafka.connect.source.SolaceSourceConnector",
     "type": "source",
     "version": "2.0.0"
   },
@@ -210,12 +210,16 @@ The PubSub+ Source Connector comes with two sample message processors that can b
 
 The desired message processor is loaded at runtime based on the configuration of the JSON or properties configuration file, for example:
 ```
-sol.message_processor_class=com.solace.source.connector.msgprocessors.SolSampleSimpleMessageProcessor
+sol.message_processor_class=com.solace.connector.kafka.connect.source.msgprocessors.SolSampleSimpleMessageProcessor
 ```
 
 It is possible to create more custom message processors based on your Kafka record requirements for keying and/or value serialization and the desired format of the PubSub+ event message. Simply add the new message processor classes to the project. The desired message processor is installed at run time based on the configuration file. 
 
 Refer to the [Developers Guide](#developers-guide) for more information about building the Source Connector and extending message processors.
+
+#### Message Replay
+
+By default, the Source Connector will process live events from the PubSub+ event broker. If replay of past recorded events is required for later consumption, it also is possible to use the PubSub+ [Message Replay](//docs.solace.com/Configuring-and-Managing/Message-Replay.htm) feature, initiated through [PubSub+ management](//docs.solace.com/Solace-PubSub-Manager/PubSub-Manager-Overview.htm). 
 
 ### Performance and Reliability Considerations
 
@@ -327,15 +331,15 @@ This script creates artifacts in the `build` directory, including the deployable
 
 An integration test suite is also included, which spins up a Docker-based deployment environment that includes a PubSub+ event broker, Zookeeper, Kafka broker, Kafka Connect. It deploys the connector to Kafka Connect and runs end-to-end tests.
 ```
-gradlew clean integrationTest --tests com.solace.messaging.kafka.it.SourceConnectorIT
+gradlew clean integrationTest --tests com.solace.connector.kafka.connect.source.it.SourceConnectorIT
 ```
 
 ### Build a New Message Processor
 
-The processing of the Solace message to create a Kafka source record is handled by an interface defined in [`SolaceMessageProcessorIF.java`](/src/main/java/com/solace/source/connector/SolMessageProcessorIF.java). This is a simple interface that creates the Kafka source records from the PubSub+ messages. This project includes two examples of classes that implement this interface:
+The processing of the Solace message to create a Kafka source record is handled by an interface defined in [`SolaceMessageProcessorIF.java`](/src/main/java/com/solace/connector/kafka/connect/source/SolMessageProcessorIF.java). This is a simple interface that creates the Kafka source records from the PubSub+ messages. This project includes two examples of classes that implement this interface:
 
-* [SolSampleSimpleMessageProcessor](/src/main/java/com/solace/source/connector/msgprocessors/SolSampleSimpleMessageProcessor.java)
-* [SolaceSampleKeyedMessageProcessor](/src/main/java/com/solace/source/connector/msgprocessors/SolaceSampleKeyedMessageProcessor.java)
+* [SolSampleSimpleMessageProcessor](/src/main/java/com/solace/connector/kafka/connect/source/msgprocessors/SolSampleSimpleMessageProcessor.java)
+* [SolaceSampleKeyedMessageProcessor](/src/main/java/com/solace/connector/kafka/connect/source/msgprocessors/SolaceSampleKeyedMessageProcessor.java)
 
 You can use these examples as starting points for implementing your own custom message processors.
 
