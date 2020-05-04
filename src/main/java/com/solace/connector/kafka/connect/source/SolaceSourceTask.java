@@ -115,10 +115,17 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
     int arraySize = ingressMessages.size();
     while (count < arraySize) {
       BytesXMLMessage msg = ingressMessages.take();
-      processor = connectorConfig
-          .getConfiguredInstance(SolaceSourceConstants
-              .SOL_MESSAGE_PROCESSOR, SolMessageProcessorIF.class)
-          .process(connectorConfig.getString(SolaceSourceConstants.SOL_KAFKA_MESSAGE_KEY), msg);
+      try {
+        processor = connectorConfig
+            .getConfiguredInstance(SolaceSourceConstants
+                .SOL_MESSAGE_PROCESSOR, SolMessageProcessorIF.class)
+            .process(connectorConfig.getString(SolaceSourceConstants.SOL_KAFKA_MESSAGE_KEY), msg);
+      } catch (Exception e) {
+        log.info(
+            "================ Encountered exception in message processing....discarded."
+            + " Cause: {}, Stacktrace: {} ",
+            e.getCause(), e.getStackTrace());
+      }
       Collections.addAll(records, processor.getRecords(skafkaTopic));
       count++;
       processedInIhisBatch++;
