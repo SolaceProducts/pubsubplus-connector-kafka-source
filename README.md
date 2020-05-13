@@ -1,10 +1,10 @@
 [![Build Status](https://travis-ci.org/SolaceProducts/pubsubplus-connector-kafka-source.svg?branch=master)](https://travis-ci.org/SolaceProducts/pubsubplus-connector-kafka-source)
 
-# PubSub+ Connector Kafka Source
+# Solace PubSub+ Connector for Kafka: Source
 
 This project provides a Solace PubSub+ Event Broker to Kafka [Source Connector](//kafka.apache.org/documentation.html#connect_concepts) (adapter) that makes use of the [Kafka Connect API](//kafka.apache.org/documentation/#connect).
 
-**Note**: there is also a PubSub+ Kafka Sink Connector available from the [PubSub+ Connector Kafka Sink](https://github.com/SolaceProducts/pubsubplus-connector-kafka-sink) GitHub repository.
+**Note**: there is also a PubSub+ Kafka Sink Connector available from the [Solace PubSub+ Connector for Kafka: Sink](https://github.com/SolaceProducts/pubsubplus-connector-kafka-sink) GitHub repository.
 
 Contents:
 
@@ -23,7 +23,7 @@ Contents:
 
 ## Overview
 
-The PubSub+ Source Connector consumes PubSub+ event broker real-time queue or topic data events and streams them to a Kafka topic as Source Records. 
+The PubSub+ Kafka Source Connector consumes PubSub+ event broker real-time queue or topic data events and streams them to a Kafka topic as Source Records. 
 
 The connector was created using PubSub+ high performance Java API to move PubSub+ data events to the Kafka Broker.
 
