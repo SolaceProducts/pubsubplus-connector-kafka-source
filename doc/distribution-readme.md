@@ -1,4 +1,4 @@
-# Solace PubSub+ Connector Kafka Source
+# Solace PubSub+ Connector for Kafka: Source
 
 This package provides a Solace PubSub+ Event Broker to Kafka Source Connector. 
 
