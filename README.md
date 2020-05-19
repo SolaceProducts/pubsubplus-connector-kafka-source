@@ -367,6 +367,7 @@ This project is licensed under the Apache License, Version 2.0. See the [LICENSE
 
 For more information about Solace technology in general, please visit these resources:
 
+- How to [Setup and Use](https://solace.com/resources/solace-with-kafka/kafka-source-and-sink-how-to-video-final)
 - The [Solace Developers website](https://www.solace.dev/)
 - Understanding [Solace technology]( https://solace.com/products/tech/)
 - Ask the [Solace Community]( https://solace.community/)
