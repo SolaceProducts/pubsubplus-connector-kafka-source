@@ -24,19 +24,12 @@ import com.solacesystems.jcsmp.DeliveryMode;
 import com.solacesystems.jcsmp.JCSMPException;
 import com.solacesystems.jcsmp.JCSMPProperties;
 import com.solacesystems.jcsmp.JCSMPSession;
-import com.solacesystems.jcsmp.JCSMPSessionStats;
-import com.solacesystems.jcsmp.statistics.StatType;
-
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Enumeration;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-
 import org.apache.kafka.connect.source.SourceRecord;
 import org.apache.kafka.connect.source.SourceTask;
 import org.slf4j.Logger;
@@ -59,7 +52,7 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
   String skafkaTopic;
   SolaceSourceTopicListener topicListener = null;
   SolaceSourceQueueConsumer queueConsumer = null;
-  
+  private int spinTurns = 0;
   private volatile boolean shuttingDown = false;
 
   // private Class<?> cProcessor;
@@ -74,6 +67,16 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
   public void start(Map<String, String> props) {
 
     connectorConfig = new SolaceSourceConnectorConfig(props);
+    try {
+      processor = connectorConfig
+          .getConfiguredInstance(SolaceSourceConstants
+              .SOL_MESSAGE_PROCESSOR, SolMessageProcessorIF.class);
+    } catch (Exception e) {
+      log.info(
+          "================ Encountered exception in creating the message processor."
+          + " Cause: {}, Stacktrace: {} ",
+          e.getCause(), e.getStackTrace());
+    }
     skafkaTopic = connectorConfig.getString(SolaceSourceConstants.KAFKA_TOPIC);
     solSessionHandler = new SolSessionHandler(connectorConfig);
     try {
@@ -106,7 +109,12 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
   public synchronized List<SourceRecord> poll() throws InterruptedException {
 
     if (shuttingDown || ingressMessages.size() == 0) {
-        return null;  // Nothing to do, return control
+      spinTurns++;
+      if (spinTurns > 100) {
+        spinTurns = 0;
+        Thread.sleep(1);
+      }
+      return null;  // Nothing to do, return control
     }
     // There is at least one message to process
     List<SourceRecord> records = new ArrayList<>();
@@ -116,10 +124,7 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
     while (count < arraySize) {
       BytesXMLMessage msg = ingressMessages.take();
       try {
-        processor = connectorConfig
-            .getConfiguredInstance(SolaceSourceConstants
-                .SOL_MESSAGE_PROCESSOR, SolMessageProcessorIF.class)
-            .process(connectorConfig.getString(SolaceSourceConstants.SOL_KAFKA_MESSAGE_KEY), msg);
+          processor.process(connectorConfig.getString(SolaceSourceConstants.SOL_KAFKA_MESSAGE_KEY), msg);
       } catch (Exception e) {
         log.info(
             "================ Encountered exception in message processing....discarded."
