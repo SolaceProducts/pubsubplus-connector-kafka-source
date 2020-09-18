@@ -27,4 +27,20 @@ after_success:
     git remote add origin-pages https://${GH_TOKEN}@github.com/SolaceProducts/pubsubplus-connector-kafka-source.git > /dev/null 2>&1;
     git push --quiet --set-upstream origin-pages gh-pages;
     echo "Updated and pushed GH pages!";
+  elif [ "$TRAVIS_PULL_REQUEST" = "false" ] && ! [ $(echo $TRAVIS_REPO_SLUG | grep "SolaceProducts") ]; then
+    git config --global user.email "travis@travis-ci.org";
+    git config --global user.name "travis-ci";
+    mkdir gh-pages; # Now update gh-pages
+    git clone --quiet --branch=gh-pages https://${GH_TOKEN}@github.com/$TRAVIS_REPO_SLUG gh-pages > /dev/null 2>&1;
+    rm gh-pages/downloads/pubsubplus-connector-kafka-source*
+    mv build/distributions/pubsubplus-connector-kafka-source* gh-pages/downloads
+    cd gh-pages;
+    pushd downloads
+    cp index.template index.html; FILENAME=`find . | grep *.zip | cut -d'/' -f2 | sed 's/.\{4\}$//'`;  sed -i "s/CONNECTOR_NAME/$FILENAME/g" index.html;
+    popd;
+    git add -f .;
+    git commit -m "Latest connector distribution on successful travis build $TRAVIS_BUILD_NUMBER auto-pushed to gh-pages";
+    git remote add origin-pages https://${GH_TOKEN}@github.com/$TRAVIS_REPO_SLUG.git > /dev/null 2>&1;
+    git push --quiet --set-upstream origin-pages gh-pages;
+    echo "Updated and pushed GH pages!";
   fi
