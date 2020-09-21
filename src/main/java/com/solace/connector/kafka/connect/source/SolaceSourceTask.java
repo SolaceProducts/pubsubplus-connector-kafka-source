@@ -117,6 +117,7 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
       return null;  // Nothing to do, return control
     }
     // There is at least one message to process
+    spinTurns = 0; // init spinTurns again
     List<SourceRecord> records = new ArrayList<>();
     int processedInIhisBatch = 0;
     int count = 0;
