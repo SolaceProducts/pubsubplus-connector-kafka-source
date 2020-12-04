@@ -1,6 +1,6 @@
-# This workflow will build a Java project with Gradle
+# This workflow will build and test a Java project with Gradle
 
-name: Build and test project on push and on crone
+name: build
 
 on:
   schedule:
@@ -22,4 +22,4 @@ jobs:
     - name: Grant execute permission for gradlew
       run: chmod +x gradlew
     - name: Build with Gradle
-      run: echo "Starting" ; ./gradlew clean integrationTest --tests com.solace.connector.kafka.connect.source.it.SourceConnectorIT; echo "Finished"
+      run: ./gradlew clean integrationTest --tests com.solace.connector.kafka.connect.source.it.SourceConnectorIT
