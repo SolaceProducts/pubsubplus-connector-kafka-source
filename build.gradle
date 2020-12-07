@@ -68,6 +68,14 @@ project.integrationTest {
     useJUnitPlatform()
     outputs.upToDateWhen { false }
     dependsOn prepDistForIntegrationTesting
+    afterSuite { desc, result ->
+      if (!desc.parent)
+          println("${result.resultType} " +
+              "(${result.testCount} tests, " +
+              "${result.successfulTestCount} successes, " +
+              "${result.failedTestCount} failures, " +
+              "${result.skippedTestCount} skipped)")
+      }
 }
 
 distributions {
