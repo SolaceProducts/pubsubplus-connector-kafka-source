@@ -1,4 +1,4 @@
-![Build Status](https://github.com/SolaceDev/pubsubplus-connector-kafka-source/workflows/Build%20and%20test%20project%20on%20push%20and%20on%20crone/badge.svg)
+![[Build Status](https://github.com/SolaceDev/pubsubplus-connector-kafka-source/workflows/build/badge.svg)](https://github.com/SolaceDev/pubsubplus-connector-kafka-source/actions?query=workflow%3Abuild)
 
 # Solace PubSub+ Connector for Kafka: Source
 
