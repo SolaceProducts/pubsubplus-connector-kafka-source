@@ -1,4 +1,4 @@
-[![Actions Status](https://github.com/SolaceDev/pubsubplus-connector-kafka-source/workflows/build/badge.svg)](https://github.com/SolaceDev/pubsubplus-connector-kafka-source/actions?query=workflow%3Abuild)
+[![Actions Status](https://github.com/SolaceProducts/pubsubplus-connector-kafka-source/workflows/build/badge.svg)](https://github.com/SolaceProducts/pubsubplus-connector-kafka-source/actions?query=workflow%3Abuild)
 
 # Solace PubSub+ Connector for Kafka: Source
 
