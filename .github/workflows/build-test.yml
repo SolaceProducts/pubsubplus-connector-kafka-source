@@ -17,7 +17,7 @@ jobs:
       with:
         java-version: 1.8
     - name: Build and test with Gradle
-      run: echo "./gradlew clean integrationTest --tests com.solace.connector.kafka.connect.source.it.SourceConnectorIT"
+      run: ./gradlew clean integrationTest --tests com.solace.connector.kafka.connect.source.it.SourceConnectorIT
     - name: Publish artifacts
       run: |
         if [ ${{ github.ref }} == 'refs/heads/master' ] && [ ${{ github.repository_owner }} == 'SolaceProducts' ] ; then
