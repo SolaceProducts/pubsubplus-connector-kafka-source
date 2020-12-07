@@ -1,0 +1,57 @@
+# This workflow will build and test a Java project with Gradle
+
+name: build
+
+on:
+  push:
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup JDK 1.8
+      uses: actions/setup-java@v1
+      with:
+        java-version: 1.8
+    - name: Build and test with Gradle
+      run: ./gradlew clean integrationTest --tests com.solace.connector.kafka.connect.source.it.SourceConnectorIT
+    - name: Publish artifacts
+      run: |
+        if [ ${{ github.ref }} == 'refs/heads/master' ] && [ ${{ github.repository_owner }} == 'SolaceProducts' ] ; then
+          echo "Using master on SolaceProducts"
+          git config --global user.name "GitHub Actions Automation"
+          git config --global user.email "<>"
+          mkdir gh-pages; # Now update gh-pages
+          git clone --quiet --branch=gh-pages https://${{ secrets.GH_TOKEN }}@github.com/SolaceProducts/pubsubplus-connector-kafka-source gh-pages > /dev/null 2>&1;
+          rm gh-pages/downloads/pubsubplus-connector-kafka-source*
+          mv build/distributions/pubsubplus-connector-kafka-source* gh-pages/downloads
+          cd gh-pages;
+          pushd downloads
+          cp index.template index.html; FILENAME=`find . | grep *.zip | cut -d'/' -f2 | sed 's/.\{4\}$//'`;  sed -i "s/CONNECTOR_NAME/$FILENAME/g" index.html;
+          popd;
+          git add -f .;
+          git commit -m "Latest connector distribution on successful travis build ${{ github.run_number }} auto-pushed to gh-pages";
+          git remote add origin-pages https://${{ secrets.GH_TOKEN }}@github.com/SolaceProducts/pubsubplus-connector-kafka-source.git > /dev/null 2>&1;
+          git push --quiet --set-upstream origin-pages gh-pages;
+          echo "Updated and pushed GH pages!";
+        elif [ ${{ github.ref }} != 'refs/heads/gh-pages' ] && [ ${{ github.repository_owner }} != 'SolaceProducts' ] ; then
+          echo "Using ${{ github.ref }} on ${{ github.repository_owner }}"
+          git config --global user.name "GitHub Actions Automation"
+          git config --global user.email "<>"
+          mkdir gh-pages; # Now update gh-pages
+          git clone --quiet --branch=gh-pages https://${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }} gh-pages > /dev/null 2>&1;
+          rm gh-pages/downloads/pubsubplus-connector-kafka-source*
+          mv build/distributions/pubsubplus-connector-kafka-source* gh-pages/downloads
+          cd gh-pages;
+          pushd downloads
+          cp index.template index.html; FILENAME=`find . | grep *.zip | cut -d'/' -f2 | sed 's/.\{4\}$//'`;  sed -i "s/CONNECTOR_NAME/$FILENAME/g" index.html;
+          popd;
+          git add -f .;
+          git commit -m "Latest connector distribution on successful travis build ${{ github.run_number }} auto-pushed to gh-pages";
+          git remote add origin-pages https://${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git > /dev/null 2>&1;
+          git push --quiet --set-upstream origin-pages gh-pages;
+          echo "Updated and pushed GH pages!";
+        fi        

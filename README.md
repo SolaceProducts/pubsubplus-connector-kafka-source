@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/SolaceProducts/pubsubplus-connector-kafka-source.svg?branch=master)](https://travis-ci.org/SolaceProducts/pubsubplus-connector-kafka-source)
+[![Actions Status](https://github.com/SolaceProducts/pubsubplus-connector-kafka-source/workflows/build/badge.svg?branch=master)](https://github.com/SolaceProducts/pubsubplus-connector-kafka-source/actions?query=workflow%3Abuild+branch%3Amaster)
 
 # Solace PubSub+ Connector for Kafka: Source
 
