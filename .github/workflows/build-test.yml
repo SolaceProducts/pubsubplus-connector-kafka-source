@@ -3,6 +3,7 @@
 name: build
 
 on:
+  pull_request:
   push:
 
 jobs:
@@ -19,6 +20,7 @@ jobs:
     - name: Build and test with Gradle
       run: ./gradlew clean integrationTest --tests com.solace.connector.kafka.connect.source.it.SourceConnectorIT
     - name: Publish artifacts
+      if: github.event_name == 'push'
       run: |
         if [ ${{ github.ref }} == 'refs/heads/master' ] && [ ${{ github.repository_owner }} == 'SolaceProducts' ] ; then
           echo "Using master on SolaceProducts"
