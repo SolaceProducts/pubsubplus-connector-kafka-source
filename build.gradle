@@ -38,7 +38,6 @@ dependencies {
     integrationTestImplementation 'org.mockito:mockito-junit-jupiter:3.7.7'
     integrationTestImplementation 'org.testcontainers:testcontainers:1.15.1'
     integrationTestImplementation 'org.testcontainers:junit-jupiter:1.15.1'
-    integrationTestImplementation 'org.testcontainers:junit-jupiter:1.12.4'
     integrationTestImplementation 'org.slf4j:slf4j-api:1.7.28'
     integrationTestImplementation 'org.slf4j:slf4j-simple:1.7.28'
     integrationTestImplementation 'org.apache.commons:commons-configuration2:2.6'
