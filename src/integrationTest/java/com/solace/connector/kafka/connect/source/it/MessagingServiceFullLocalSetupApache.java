@@ -35,9 +35,7 @@ public interface MessagingServiceFullLocalSetupApache  extends TestConstants {
             new File(FULL_DOCKER_COMPOSE_FILE_PATH + "docker-compose-kafka-apache.yml"))
             .withEnv("KAFKA_TOPIC", KAFKA_SOURCE_TOPIC)
             .withEnv("KAFKA_HOST", dockerIpAddress)
-            .withLocalCompose(true)
-            .waitingFor("schema-registry_1",
-                Wait.forHttp("/subjects").forStatusCode(200));
+            .withLocalCompose(true);
 
   @BeforeAll
   static void checkContainer() {
