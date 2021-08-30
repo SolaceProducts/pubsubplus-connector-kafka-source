@@ -12,6 +12,7 @@ import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.junit.jupiter.Container;
 
+@Disabled
 public class DockerizedPlatformSetupConfluent implements MessagingServiceFullLocalSetupConfluent {
 
   @Container
@@ -41,7 +42,7 @@ public class DockerizedPlatformSetupConfluent implements MessagingServiceFullLoc
               "http://" + COMPOSE_CONTAINER_KAFKA.getServiceHost("schema-registry_1", 8081) + ":8081")
           .withEnv("CONNECT_INTERNAL_KEY_CONVERTER", "org.apache.kafka.connect.json.JsonConverter")
           .withEnv("CONNECT_INTERNAL_VALUE_CONVERTER", "org.apache.kafka.connect.json.JsonConverter")
-//                        
+//
           .withEnv("CONNECT_REST_ADVERTISED_HOST_NAME", "localhost").withEnv("CONNECT_LOG4J_ROOT_LOGLEVEL", "INFO")
           .withEnv("CONNECT_PLUGIN_PATH", "/usr/share/java,/etc/kafka-connect/jars")
           .withClasspathResourceMapping(Tools.getUnzippedConnectorDirName() + "/lib",
@@ -54,12 +55,12 @@ public class DockerizedPlatformSetupConfluent implements MessagingServiceFullLoc
     assert(connector != null);
   }
 
+  @Disabled
   @DisplayName("Local MessagingService connection tests")
   @Nested
   class MessagingServiceConnectionTests {
     @DisplayName("Setup the dockerized platform")
     @Test
-//    @Disabled
     void setupDockerizedPlatformTest() {
       String host = COMPOSE_CONTAINER_PUBSUBPLUS.getServiceHost("solbroker_1", 8080);
       assertNotNull(host);
