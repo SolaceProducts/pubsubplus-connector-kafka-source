@@ -18,7 +18,7 @@ jobs:
       with:
         java-version: 1.8
     - name: Build and test with Gradle
-      run: ./gradlew clean integrationTest --tests com.solace.connector.kafka.connect.source.it.SourceConnectorIT
+      run: ./gradlew clean test integrationTest --info
     - name: Publish artifacts
       if: github.event_name == 'push'
       run: |
@@ -56,4 +56,4 @@ jobs:
           git remote add origin-pages https://${{ secrets.GH_TOKEN }}@github.com/${{ github.repository }}.git > /dev/null 2>&1;
           git push --quiet --set-upstream origin-pages gh-pages;
           echo "Updated and pushed GH pages!";
-        fi        
+        fi

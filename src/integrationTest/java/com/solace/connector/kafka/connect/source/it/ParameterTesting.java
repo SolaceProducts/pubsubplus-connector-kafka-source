@@ -1,23 +1,23 @@
 package com.solace.connector.kafka.connect.source.it;
 
-import java.util.HashMap;
-import java.util.Map;
-import org.junit.jupiter.api.DisplayName;
-import org.junit.jupiter.api.Test;
-
 import com.solace.connector.kafka.connect.source.SolaceSourceTask;
 import com.solacesystems.jcsmp.JCSMPChannelProperties;
 import com.solacesystems.jcsmp.JCSMPProperties;
 import com.solacesystems.jcsmp.JCSMPSession;
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
 
-public class ParameterTesting implements TestConstants {
+import java.util.HashMap;
+import java.util.Map;
 
-    
+public class ParameterTesting implements MessagingServiceFullLocalSetupConfluent {
+
+
     @DisplayName("Default Parameter test")
     @Test
     void CheckDefaultParams() {
         SolaceSourceTask testSourceTask = new SolaceSourceTask();
-        
+
         Map<String, String> props = new HashMap<String, String>();
         /* ("sol.host", "tcp://" + MessagingServiceFullLocalSetupConfluent.COMPOSE_CONTAINER_PUBSUBPLUS
                             .getServiceHost("solbroker_1", 55555) + ":55555");
@@ -29,11 +29,11 @@ public class ParameterTesting implements TestConstants {
         props.put("sol.username", SOL_ADMINUSER_NAME);
         props.put("sol.password", SOL_ADMINUSER_PW);
         props.put("sol.vpn_name", SOL_VPN);
-        
+
         testSourceTask.start(props);
         JCSMPSession solSession = testSourceTask.getSolSession();
         assert(!solSession.isClosed());
-        JCSMPChannelProperties chanProperties = 
+        JCSMPChannelProperties chanProperties =
                         (JCSMPChannelProperties) solSession.getProperty(JCSMPProperties.CLIENT_CHANNEL_PROPERTIES);
         boolean GENERATE_SEND_TIMESTAMPS = (boolean) solSession.getProperty(JCSMPProperties.GENERATE_SEND_TIMESTAMPS);
         solSession.getProperty(JCSMPProperties.GENERATE_RCV_TIMESTAMPS);
@@ -64,10 +64,10 @@ public class ParameterTesting implements TestConstants {
         solSession.getProperty(JCSMPProperties.SSL_KEY_STORE_NORMALIZED_FORMAT);
         solSession.getProperty(JCSMPProperties.SSL_PRIVATE_KEY_PASSWORD);
 
-        
-        
-        
-        
+
+
+
+
         testSourceTask.stop();
     }
 
