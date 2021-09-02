@@ -22,32 +22,30 @@ package com.solace.connector.kafka.connect.source;
 import com.solacesystems.jcsmp.BytesXMLMessage;
 import com.solacesystems.jcsmp.DeliveryMode;
 import com.solacesystems.jcsmp.JCSMPException;
-import com.solacesystems.jcsmp.JCSMPProperties;
 import com.solacesystems.jcsmp.JCSMPSession;
+import org.apache.kafka.connect.errors.ConnectException;
+import org.apache.kafka.connect.source.SourceRecord;
+import org.apache.kafka.connect.source.SourceTask;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
-import org.apache.kafka.connect.source.SourceRecord;
-import org.apache.kafka.connect.source.SourceTask;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 
 public class SolaceSourceTask extends SourceTask { // implements XMLMessageListener{
 
   private static final Logger log = LoggerFactory.getLogger(SolaceSourceTask.class);
 
-  final JCSMPProperties properties = new JCSMPProperties();
-
   SolaceSourceConnectorConfig connectorConfig;
   private SolSessionHandler solSessionHandler = null;
-  BlockingQueue<BytesXMLMessage> ingressMessages 
+  BlockingQueue<BytesXMLMessage> ingressMessages
       = new LinkedBlockingQueue<>(); // LinkedBlockingQueue for any incoming message from PS+ topics and queue
-  BlockingQueue<BytesXMLMessage> outstandingAckList 
+  BlockingQueue<BytesXMLMessage> outstandingAckList
       = new LinkedBlockingQueue<>(); // LinkedBlockingQueue for Solace Flow messages
   String skafkaTopic;
   SolaceSourceTopicListener topicListener = null;
@@ -72,10 +70,7 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
           .getConfiguredInstance(SolaceSourceConstants
               .SOL_MESSAGE_PROCESSOR, SolMessageProcessorIF.class);
     } catch (Exception e) {
-      log.info(
-          "================ Encountered exception in creating the message processor."
-          + " Cause: {}, Stacktrace: {} ",
-          e.getCause(), e.getStackTrace());
+      throw new ConnectException("Encountered exception in creating the message processor.", e);
     }
     skafkaTopic = connectorConfig.getString(SolaceSourceConstants.KAFKA_TOPIC);
     solSessionHandler = new SolSessionHandler(connectorConfig);
@@ -83,24 +78,23 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
       solSessionHandler.configureSession();
       solSessionHandler.connectSession();
     } catch (JCSMPException e) {
-      log.info("Received Solace exception {}, with the "
-          + "following: {} ", e.getCause(), e.getStackTrace());
-      log.info("================ Failed to create JCSMPSession Session");
-      stop();
+      throw new ConnectException("Failed to create JCSMPSession", e);
     }
     log.info("================ JCSMPSession Connected");
     if (connectorConfig.getString(SolaceSourceConstants.SOL_TOPICS) != null) {
       topicListener = new SolaceSourceTopicListener(connectorConfig, solSessionHandler);
-      if (!topicListener.init(ingressMessages)) {
-        log.info("================ Failed to start topic consumer ... shutting down");
-        stop();
+      try {
+        topicListener.init(ingressMessages);
+      } catch (JCSMPException e) {
+        throw new ConnectException("Failed to start topic consumer", e);
       }
     }
     if (connectorConfig.getString(SolaceSourceConstants.SOL_QUEUE) != null) {
       queueConsumer = new SolaceSourceQueueConsumer(connectorConfig, solSessionHandler);
-      if (!queueConsumer.init(ingressMessages)) {
-        log.info("================ Failed to start queue consumer ... shutting down");
-        stop();
+      try {
+        queueConsumer.init(ingressMessages);
+      } catch (JCSMPException e) {
+        throw new ConnectException("Failed to start queue consumer", e);
       }
     }
   }
@@ -135,9 +129,9 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
       Collections.addAll(records, processor.getRecords(skafkaTopic));
       count++;
       processedInIhisBatch++;
-      if (msg.getDeliveryMode() == DeliveryMode.NON_PERSISTENT 
+      if (msg.getDeliveryMode() == DeliveryMode.NON_PERSISTENT
           || msg.getDeliveryMode() == DeliveryMode.PERSISTENT) {
-        outstandingAckList.add(msg);  // enqueue messages received from guaranteed messaging endpoint for later ack 
+        outstandingAckList.add(msg);  // enqueue messages received from guaranteed messaging endpoint for later ack
       }
     }
     log.debug("Processed {} records in this batch.", processedInIhisBatch);
@@ -181,5 +175,5 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
   public JCSMPSession getSolSession() {
     return solSessionHandler.getSession();
   }
-  
+
 }
