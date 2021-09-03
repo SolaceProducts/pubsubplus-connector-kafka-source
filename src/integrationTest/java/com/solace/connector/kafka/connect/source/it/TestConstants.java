@@ -1,5 +1,7 @@
 package com.solace.connector.kafka.connect.source.it;
 
+import com.solace.connector.kafka.connect.source.msgprocessors.SolSampleSimpleMessageProcessor;
+
 public interface TestConstants {
 
     public static final String PUBSUB_TAG = "latest";
@@ -17,14 +19,14 @@ public interface TestConstants {
     public static final String UNZIPPEDCONNECTORDESTINATION = "src/integrationTest/resources";
     public static final String CONNECTORPROPERTIESFILE = "etc/solace_source.properties";
     public static final String CONNECTORJSONPROPERTIESFILE = "etc/solace_source_properties.json";
-    
+
     public static final String SOL_ADMINUSER_NAME = "default";
     public static final String SOL_ADMINUSER_PW = "default";
     public static final String SOL_VPN = "default";
     public static final String KAFKA_SOURCE_TOPIC = "kafka-source-test-topic";
     public static final String SOL_TOPICS = "pubsubplus-test-topic";
     public static final String SOL_QUEUE = "pubsubplus-test-queue";
-    public static final String CONN_MSGPROC_CLASS = "com.solace.source.connector.msgprocessors.SolSampleSimpleMessageProcessor";
+    public static final String CONN_MSGPROC_CLASS = SolSampleSimpleMessageProcessor.class.getName();
     public static final String CONN_KAFKA_MSGKEY = "DESTINATION";
-    
+
 }

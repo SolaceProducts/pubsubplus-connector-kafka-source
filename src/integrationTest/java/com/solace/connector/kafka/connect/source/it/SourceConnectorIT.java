@@ -1,5 +1,16 @@
 package com.solace.connector.kafka.connect.source.it;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonObject;
+import com.solacesystems.jcsmp.BytesMessage;
+import com.solacesystems.jcsmp.JCSMPException;
+import com.solacesystems.jcsmp.Message;
+import com.solacesystems.jcsmp.Queue;
+import com.solacesystems.jcsmp.TextMessage;
+import com.solacesystems.jcsmp.Topic;
+import com.solacesystems.jcsmp.impl.AbstractDestination;
+import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
@@ -10,18 +21,17 @@ import org.junit.jupiter.api.TestInstance;
 import org.junit.jupiter.api.TestInstance.Lifecycle;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import com.solacesystems.jcsmp.BytesMessage;
-import com.solacesystems.jcsmp.JCSMPException;
-import com.solacesystems.jcsmp.Message;
-import com.solacesystems.jcsmp.Queue;
-import com.solacesystems.jcsmp.TextMessage;
-import com.solacesystems.jcsmp.Topic;
-import com.solacesystems.jcsmp.impl.AbstractDestination;
 
 import java.nio.ByteBuffer;
+import java.time.Duration;
 import java.util.Arrays;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicReference;
+
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 public class SourceConnectorIT extends DockerizedPlatformSetupApache implements TestConstants {
 
@@ -31,7 +41,7 @@ public class SourceConnectorIT extends DockerizedPlatformSetupApache implements 
   static SolaceConnectorDeployment connectorDeployment = new SolaceConnectorDeployment();
   static TestKafkaConsumer kafkaConsumer = new TestKafkaConsumer(SolaceConnectorDeployment.kafkaTestTopic);
   static TestSolaceProducer solaceProducer = new TestSolaceProducer();
-  
+
   ////////////////////////////////////////////////////
   // Main setup/teardown
 
@@ -507,5 +517,36 @@ public class SourceConnectorIT extends DockerizedPlatformSetupApache implements 
           "Hello attached world!", null);
     }
 
+  }
+
+  @DisplayName("Solace connector provisioning tests")
+  @Nested
+  @TestInstance(Lifecycle.PER_CLASS)
+  class SolaceConnectorProvisioningTests {
+    private final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
+
+    @BeforeAll
+    void setUp() {
+      solaceProducer.resetQueue(SOL_QUEUE);
+    }
+
+    @Test
+    void testFailPubSubConnection() {
+      Properties prop = new Properties();
+      prop.setProperty("sol.message_processor_class",
+              "com.solace.connector.kafka.connect.source.msgprocessors.SolSampleSimpleMessageProcessor");
+      prop.setProperty("sol.vpn_name", RandomStringUtils.randomAlphanumeric(10));
+      connectorDeployment.startConnector(prop);
+      AtomicReference<JsonObject> connectorStatus = new AtomicReference<>(new JsonObject());
+      assertTimeoutPreemptively(Duration.ofMinutes(1), () -> {
+        JsonObject taskStatus;
+        do {
+          JsonObject status = connectorDeployment.getConnectorStatus();
+          connectorStatus.set(status);
+          taskStatus = status.getAsJsonArray("tasks").get(0).getAsJsonObject();
+        } while (!taskStatus.get("state").getAsString().equals("FAILED"));
+        assertThat(taskStatus.get("trace").getAsString(), containsString("Message VPN Not Allowed"));
+      }, () -> "Timed out waiting for connector to fail: " + GSON.toJson(connectorStatus.get()));
+    }
   }
 }

@@ -29,6 +29,7 @@ public class ParameterTesting implements MessagingServiceFullLocalSetupConfluent
         props.put("sol.username", SOL_ADMINUSER_NAME);
         props.put("sol.password", SOL_ADMINUSER_PW);
         props.put("sol.vpn_name", SOL_VPN);
+        props.put("sol.message_processor_class", TestConstants.CONN_MSGPROC_CLASS);
 
         testSourceTask.start(props);
         JCSMPSession solSession = testSourceTask.getSolSession();

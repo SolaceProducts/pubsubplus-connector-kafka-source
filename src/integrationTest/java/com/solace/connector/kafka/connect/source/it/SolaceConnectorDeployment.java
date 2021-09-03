@@ -1,12 +1,16 @@
 package com.solace.connector.kafka.connect.source.it;
 
-import java.io.File;
-import java.io.IOException;
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Properties;
-
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import okhttp3.ResponseBody;
 import org.apache.commons.io.FileUtils;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
@@ -14,16 +18,21 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import java.io.File;
+import java.io.IOException;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+import java.util.Properties;
+import java.util.concurrent.atomic.AtomicReference;
 
-import okhttp3.MediaType;
-import okhttp3.OkHttpClient;
-import okhttp3.Request;
-import okhttp3.RequestBody;
-import okhttp3.Response;
+import static org.hamcrest.CoreMatchers.containsString;
+import static org.hamcrest.MatcherAssert.assertThat;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class SolaceConnectorDeployment implements TestConstants {
 
@@ -65,6 +74,7 @@ public class SolaceConnectorDeployment implements TestConstants {
   }
 
   void startConnector(Properties props) {
+    Gson gson = new GsonBuilder().setPrettyPrinting().create();
     String configJson = null;
     // Prep config files
     try {
@@ -94,7 +104,6 @@ public class SolaceConnectorDeployment implements TestConstants {
           jobject.addProperty((String) key, (String) value);
         });
       }
-      Gson gson = new Gson();
       configJson = gson.toJson(jtree);
     } catch (IOException e) {
       e.printStackTrace();
@@ -105,37 +114,41 @@ public class SolaceConnectorDeployment implements TestConstants {
       // check presence of Solace plugin: curl
       // http://18.218.82.209:8083/connector-plugins | jq
       Request request = new Request.Builder().url("http://" + connectorAddress + "/connector-plugins").build();
-      Response response = client.newCall(request).execute();
-      assert (response.isSuccessful());
-      String results = response.body().string();
-      logger.info("Available connector plugins: " + results);
-      assert (results.contains("solace"));
+      try (Response response = client.newCall(request).execute()) {
+        assertTrue(response.isSuccessful());
+        ResponseBody responseBody = response.body();
+        assertNotNull(responseBody);
+        String results = responseBody.string();
+        logger.info("Available connector plugins: " + results);
+        assertThat(results, containsString("solace"));
+      }
 
       // Delete a running connector, if any
       Request deleterequest = new Request.Builder().url("http://" + connectorAddress + "/connectors/solaceSourceConnector")
           .delete().build();
-      Response deleteresponse = client.newCall(deleterequest).execute();
-      logger.info("Delete response: " + deleteresponse);
+      try (Response deleteresponse = client.newCall(deleterequest).execute()) {
+        logger.info("Delete response: " + deleteresponse);
+      }
 
       // configure plugin: curl -X POST -H "Content-Type: application/json" -d
       // @solace_source_properties.json http://18.218.82.209:8083/connectors
       Request configrequest = new Request.Builder().url("http://" + connectorAddress + "/connectors")
           .post(RequestBody.create(configJson, MediaType.parse("application/json"))).build();
-      Response configresponse = client.newCall(configrequest).execute();
-      // if (!configresponse.isSuccessful()) throw new IOException("Unexpected code "
-      // + configresponse);
-      String configresults = configresponse.body().string();
-      logger.info("Connector config results: " + configresults);
+      try (ResponseBody configresponse = client.newCall(configrequest).execute().body()) {
+        assertNotNull(configresponse);
+        String configresults = configresponse.string();
+        logger.info("Connector config results: " + configresults);
+      }
 
       // check success
-      Request statusrequest = new Request.Builder()
-          .url("http://" + connectorAddress + "/connectors/solaceSourceConnector/status").build();
-      Response statusresponse;
-      long starttime = System.currentTimeMillis();
-      do {
-        statusresponse = client.newCall(statusrequest).execute();
-        assert (System.currentTimeMillis() - starttime < 10000l); // don't wait forever
-      } while (!statusresponse.body().string().contains("state\":\"RUNNING"));
+      AtomicReference<JsonObject> statusResponse = new AtomicReference<>(new JsonObject());
+      assertTimeoutPreemptively(Duration.ofSeconds(10), () -> {
+        JsonObject connectorStatus;
+        do {
+          connectorStatus = getConnectorStatus();
+          statusResponse.set(connectorStatus);
+        } while (!"RUNNING".equals(connectorStatus.getAsJsonObject("connector").get("state").getAsString()));
+      }, () -> "Timed out while waiting for connector to start: " + gson.toJson(statusResponse.get()));
       Thread.sleep(10000); // Give some extra time to start
       logger.info("Connector is now RUNNING");
     } catch (IOException e) {
@@ -144,5 +157,25 @@ public class SolaceConnectorDeployment implements TestConstants {
       // TODO Auto-generated catch block
       e.printStackTrace();
     }
+  }
+
+  public JsonObject getConnectorStatus() {
+    Request request = new Request.Builder()
+            .url("http://" + connectorAddress + "/connectors/solaceSourceConnector/status").build();
+    return assertTimeoutPreemptively(Duration.ofSeconds(30), () -> {
+      while (true) {
+        try (Response response = client.newCall(request).execute()) {
+          if (!response.isSuccessful()) {
+            continue;
+          }
+
+          return Optional.ofNullable(response.body())
+                  .map(ResponseBody::charStream)
+                  .map(s -> new JsonParser().parse(s))
+                  .map(JsonElement::getAsJsonObject)
+                  .orElseGet(JsonObject::new);
+        }
+      }
+    });
   }
 }
