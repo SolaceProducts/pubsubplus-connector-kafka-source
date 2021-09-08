@@ -19,7 +19,8 @@
 
 package com.solace.connector.kafka.connect.source;
 
-import com.solacesystems.jcsmp.InvalidPropertiesException;
+import com.solacesystems.jcsmp.Context;
+import com.solacesystems.jcsmp.ContextProperties;
 import com.solacesystems.jcsmp.JCSMPChannelProperties;
 import com.solacesystems.jcsmp.JCSMPException;
 import com.solacesystems.jcsmp.JCSMPFactory;
@@ -27,13 +28,12 @@ import com.solacesystems.jcsmp.JCSMPProperties;
 import com.solacesystems.jcsmp.JCSMPSession;
 import com.solacesystems.jcsmp.JCSMPSessionStats;
 import com.solacesystems.jcsmp.statistics.StatType;
-import com.solacesystems.jcsmp.Context;
-import com.solacesystems.jcsmp.ContextProperties;
-
-import java.util.Enumeration;
-
+import org.apache.kafka.common.config.types.Password;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Enumeration;
+import java.util.Optional;
 
 public class SolSessionHandler {
   private static final Logger log = LoggerFactory.getLogger(SolSessionHandler.class);
@@ -60,7 +60,8 @@ public class SolSessionHandler {
     properties.setProperty(JCSMPProperties.USERNAME,
         connectorConfig.getString(SolaceSourceConstants.SOL_USERNAME));
     properties.setProperty(JCSMPProperties.PASSWORD,
-        connectorConfig.getPassword(SolaceSourceConstants.SOL_PASSWORD).value());
+            Optional.ofNullable(connectorConfig.getPassword(SolaceSourceConstants.SOL_PASSWORD))
+                    .map(Password::value).orElse(null));
     properties.setProperty(JCSMPProperties.VPN_NAME,
         connectorConfig.getString(SolaceSourceConstants.SOL_VPN_NAME));
     properties.setProperty(JCSMPProperties.HOST, connectorConfig.getString(SolaceSourceConstants.SOL_HOST));
@@ -141,7 +142,8 @@ public class SolSessionHandler {
     properties.setProperty(JCSMPProperties.SSL_TRUST_STORE,
         connectorConfig.getString(SolaceSourceConstants.SOL_SSL_TRUST_STORE));
     properties.setProperty(JCSMPProperties.SSL_TRUST_STORE_PASSWORD,
-        connectorConfig.getPassword(SolaceSourceConstants.SOL_SSL_TRUST_STORE_PASSWORD).value());
+            Optional.ofNullable(connectorConfig.getPassword(SolaceSourceConstants.SOL_SSL_TRUST_STORE_PASSWORD))
+                    .map(Password::value).orElse(null));
     properties.setProperty(JCSMPProperties.SSL_TRUST_STORE_FORMAT,
         connectorConfig.getString(SolaceSourceConstants.SOL_SSL_TRUST_STORE_FORMAT));
     properties.setProperty(JCSMPProperties.SSL_TRUSTED_COMMON_NAME_LIST,
@@ -149,13 +151,15 @@ public class SolSessionHandler {
     properties.setProperty(JCSMPProperties
         .SSL_KEY_STORE, connectorConfig.getString(SolaceSourceConstants.SOL_SSL_KEY_STORE));
     properties.setProperty(JCSMPProperties.SSL_KEY_STORE_PASSWORD,
-        connectorConfig.getPassword(SolaceSourceConstants.SOL_SSL_KEY_STORE_PASSWORD).value());
+            Optional.ofNullable(connectorConfig.getPassword(SolaceSourceConstants.SOL_SSL_KEY_STORE_PASSWORD))
+                    .map(Password::value).orElse(null));
     properties.setProperty(JCSMPProperties.SSL_KEY_STORE_FORMAT,
         connectorConfig.getString(SolaceSourceConstants.SOL_SSL_KEY_STORE_FORMAT));
     properties.setProperty(JCSMPProperties.SSL_KEY_STORE_NORMALIZED_FORMAT,
         connectorConfig.getString(SolaceSourceConstants.SOL_SSL_KEY_STORE_NORMALIZED_FORMAT));
     properties.setProperty(JCSMPProperties.SSL_PRIVATE_KEY_PASSWORD,
-        connectorConfig.getPassword(SolaceSourceConstants.SOL_SSL_PRIVATE_KEY_PASSWORD).value());
+            Optional.ofNullable(connectorConfig.getPassword(SolaceSourceConstants.SOL_SSL_PRIVATE_KEY_PASSWORD))
+                    .map(Password::value).orElse(null));
 
     // }
   }
