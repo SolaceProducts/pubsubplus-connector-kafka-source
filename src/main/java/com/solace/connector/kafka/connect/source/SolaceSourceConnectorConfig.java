@@ -68,6 +68,9 @@ public class SolaceSourceConnectorConfig extends AbstractConfig {
         .define(SolaceSourceConstants.SOL_MESSAGE_PROCESSOR, Type.CLASS, SolMessageProcessorIF.class,
             Importance.HIGH,
             "default Solace message processor to use")
+        .define(SolaceSourceConstants.SOL_MESSAGE_PROCESSOR_IGNORE_ERROR, Type.BOOLEAN, false,
+                Importance.MEDIUM,
+                "If enabled, messages that throw message processor errors will be discarded")
         .define(SolaceSourceConstants.SOL_LOCALHOST, Type.STRING, null, Importance.LOW,
             "The hostname or IP address of the machine on which the application is running. "
             + "On a multihomed machine, it is strongly recommended to provide this parameter "

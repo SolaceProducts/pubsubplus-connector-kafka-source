@@ -113,29 +113,35 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
     // There is at least one message to process
     spinTurns = 0; // init spinTurns again
     List<SourceRecord> records = new ArrayList<>();
-    int processedInIhisBatch = 0;
-    int count = 0;
+    int processedInThisBatch;
+    int discarded = 0;
     int arraySize = ingressMessages.size();
-    while (count < arraySize) {
+    for (processedInThisBatch = 0; processedInThisBatch < arraySize; processedInThisBatch++) {
       BytesXMLMessage msg = ingressMessages.take();
       try {
           processor.process(connectorConfig.getString(SolaceSourceConstants.SOL_KAFKA_MESSAGE_KEY), msg);
       } catch (Exception e) {
-        log.info(
-            "================ Encountered exception in message processing....discarded."
-            + " Cause: {}, Stacktrace: {} ",
-            e.getCause(), e.getStackTrace());
+        if (connectorConfig.getBoolean(SolaceSourceConstants.SOL_MESSAGE_PROCESSOR_IGNORE_ERROR)) {
+          log.warn("================ Encountered exception in message processing....discarded.", e);
+          scheduleForAck(msg);
+          discarded++;
+          continue;
+        } else {
+          throw new ConnectException("Encountered exception in message processing", e);
+        }
       }
       Collections.addAll(records, processor.getRecords(skafkaTopic));
-      count++;
-      processedInIhisBatch++;
-      if (msg.getDeliveryMode() == DeliveryMode.NON_PERSISTENT
-          || msg.getDeliveryMode() == DeliveryMode.PERSISTENT) {
-        outstandingAckList.add(msg);  // enqueue messages received from guaranteed messaging endpoint for later ack
-      }
+      scheduleForAck(msg);
     }
-    log.debug("Processed {} records in this batch.", processedInIhisBatch);
+    log.debug("Processed {} records in this batch. Discarded {}", processedInThisBatch - discarded, discarded);
     return records;
+  }
+
+  private synchronized void scheduleForAck(BytesXMLMessage msg) {
+    if (msg.getDeliveryMode() == DeliveryMode.NON_PERSISTENT
+            || msg.getDeliveryMode() == DeliveryMode.PERSISTENT) {
+      outstandingAckList.add(msg);  // enqueue messages received from guaranteed messaging endpoint for later ack
+    }
   }
 
   /**
