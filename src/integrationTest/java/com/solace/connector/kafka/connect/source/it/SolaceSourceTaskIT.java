@@ -170,6 +170,8 @@ public class SolaceSourceTaskIT {
 			ConnectException thrown = assertThrows(ConnectException.class, () -> solaceSourceTask.poll());
 			assertThat(thrown.getMessage(), containsString("Encountered exception in message processing"));
 			assertEquals(BadMessageProcessor.TEST_EXCEPTION, thrown.getCause());
+			solaceSourceTask.commit();
+			Thread.sleep(Duration.ofSeconds(5).toMillis());
 			assertEquals(1, sempV2Api.monitor().getMsgVpnQueue(vpnName, queue.getName(), null)
 					.getData().getTxUnackedMsgCount());
 		}
