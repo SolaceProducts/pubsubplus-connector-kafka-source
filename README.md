@@ -1,5 +1,6 @@
 [![Actions Status](https://github.com/SolaceProducts/pubsubplus-connector-kafka-source/workflows/build/badge.svg?branch=master)](https://github.com/SolaceProducts/pubsubplus-connector-kafka-source/actions?query=workflow%3Abuild+branch%3Amaster)
 [![Code Analysis (SpotBugs)](https://github.com/SolaceProducts/pubsubplus-connector-kafka-source/actions/workflows/spotbugs-analysis.yml/badge.svg?branch=master)](https://github.com/SolaceProducts/pubsubplus-connector-kafka-source/actions/workflows/spotbugs-analysis.yml)
+[![Code Analysis (CodeQL)](https://github.com/SolaceProducts/pubsubplus-connector-kafka-source/actions/workflows/codeql-analysis.yml/badge.svg?branch=master)](https://github.com/SolaceProducts/pubsubplus-connector-kafka-source/actions/workflows/codeql-analysis.yml)
 
 # Solace PubSub+ Connector for Kafka: Source
 
