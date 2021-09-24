@@ -23,7 +23,16 @@ jobs:
       working-directory: solace-integration-test-support
       run: ./mvnw clean install -DskipTests
     - name: Build and test with Gradle
-      run: ./gradlew clean test integrationTest --info
+      run: ./gradlew clean test integrationTest jacocoFullReport --info
+    - name: Upload Test Artifacts
+      if: always()
+      uses: actions/upload-artifact@v2
+      with:
+        name: Test Results
+        path: |
+          **/build/jacoco/*.exec
+          **/build/reports/
+          **/build/test-results/**/*.xml
     - name: Publish artifacts
       if: github.event_name == 'push'
       run: |
@@ -62,3 +71,9 @@ jobs:
           git push --quiet --set-upstream origin-pages gh-pages;
           echo "Updated and pushed GH pages!";
         fi
+    - name: Publish Test Coverage Results
+      if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' && github.event.pull_request.head.repo.full_name == github.repository
+      uses: madrapps/jacoco-report@v1.2
+      with:
+        paths: build/reports/jacoco/jacocoFullReport/jacocoFullReport.xml
+        token: ${{ secrets.GITHUB_TOKEN }}
