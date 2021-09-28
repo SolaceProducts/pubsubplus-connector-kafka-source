@@ -71,6 +71,16 @@ jobs:
           git push --quiet --set-upstream origin-pages gh-pages;
           echo "Updated and pushed GH pages!";
         fi
+    - name: Publish Unit Test Results
+      uses: EnricoMi/publish-unit-test-result-action@v1
+      continue-on-error: true
+      with:
+        check_name: Unit Test Results
+        comment_mode: create new
+        fail_on: nothing
+        hide_comments: orphaned commits
+        files: |
+          **/build/test-results/**/*.xml
     - name: Publish Test Coverage Results
       if: github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' && github.event.pull_request.head.repo.full_name == github.repository
       uses: madrapps/jacoco-report@v1.2
