@@ -1,7 +1,13 @@
-apply plugin:  'java'
-apply plugin:  'distribution'
-apply plugin:  'jacoco'
-apply plugin:  'org.unbroken-dome.test-sets'
+import com.github.spotbugs.snom.SpotBugsTask
+
+plugins {
+    id 'java'
+    id 'distribution'
+    id 'jacoco'
+    id 'pmd'
+    id 'com.github.spotbugs' version '4.7.6'
+    id 'org.unbroken-dome.test-sets' version '2.2.1'
+}
 
 ext {
     kafkaVersion = '2.4.1'
@@ -11,18 +17,6 @@ ext {
 repositories {
     mavenLocal()
     mavenCentral()
-}
-
-buildscript {
-    repositories {
-        maven {
-           url "https://plugins.gradle.org/m2/"
-        }
-    }
-    dependencies {
-        classpath "com.github.spotbugs:spotbugs-gradle-plugin:3.0.0"
-        classpath "org.unbroken-dome.test-sets:org.unbroken-dome.test-sets.gradle.plugin:2.2.1"
-    }
 }
 
 testSets {
@@ -48,6 +42,17 @@ dependencies {
     testImplementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.14.1'
     compile "org.apache.kafka:connect-api:$kafkaVersion"
     compile "com.solacesystems:sol-jcsmp:$solaceJavaAPIVersion"
+}
+
+pmd {
+    consoleOutput = true
+    rulesMinimumPriority = 2
+    toolVersion = '6.38.0'
+}
+
+spotbugs {
+    effort 'max'
+    reportLevel 'high' // Decrease to medium once medium errors are fixed
 }
 
 task('jacocoFullReport', type: JacocoReport) {
@@ -89,6 +94,65 @@ project.integrationTest {
 
 project.test {
     useJUnitPlatform()
+}
+
+tasks.withType(SpotBugsTask) {
+    reports {
+        sarif {
+            enabled = true
+        }
+    }
+}
+
+// Workaround to generate Sarif report
+// Based off https://github.com/gradle/gradle/blob/v6.9.1/subprojects/code-quality/src/main/groovy/org/gradle/api/plugins/quality/internal/PmdInvoker.groovy
+task('pmdMainSarif') {
+    PmdExtension extension = project.extensions.getByType(PmdExtension)
+    dependsOn classes
+    outputs.dir extension.getReportsDir()
+    doLast {
+        ant.taskdef(name: 'pmd',
+                classname: 'net.sourceforge.pmd.ant.PMDTask',
+                classpath: project.configurations.pmd.asPath)
+        ant.pmd(failOnRuleViolation: false,
+                failuresPropertyName: "pmdFailureCount",
+                minimumPriority: extension.rulesMinimumPriority.get()) {
+            sourceSets.main.allJava.srcDirs.each {
+                fileset(dir: it)
+            }
+
+            extension.ruleSets.each {
+                ruleset(it)
+            }
+
+            extension.ruleSetFiles.each {
+                ruleset(it)
+            }
+
+            if (extension.ruleSetConfig != null) {
+                ruleset(extension.ruleSetConfig.asFile())
+            }
+
+            Provider<RegularFile> reportsDir = project.getLayout()
+                    .file(project.getProviders().provider({a -> extension.getReportsDir()}) as Provider<File>)
+            formatter(type: 'sarif', toFile: new File(reportsDir.get().getAsFile(), 'main.sarif'))
+            formatter(type: 'html', toFile: new File(reportsDir.get().getAsFile(), 'main.html'))
+
+            if (extension.consoleOutput) {
+                formatter(type: 'textcolor', toConsole: true)
+            }
+        }
+
+        def failureCount = ant.project.properties["pmdFailureCount"]
+        if (failureCount) {
+            def message = "$failureCount PMD rule violations were found."
+            if (extension.ignoreFailures || ((failureCount as Integer) <= extension.maxFailures.get())) {
+                logger.warn(message)
+            } else {
+                throw new GradleException(message)
+            }
+        }
+    }
 }
 
 distributions {
