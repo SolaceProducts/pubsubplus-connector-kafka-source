@@ -27,7 +27,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SolSessionEventCallbackHandler implements SessionEventHandler {
-  final Logger log = LoggerFactory.getLogger(SolSessionEventCallbackHandler.class);
+  private static final Logger log = LoggerFactory.getLogger(SolSessionEventCallbackHandler.class);
 
   @Override
   public void handleEvent(SessionEventArgs event) {

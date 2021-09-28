@@ -26,7 +26,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class SolReconnectCallbackHandler implements JCSMPReconnectEventHandler {
-  final Logger log = LoggerFactory.getLogger(SolReconnectCallbackHandler.class);
+  private static final Logger log = LoggerFactory.getLogger(SolReconnectCallbackHandler.class);
 
   @Override
   public void postReconnect() throws JCSMPException {
