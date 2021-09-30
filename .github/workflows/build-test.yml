@@ -22,7 +22,7 @@ jobs:
   build:
     needs:
       - dupe_check
-    if: needs.dupe_check.outputs.should_skip != 'true'
+    if: needs.dupe_check.outputs.should_skip != 'true' || (github.event_name == 'push' && github.ref == 'refs/heads/master' && github.repository_owner == 'SolaceProducts')
 
     runs-on: ubuntu-latest
 
@@ -68,7 +68,8 @@ jobs:
           **/build/test-results/**/*.xml
 
     - name: Publish artifacts
-      if: github.event_name == 'push'
+      # Security Measure: Do not publish artifacts from dependabot builds
+      if: github.event_name == 'push' && (github.actor != 'dependabot[bot]' || !contains(github.ref, 'dependabot'))
       run: |
         if [ ${{ github.ref }} == 'refs/heads/master' ] && [ ${{ github.repository_owner }} == 'SolaceProducts' ] ; then
           echo "Using master on SolaceProducts"
@@ -114,6 +115,7 @@ jobs:
         rm -f ~/.gradle/caches/modules-2/gc.properties
 
     - name: Publish Unit Test Results
+      if: github.actor != 'dependabot[bot]' || (github.event_name == 'push' && !contains(github.ref, 'dependabot'))
       uses: EnricoMi/publish-unit-test-result-action@v1
       continue-on-error: true
       with:
