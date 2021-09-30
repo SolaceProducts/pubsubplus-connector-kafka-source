@@ -10,8 +10,8 @@ plugins {
 }
 
 ext {
-    kafkaVersion = '2.4.1'
-    solaceJavaAPIVersion = '10.6.0'
+    kafkaVersion = '2.8.1'
+    solaceJavaAPIVersion = '10.12.0'
 }
 
 repositories {
@@ -36,7 +36,7 @@ dependencies {
     integrationTestImplementation 'com.google.code.gson:gson:2.3.1'
     integrationTestImplementation 'commons-io:commons-io:2.4'
     integrationTestImplementation 'com.squareup.okhttp3:okhttp:4.9.1'
-    integrationTestImplementation 'org.apache.kafka:kafka-clients:$kafkaVersion'
+    integrationTestImplementation "org.apache.kafka:kafka-clients:$kafkaVersion"
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.0'
     testImplementation 'org.hamcrest:hamcrest-all:1.3'
     testImplementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.14.1'
