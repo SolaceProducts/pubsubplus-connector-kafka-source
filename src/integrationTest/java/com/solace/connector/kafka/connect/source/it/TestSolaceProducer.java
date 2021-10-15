@@ -1,54 +1,45 @@
 package com.solace.connector.kafka.connect.source.it;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import com.solacesystems.jcsmp.BytesMessage;
 import com.solacesystems.jcsmp.DeliveryMode;
 import com.solacesystems.jcsmp.EndpointProperties;
 import com.solacesystems.jcsmp.JCSMPException;
 import com.solacesystems.jcsmp.JCSMPFactory;
-import com.solacesystems.jcsmp.JCSMPProperties;
 import com.solacesystems.jcsmp.JCSMPSession;
-import com.solacesystems.jcsmp.JCSMPStreamingPublishEventHandler;
+import com.solacesystems.jcsmp.JCSMPStreamingPublishCorrelatingEventHandler;
 import com.solacesystems.jcsmp.Message;
 import com.solacesystems.jcsmp.Queue;
 import com.solacesystems.jcsmp.TextMessage;
 import com.solacesystems.jcsmp.Topic;
 import com.solacesystems.jcsmp.XMLMessageProducer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-public class TestSolaceProducer {
-    
-    static Logger logger = LoggerFactory.getLogger(SourceConnectorIT.class.getName());
-    private JCSMPSession session;
+public class TestSolaceProducer implements AutoCloseable {
+
+    private static final Logger logger = LoggerFactory.getLogger(TestSolaceProducer.class);
+    private final JCSMPSession session;
     private XMLMessageProducer producer;
 
-    public void setup() {
-        TestConfigProperties configProps = new TestConfigProperties();
-        final JCSMPProperties properties = new JCSMPProperties();
-        properties.setProperty(JCSMPProperties.HOST, "tcp://" + configProps.getProperty("sol.host") + ":55555");     // host:port
-        properties.setProperty(JCSMPProperties.USERNAME, configProps.getProperty("sol.username")); // client-username
-        properties.setProperty(JCSMPProperties.VPN_NAME,  configProps.getProperty("sol.vpn_name")); // message-vpn
-        properties.setProperty(JCSMPProperties.PASSWORD, configProps.getProperty("sol.password")); // client-password
-        try {
-            session =  JCSMPFactory.onlyInstance().createSession(properties);
-            session.connect();
-            producer = session.getMessageProducer(new JCSMPStreamingPublishEventHandler() {
-                @Override
-                public void responseReceived(String messageID) {
-                    logger.info("Producer received response for msg: " + messageID);
-                }
-                @Override
-                public void handleError(String messageID, JCSMPException e, long timestamp) {
-                    logger.info("Producer received error for msg: %s@%s - %s%n",
-                            messageID,timestamp,e);
-                }
-            });
-        } catch (JCSMPException e1) {
-            e1.printStackTrace();
-        }
+    public TestSolaceProducer(JCSMPSession session) {
+        this.session = session;
     }
-    
+
+
+    public void start() throws JCSMPException {
+        producer = session.getMessageProducer(new JCSMPStreamingPublishCorrelatingEventHandler() {
+            @Override
+            public void responseReceivedEx(Object correlationKey) {
+                logger.info("Producer received response for msg: " + correlationKey);
+            }
+
+            @Override
+            public void handleErrorEx(Object correlationKey, JCSMPException e, long timestamp) {
+                logger.error("Producer received error for msg: {} {}", correlationKey, timestamp, e);
+            }
+        });
+    }
+
     public TextMessage createTextMessage(String contents) {
         TextMessage textMessage = JCSMPFactory.onlyInstance().createMessage(TextMessage.class);
         textMessage.setText(contents);
@@ -60,20 +51,20 @@ public class TestSolaceProducer {
         bytesMessage.setData(contents);
         return bytesMessage;
     }
-    
+
     public Topic defineTopic(String topicName) {
         return JCSMPFactory.onlyInstance().createTopic(topicName);
     }
-    
+
     public Queue defineQueue(String queueName) {
         return JCSMPFactory.onlyInstance().createQueue(queueName);
     }
-    
+
     public void sendMessageToTopic(Topic topic, Message msg) throws JCSMPException {
         producer.send(msg,topic);
         logger.info("Message sent to Solace topic " + topic.toString());
     }
-    
+
     public void resetQueue(String queueName) {
         try {
           final Queue queue = JCSMPFactory.onlyInstance().createQueue(queueName);
@@ -89,14 +80,15 @@ public class TestSolaceProducer {
           e.printStackTrace();
         }
     }
-    
+
     public void sendMessageToQueue(Queue queue, Message msg) throws JCSMPException {
         msg.setDeliveryMode(DeliveryMode.PERSISTENT);
         producer.send(msg,queue);
         logger.info("Message sent to Solace queue " + queue.toString());
     }
-    
+
+    @Override
     public void close() {
-        session.closeSession();
+        producer.close();
     }
 }
