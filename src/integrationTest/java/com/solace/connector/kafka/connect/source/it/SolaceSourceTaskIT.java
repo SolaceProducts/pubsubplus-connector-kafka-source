@@ -3,12 +3,12 @@ package com.solace.connector.kafka.connect.source.it;
 import com.solace.connector.kafka.connect.source.SolMessageProcessorIF;
 import com.solace.connector.kafka.connect.source.SolaceSourceConstants;
 import com.solace.connector.kafka.connect.source.SolaceSourceTask;
+import com.solace.connector.kafka.connect.source.it.util.extensions.NetworkPubSubPlusExtension;
 import com.solace.connector.kafka.connect.source.msgprocessors.SolSampleSimpleMessageProcessor;
 import com.solace.test.integration.junit.jupiter.extension.ExecutorServiceExtension;
 import com.solace.test.integration.junit.jupiter.extension.ExecutorServiceExtension.ExecSvc;
 import com.solace.test.integration.junit.jupiter.extension.LogCaptorExtension;
 import com.solace.test.integration.junit.jupiter.extension.LogCaptorExtension.LogCaptor;
-import com.solace.test.integration.junit.jupiter.extension.PubSubPlusExtension;
 import com.solace.test.integration.semp.v2.SempV2Api;
 import com.solacesystems.jcsmp.BytesXMLMessage;
 import com.solacesystems.jcsmp.JCSMPErrorResponseException;
@@ -52,7 +52,7 @@ import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 @ExtendWith(ExecutorServiceExtension.class)
 @ExtendWith(LogCaptorExtension.class)
-@ExtendWith(PubSubPlusExtension.class)
+@ExtendWith(NetworkPubSubPlusExtension.class)
 public class SolaceSourceTaskIT {
 	private SolaceSourceTask solaceSourceTask;
 	private Map<String, String> connectorProperties;
