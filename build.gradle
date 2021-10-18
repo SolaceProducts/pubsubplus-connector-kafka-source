@@ -19,6 +19,14 @@ repositories {
     mavenCentral()
 }
 
+sourceSets {
+    main {
+        java {
+            srcDir "${buildDir}/generated/java" // add generated sources as additional source directory
+        }
+    }
+}
+
 testSets {
     integrationTest
 }
@@ -70,12 +78,16 @@ task('prepDistForIntegrationTesting') {
     dependsOn assembleDist
     doLast {
         copy {
-            from zipTree(file('build/distributions').listFiles().findAll {it.name.endsWith('.zip')}[0])
-            into (file('src/integrationTest/resources'))
+            from zipTree(file(distsDirectory).listFiles().findAll {
+                it.name.endsWith("-${project.version}.zip")
+            }[0])
+            into sourceSets.integrationTest.resources.srcDirs[0]
         }
         copy {
-            from zipTree(file('build/distributions').listFiles().findAll {it.name.endsWith('.zip')}[0])
-            into (file('build/resources/integrationTest'))
+            from zipTree(file(distsDirectory).listFiles().findAll {
+                it.name.endsWith("-${project.version}.zip")
+            }[0])
+            into sourceSets.integrationTest.output.resourcesDir
         }
     }
 }
@@ -155,6 +167,18 @@ task('pmdMainSarif') {
             }
         }
     }
+}
+
+task('generateJava', type: Copy) {
+    def templateContext = [version: project.version]
+    inputs.properties templateContext // Register context as input so that task doesn't skip when props are updated
+    from 'src/template/java'
+    into "${buildDir}/generated/java"
+    expand templateContext
+}
+
+project.compileJava {
+    dependsOn generateJava
 }
 
 distributions {
