@@ -156,7 +156,7 @@ In this case the IP address is one of the nodes running the distributed mode wor
   {
     "class": "com.solace.connector.kafka.connect.source.SolaceSourceConnector",
     "type": "source",
-    "version": "2.0.0"
+    "version": "2.1.0"
   },
 ```
 
