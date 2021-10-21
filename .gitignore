@@ -36,5 +36,11 @@ local.properties
 *.launch
 /build/
 
+### IntelliJ
+.idea
+*.iws
+*.iml
+*.ipr
+
 # Unzipped test connector
 src/integrationTest/resources/pubsubplus-connector-kafka*/

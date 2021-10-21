@@ -46,7 +46,7 @@ public class SolaceSourceQueueConsumer {
     this.solSessionHandler = solSessionHandler;
   }
 
-  public boolean init(BlockingQueue<BytesXMLMessage> squeue) {
+  public void init(BlockingQueue<BytesXMLMessage> squeue) throws JCSMPException {
     solQueue = JCSMPFactory.onlyInstance().createQueue(lconfig.getString(SolaceSourceConstants.SOL_QUEUE));
     final ConsumerFlowProperties flow_prop = new ConsumerFlowProperties();
     flow_prop.setEndpoint(solQueue);
@@ -54,16 +54,10 @@ public class SolaceSourceQueueConsumer {
     flow_prop.setStartState(true);
     EndpointProperties endpointProps = new EndpointProperties();
     endpointProps.setAccessType(EndpointProperties.ACCESSTYPE_NONEXCLUSIVE);
-    try {
-      callbackhandler = new SolMessageQueueCallbackHandler(squeue);
-      recv = solSessionHandler.getSession().createFlow(callbackhandler, flow_prop, endpointProps,
-          new SolFlowEventCallBackHandler());
-      recv.start();
-    } catch (JCSMPException je) {
-      log.info("=========== JCSMP Exception while creating Solace Flow to Queue " + "in SolaceSourceQueueConsumer {} \n",
-          je.getLocalizedMessage());
-    }
-    return true;
+    callbackhandler = new SolMessageQueueCallbackHandler(squeue);
+    recv = solSessionHandler.getSession().createFlow(callbackhandler, flow_prop, endpointProps,
+        new SolFlowEventCallBackHandler());
+    recv.start();
   }
 
   public void stop() {

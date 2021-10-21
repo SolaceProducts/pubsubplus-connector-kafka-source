@@ -1,10 +1,17 @@
-apply plugin:  'java'
-apply plugin:  'distribution'
-apply plugin:  'org.unbroken-dome.test-sets'
+import com.github.spotbugs.snom.SpotBugsTask
+
+plugins {
+    id 'java'
+    id 'distribution'
+    id 'jacoco'
+    id 'pmd'
+    id 'com.github.spotbugs' version '4.7.6'
+    id 'org.unbroken-dome.test-sets' version '2.2.1'
+}
 
 ext {
-    kafkaVersion = '2.4.1'
-    solaceJavaAPIVersion = '10.6.0'
+    kafkaVersion = '2.8.1'
+    solaceJavaAPIVersion = '10.12.0'
 }
 
 repositories {
@@ -12,15 +19,11 @@ repositories {
     mavenCentral()
 }
 
-buildscript {
-    repositories {
-        maven {
-           url "https://plugins.gradle.org/m2/"
+sourceSets {
+    main {
+        java {
+            srcDir "${buildDir}/generated/java" // add generated sources as additional source directory
         }
-    }
-    dependencies {
-        classpath "com.github.spotbugs:spotbugs-gradle-plugin:3.0.0"
-        classpath "org.unbroken-dome.test-sets:org.unbroken-dome.test-sets.gradle.plugin:2.2.1"
     }
 }
 
@@ -29,37 +32,62 @@ testSets {
 }
 
 dependencies {
-    integrationTestImplementation 'junit:junit:4.12'
-    integrationTestImplementation 'org.junit.jupiter:junit-jupiter-api:5.7.1'
-    integrationTestImplementation 'org.junit.jupiter:junit-jupiter-engine:5.7.1'
-    integrationTestImplementation 'org.junit.jupiter:junit-jupiter-params:5.7.1'
-    integrationTestImplementation 'org.junit.platform:junit-platform-engine:1.7.1'
-    integrationTestImplementation 'org.mockito:mockito-core:3.7.7'
-    integrationTestImplementation 'org.mockito:mockito-junit-jupiter:3.7.7'
-    integrationTestImplementation 'org.testcontainers:testcontainers:1.15.1'
-    integrationTestImplementation 'org.testcontainers:junit-jupiter:1.15.1'
-    integrationTestImplementation 'org.slf4j:slf4j-api:1.7.28'
-    integrationTestImplementation 'org.slf4j:slf4j-simple:1.7.28'
+    integrationTestImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
+    integrationTestImplementation 'org.junit-pioneer:junit-pioneer:1.4.2'
+    integrationTestImplementation 'org.mockito:mockito-junit-jupiter:3.12.4'
+    integrationTestImplementation 'org.testcontainers:testcontainers:1.16.0'
+    integrationTestImplementation 'org.testcontainers:junit-jupiter:1.16.0'
+    integrationTestImplementation 'org.testcontainers:kafka:1.16.0'
+    integrationTestImplementation 'com.solace.test.integration:pubsubplus-junit-jupiter:0.5.0'
+    integrationTestImplementation 'org.slf4j:slf4j-api:1.7.32'
+    integrationTestImplementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.14.1'
     integrationTestImplementation 'org.apache.commons:commons-configuration2:2.6'
     integrationTestImplementation 'commons-beanutils:commons-beanutils:1.9.4'
     integrationTestImplementation 'com.google.code.gson:gson:2.3.1'
     integrationTestImplementation 'commons-io:commons-io:2.4'
     integrationTestImplementation 'com.squareup.okhttp3:okhttp:4.9.1'
-    integrationTestImplementation 'org.apache.kafka:kafka-clients:$kafkaVersion'
+    integrationTestImplementation "org.apache.kafka:kafka-clients:$kafkaVersion"
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
+    testImplementation 'org.hamcrest:hamcrest-all:1.3'
+    testImplementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.14.1'
     compile "org.apache.kafka:connect-api:$kafkaVersion"
     compile "com.solacesystems:sol-jcsmp:$solaceJavaAPIVersion"
+}
+
+pmd {
+    consoleOutput = true
+    rulesMinimumPriority = 2
+    toolVersion = '6.38.0'
+}
+
+spotbugs {
+    effort 'max'
+    reportLevel 'high' // Decrease to medium once medium errors are fixed
+}
+
+task('jacocoFullReport', type: JacocoReport) {
+    description 'Generates code coverage report for all tests.'
+    executionData tasks.withType(Test)
+    sourceSets sourceSets.main
+    reports {
+        xml.required = true
+    }
 }
 
 task('prepDistForIntegrationTesting') {
     dependsOn assembleDist
     doLast {
-        copy { 
-            from zipTree(file('build/distributions').listFiles().findAll {it.name.endsWith('.zip')}[0])
-            into (file('src/integrationTest/resources'))
+        copy {
+            from zipTree(file(distsDirectory).listFiles().findAll {
+                it.name.endsWith("-${project.version}.zip")
+            }[0])
+            into sourceSets.integrationTest.resources.srcDirs[0]
         }
         copy {
-            from zipTree(file('build/distributions').listFiles().findAll {it.name.endsWith('.zip')}[0])
-            into (file('build/resources/integrationTest'))
+            from zipTree(file(distsDirectory).listFiles().findAll {
+                it.name.endsWith("-${project.version}.zip")
+            }[0])
+            into sourceSets.integrationTest.output.resourcesDir
         }
     }
 }
@@ -76,6 +104,81 @@ project.integrationTest {
               "${result.failedTestCount} failures, " +
               "${result.skippedTestCount} skipped)")
       }
+}
+
+project.test {
+    useJUnitPlatform()
+}
+
+tasks.withType(SpotBugsTask) {
+    reports {
+        sarif {
+            enabled = true
+        }
+    }
+}
+
+// Workaround to generate Sarif report
+// Based off https://github.com/gradle/gradle/blob/v6.9.1/subprojects/code-quality/src/main/groovy/org/gradle/api/plugins/quality/internal/PmdInvoker.groovy
+task('pmdMainSarif') {
+    PmdExtension extension = project.extensions.getByType(PmdExtension)
+    dependsOn classes
+    outputs.dir extension.getReportsDir()
+    doLast {
+        ant.taskdef(name: 'pmd',
+                classname: 'net.sourceforge.pmd.ant.PMDTask',
+                classpath: project.configurations.pmd.asPath)
+        ant.pmd(failOnRuleViolation: false,
+                failuresPropertyName: "pmdFailureCount",
+                minimumPriority: extension.rulesMinimumPriority.get()) {
+            sourceSets.main.allJava.srcDirs.each {
+                fileset(dir: it)
+            }
+
+            extension.ruleSets.each {
+                ruleset(it)
+            }
+
+            extension.ruleSetFiles.each {
+                ruleset(it)
+            }
+
+            if (extension.ruleSetConfig != null) {
+                ruleset(extension.ruleSetConfig.asFile())
+            }
+
+            Provider<RegularFile> reportsDir = project.getLayout()
+                    .file(project.getProviders().provider({a -> extension.getReportsDir()}) as Provider<File>)
+            formatter(type: 'sarif', toFile: new File(reportsDir.get().getAsFile(), 'main.sarif'))
+            formatter(type: 'html', toFile: new File(reportsDir.get().getAsFile(), 'main.html'))
+
+            if (extension.consoleOutput) {
+                formatter(type: 'textcolor', toConsole: true)
+            }
+        }
+
+        def failureCount = ant.project.properties["pmdFailureCount"]
+        if (failureCount) {
+            def message = "$failureCount PMD rule violations were found."
+            if (extension.ignoreFailures || ((failureCount as Integer) <= extension.maxFailures.get())) {
+                logger.warn(message)
+            } else {
+                throw new GradleException(message)
+            }
+        }
+    }
+}
+
+task('generateJava', type: Copy) {
+    def templateContext = [version: project.version]
+    inputs.properties templateContext // Register context as input so that task doesn't skip when props are updated
+    from 'src/template/java'
+    into "${buildDir}/generated/java"
+    expand templateContext
+}
+
+project.compileJava {
+    dependsOn generateJava
 }
 
 distributions {

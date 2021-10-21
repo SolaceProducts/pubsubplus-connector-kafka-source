@@ -50,45 +50,30 @@ public class SolaceSourceTopicListener {
     this.solSessionHandler = solSessionHandler;
   }
 
-  public boolean init(BlockingQueue<BytesXMLMessage> squeue) {
-    boolean topicListenerStarted = true;
+  public void init(BlockingQueue<BytesXMLMessage> squeue) throws JCSMPException {
     solaceTopics = lconfig.getString(SolaceSourceConstants.SOL_TOPICS);
     topics = solaceTopics.split(",");
 
-    try {
-      callbackhandler = new SolMessageTopicCallbackHandler(lconfig, squeue);
-      cons = solSessionHandler.getSession().getMessageConsumer(new SolReconnectCallbackHandler(), callbackhandler);
-    } catch (JCSMPException je) {
-      log.info("JCSMP Exception in SolaceSourceTopicListener {} \n", je.getLocalizedMessage());
-    }
-    try {
-      Topic topic;
-      int counter = 0;
-      log.info("Number of topics to add: {} ", topics.length);
-      while (topics.length > counter) {
-        log.info("Adding subscription for topic {} ", topics[counter].trim());
-        TopicProperties tproperties = new TopicProperties();
-        tproperties.setName(topics[counter].trim());
-        // Only used for legacy PubSub+ versions
-        tproperties.setRxAllDeliverToOne(lconfig.getBoolean(SolaceSourceConstants.SOL_SUBSCRIBER_DTO_OVERRIDE));
-        topic = JCSMPFactory.onlyInstance().createTopic(tproperties);
-        solSessionHandler.getSession().addSubscription(topic, true);
-        counter++;
-      }
-    } catch (JCSMPException je) {
-      log.info("JCSMP Exception in SolaceSourceTopicListener {} \n", je.getLocalizedMessage());
+    callbackhandler = new SolMessageTopicCallbackHandler(lconfig, squeue);
+    cons = solSessionHandler.getSession().getMessageConsumer(new SolReconnectCallbackHandler(), callbackhandler);
+
+    Topic topic;
+    int counter = 0;
+    log.info("Number of topics to add: {} ", topics.length);
+    while (topics.length > counter) {
+      log.info("Adding subscription for topic {} ", topics[counter].trim());
+      TopicProperties tproperties = new TopicProperties();
+      tproperties.setName(topics[counter].trim());
+      // Only used for legacy PubSub+ versions
+      tproperties.setRxAllDeliverToOne(lconfig.getBoolean(SolaceSourceConstants.SOL_SUBSCRIBER_DTO_OVERRIDE));
+      topic = JCSMPFactory.onlyInstance().createTopic(tproperties);
+      solSessionHandler.getSession().addSubscription(topic, true);
+      counter++;
     }
 
-    try {
-      cons.start();
-    } catch (JCSMPException je) {
-      log.info("JCSMP Exception in SolaceSourceTopicListener {} \n", je.getLocalizedMessage());
-      topicListenerStarted = false;
-    }
+    cons.start();
 
     log.info("================Session is Connected");
-    return topicListenerStarted;
-
   }
 
   public void shutdown() {
