@@ -34,6 +34,7 @@ public class SolaceSourceConnectorConfig extends AbstractConfig {
 
   /**
    * Constructor to create Solace Configuration details for Source Connector.
+   * @param properties the configuration properties
    */
   public SolaceSourceConnectorConfig(Map<String, String> properties) {
     super(config, properties);
@@ -43,6 +44,7 @@ public class SolaceSourceConnectorConfig extends AbstractConfig {
 
   /**
    * Returns a ConfigDef to be used for Source Task.
+   * @return ConfigDef
    */
   public static ConfigDef solaceConfigDef() {
 

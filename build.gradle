@@ -1,17 +1,22 @@
 import com.github.spotbugs.snom.SpotBugsTask
+import io.github.gradlenexus.publishplugin.InitializeNexusStagingRepository
 
 plugins {
     id 'java'
     id 'distribution'
     id 'jacoco'
+    id 'maven-publish'
     id 'pmd'
+    id 'signing'
     id 'com.github.spotbugs' version '4.7.6'
+    id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
     id 'org.unbroken-dome.test-sets' version '2.2.1'
 }
 
 ext {
     kafkaVersion = '2.8.1'
     solaceJavaAPIVersion = '10.12.0'
+    isSnapshot = project.version.endsWith('-SNAPSHOT')
 }
 
 repositories {
@@ -96,6 +101,7 @@ project.integrationTest {
     useJUnitPlatform()
     outputs.upToDateWhen { false }
     dependsOn prepDistForIntegrationTesting
+    shouldRunAfter test
     afterSuite { desc, result ->
       if (!desc.parent)
           println("${result.resultType} " +
@@ -181,6 +187,11 @@ project.compileJava {
     dependsOn generateJava
 }
 
+java {
+    withJavadocJar()
+    withSourcesJar()
+}
+
 distributions {
     main {
         contents {
@@ -196,4 +207,90 @@ distributions {
             // from jar
         }
     }
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+            pom {
+                name = "Solace PubSub+ Connector for Kafka: Source"
+                description = "The PubSub+ Kafka Source Connector consumes PubSub+ event broker real-time queue or topic data events and streams them to a Kafka topic as Source Records."
+                url = "https://github.com/SolaceProducts/pubsubplus-connector-kafka-source"
+                packaging = "jar"
+                licenses {
+                    license {
+                        name = "Apache License, Version 2.0"
+                        url = "https://github.com/SolaceProducts/pubsubplus-connector-kafka-source/blob/master/LICENSE"
+                        distribution = "repo"
+                    }
+                }
+                organization {
+                    name = "Solace"
+                    url = "https://www.solace.com"
+                }
+                developers {
+                    developer {
+                        name = "Support for Solace"
+                        email = "support@solace.com"
+                        organization = "Solace"
+                        organizationUrl = "http://solace.community"
+                    }
+                }
+                scm {
+                    connection = "scm:git:git://github.com/SolaceProducts/pubsubplus-connector-kafka-source.git"
+                    developerConnection = "scm:git:git@github.com:SolaceProducts/pubsubplus-connector-kafka-source.git"
+                    url = "https://github.com/SolaceProducts/pubsubplus-connector-kafka-source.git"
+                }
+            }
+        }
+    }
+    repositories {
+        maven {
+            def releasesUrl = uri('http://apps-jenkins:9090/nexus/content/repositories/releases')
+            def snapshotRepositoryUrl = uri('http://apps-jenkins:9090/nexus/content/repositories/snapshots')
+            url = isSnapshot ? snapshotRepositoryUrl : releasesUrl
+            name = 'internal'
+            credentials {
+                username = project.properties[name + "Username"]
+                password = project.properties[name + "Password"]
+            }
+        }
+    }
+}
+
+nexusPublishing {
+    repositories {
+        sonatype {
+            nexusUrl = uri('https://oss.sonatype.org/service/local/')
+            snapshotRepositoryUrl = uri('https://oss.sonatype.org/content/repositories/snapshots')
+            // gets credentials from project.properties["sonatypeUsername"] project.properties["sonatypePassword"]
+        }
+    }
+}
+
+signing {
+    required {
+        !isSnapshot
+    }
+    useGpgCmd()
+    sign publishing.publications.maven
+}
+
+tasks.withType(Sign) {
+    onlyIf {
+        gradle.taskGraph.allTasks.any {task ->
+            task.name.startsWith("publish") && task.name.contains('Sonatype')
+        }
+    }
+    shouldRunAfter test, integrationTest
+}
+
+tasks.withType(InitializeNexusStagingRepository).configureEach {
+    dependsOn test, integrationTest
+    shouldRunAfter tasks.withType(Sign)
+}
+
+tasks.withType(PublishToMavenRepository).configureEach {
+    dependsOn test, integrationTest
 }
