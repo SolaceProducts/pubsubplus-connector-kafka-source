@@ -319,16 +319,22 @@ Kerberos has some very specific requirements to operate correctly. Some addition
 
 JDK 8 or higher is required for this project.
 
-First, clone this GitHub repo:
-```shell
-git clone https://github.com/SolaceProducts/pubsubplus-connector-kafka-source.git
-cd pubsubplus-connector-kafka-source
-```
-
-Then run the build script:
-```shell
-gradlew clean build
-```
+1. First, clone this GitHub repo:
+   ```shell
+   git clone https://github.com/SolaceProducts/pubsubplus-connector-kafka-source.git
+   cd pubsubplus-connector-kafka-source
+   ```
+2. Install the test support module:
+    ```shell
+    git submodule update --init --recursive
+    cd solace-integration-test-support
+    ./mvnw clean install -DskipTests
+    cd ..
+    ```
+3. Then run the build script:
+   ```shell
+   gradlew clean build
+   ```
 
 This script creates artifacts in the `build` directory, including the deployable packaged PubSub+ Source Connector archives under `build\distributions`.
 
@@ -336,26 +342,39 @@ This script creates artifacts in the `build` directory, including the deployable
 
 An integration test suite is also included, which spins up a Docker-based deployment environment that includes a PubSub+ event broker, Zookeeper, Kafka broker, Kafka Connect. It deploys the connector to Kafka Connect and runs end-to-end tests.
 
-1. Install the test support module:
-    ```shell
-    git submodule update --init --recursive
-    cd solace-integration-test-support
-    ./mvnw clean install -DskipTests
-    cd ..
-    ```
-2. Run the tests:
+1. Run the tests:
     ```shell
     ./gradlew clean test integrationTest
     ```
 
 ### Build a New Message Processor
 
-The processing of the Solace message to create a Kafka source record is handled by an interface defined in [`SolaceMessageProcessorIF.java`](/src/main/java/com/solace/connector/kafka/connect/source/SolMessageProcessorIF.java). This is a simple interface that creates the Kafka source records from the PubSub+ messages. This project includes two examples of classes that implement this interface:
+The processing of the Solace message to create a Kafka source record is handled by [`SolaceMessageProcessorIF`](/src/main/java/com/solace/connector/kafka/connect/source/SolMessageProcessorIF.java). This is a simple interface that creates the Kafka source records from the PubSub+ messages.
+
+To get started, import the following dependency into your project:
+
+**Maven**
+```xml
+<dependency>
+   <groupId>com.solace.connector.kafka.connect</groupId>
+   <artifactId>pubsubplus-connector-kafka-source</artifactId>
+   <version>2.1.0</version>
+</dependency>
+```
+
+**Gradle**
+```groovy
+compile "com.solace.connector.kafka.connect:pubsubplus-connector-kafka-source:2.1.0"
+```
+
+Now you can implement your custom `SolaceMessageProcessorIF`.
+
+For reference, this project includes two examples which you can use as starting points for implementing your own custom message processors:
 
 * [SolSampleSimpleMessageProcessor](/src/main/java/com/solace/connector/kafka/connect/source/msgprocessors/SolSampleSimpleMessageProcessor.java)
 * [SolaceSampleKeyedMessageProcessor](/src/main/java/com/solace/connector/kafka/connect/source/msgprocessors/SolaceSampleKeyedMessageProcessor.java)
 
-You can use these examples as starting points for implementing your own custom message processors.
+Once you've built the jar file for your custom message processor project, place it into the same directory as this connector, and update the connector's `sol.message_processor_class` config to point to the class of your new message processor.
 
 More information on Kafka source connector development can be found here:
 - [Apache Kafka Connect](https://kafka.apache.org/documentation/)

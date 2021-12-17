@@ -6,7 +6,7 @@
 /build/*
 
 # Jave related
-target/**
+/target/
 *.jar
 *.war
 *.ear
