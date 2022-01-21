@@ -367,7 +367,7 @@ To get started, import the following dependency into your project:
 compile "com.solace.connector.kafka.connect:pubsubplus-connector-kafka-source:2.1.0"
 ```
 
-Now you can implement your custom `SolaceMessageProcessorIF`.
+Now you can implement your custom `SolMessageProcessorIF`.
 
 For reference, this project includes two examples which you can use as starting points for implementing your own custom message processors:
 
