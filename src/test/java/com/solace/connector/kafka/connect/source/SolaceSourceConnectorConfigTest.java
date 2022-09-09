@@ -1,14 +1,14 @@
 package com.solace.connector.kafka.connect.source;
 
-import org.apache.commons.lang.RandomStringUtils;
-import org.apache.kafka.common.config.types.Password;
-import org.junit.jupiter.params.ParameterizedTest;
-import org.junit.jupiter.params.provider.ValueSource;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import org.apache.commons.lang3.RandomStringUtils;
+import org.apache.kafka.common.config.types.Password;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 
 public class SolaceSourceConnectorConfigTest {
 	@ParameterizedTest
