@@ -52,6 +52,7 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
   SolaceSourceQueueConsumer queueConsumer = null;
   private int spinTurns = 0;
   private volatile boolean shuttingDown = false;
+  private JCSMPException listenerException = null;
 
   // private Class<?> cProcessor;
   private SolMessageProcessorIF processor;
@@ -84,7 +85,7 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
     if (connectorConfig.getString(SolaceSourceConstants.SOL_TOPICS) != null) {
       topicListener = new SolaceSourceTopicListener(connectorConfig, solSessionHandler);
       try {
-        topicListener.init(ingressMessages);
+        topicListener.init(this);
       } catch (JCSMPException e) {
         throw new ConnectException("Failed to start topic consumer", e);
       }
@@ -92,7 +93,7 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
     if (connectorConfig.getString(SolaceSourceConstants.SOL_QUEUE) != null) {
       queueConsumer = new SolaceSourceQueueConsumer(connectorConfig, solSessionHandler);
       try {
-        queueConsumer.init(ingressMessages);
+        queueConsumer.init(this);
       } catch (JCSMPException e) {
         throw new ConnectException("Failed to start queue consumer", e);
       }
@@ -102,17 +103,25 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
   @Override
   public synchronized List<SourceRecord> poll() throws InterruptedException {
 
+    List<SourceRecord> records = null;
+    
+    if (listenerException != null) {
+      log.warn("Unrecoverable JCSMP listener exception detected");
+      JCSMPException exceptionToPropagate = listenerException;
+      listenerException = null;
+      throw new ConnectException("Message listener connection error to source on PubSub+ broker", exceptionToPropagate);
+    }
     if (shuttingDown || ingressMessages.size() == 0) {
       spinTurns++;
       if (spinTurns > 100) {
         spinTurns = 0;
         Thread.sleep(1);
       }
-      return null;  // Nothing to do, return control
+      return records;  // Nothing to do, return control (returns null)
     }
     // There is at least one message to process
     spinTurns = 0; // init spinTurns again
-    List<SourceRecord> records = new ArrayList<>();
+    records = new ArrayList<>();
     int processedInThisBatch;
     int discarded = 0;
     int arraySize = ingressMessages.size();
@@ -177,6 +186,16 @@ public class SolaceSourceTask extends SourceTask { // implements XMLMessageListe
     log.info("PubSub+ Source Connector stopped");
   }
 
+  // To access the message queue by the listeners
+  public BlockingQueue<BytesXMLMessage> getIngressMessageQueue() {
+    return ingressMessages;
+  }
+
+  // Used by listener to set exception condition
+  public void setListenerException(JCSMPException listenerException) {
+    this.listenerException = listenerException;
+  }
+  
   // For testing only
   public JCSMPSession getSolSession() {
     return solSessionHandler.getSession();
