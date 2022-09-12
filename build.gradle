@@ -2,20 +2,20 @@ import com.github.spotbugs.snom.SpotBugsTask
 import io.github.gradlenexus.publishplugin.InitializeNexusStagingRepository
 
 plugins {
-    id 'java'
+    id 'java-library'
     id 'distribution'
     id 'jacoco'
     id 'maven-publish'
     id 'pmd'
     id 'signing'
-    id 'com.github.spotbugs' version '4.7.6'
+    id 'com.github.spotbugs' version '5.0.12'
     id 'io.github.gradle-nexus.publish-plugin' version '1.1.0'
-    id 'org.unbroken-dome.test-sets' version '2.2.1'
+    id 'org.unbroken-dome.test-sets' version '4.0.0'
 }
 
 ext {
     kafkaVersion = '2.8.1'
-    solaceJavaAPIVersion = '10.12.0'
+    solaceJavaAPIVersion = '10.15.0'
     isSnapshot = project.version.endsWith('-SNAPSHOT')
 }
 
@@ -38,12 +38,13 @@ testSets {
 
 dependencies {
     integrationTestImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
-    integrationTestImplementation 'org.junit-pioneer:junit-pioneer:1.4.2'
+    integrationTestImplementation 'org.junit-pioneer:junit-pioneer:1.5.0'
     integrationTestImplementation 'org.mockito:mockito-junit-jupiter:3.12.4'
     integrationTestImplementation 'org.testcontainers:testcontainers:1.16.0'
     integrationTestImplementation 'org.testcontainers:junit-jupiter:1.16.0'
     integrationTestImplementation 'org.testcontainers:kafka:1.16.0'
-    integrationTestImplementation 'com.solace.test.integration:pubsubplus-junit-jupiter:0.7.2'
+    integrationTestImplementation 'org.testcontainers:toxiproxy:1.16.0'
+    integrationTestImplementation 'com.solace.test.integration:pubsubplus-junit-jupiter:0.7.1'
     integrationTestImplementation 'org.slf4j:slf4j-api:1.7.32'
     integrationTestImplementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.16.0'
     integrationTestImplementation 'org.apache.commons:commons-configuration2:2.6'
@@ -52,22 +53,29 @@ dependencies {
     integrationTestImplementation 'commons-io:commons-io:2.4'
     integrationTestImplementation 'com.squareup.okhttp3:okhttp:4.9.1'
     integrationTestImplementation "org.apache.kafka:kafka-clients:$kafkaVersion"
+    testImplementation 'org.apache.commons:commons-lang3:3.12.0'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
+    testImplementation 'org.mockito:mockito-junit-jupiter:3.12.4'
     testImplementation 'org.hamcrest:hamcrest-all:1.3'
     testImplementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.16.0'
-    compile "org.apache.kafka:connect-api:$kafkaVersion"
-    compile "com.solacesystems:sol-jcsmp:$solaceJavaAPIVersion"
+    implementation "org.apache.kafka:connect-api:$kafkaVersion"
+    implementation "com.solacesystems:sol-jcsmp:$solaceJavaAPIVersion"
 }
 
 pmd {
     consoleOutput = true
+    toolVersion = '6.49.0'
     rulesMinimumPriority = 2
-    toolVersion = '6.38.0'
+    sourceSets = [sourceSets.main]
 }
 
 spotbugs {
     effort 'max'
     reportLevel 'high' // Decrease to medium once medium errors are fixed
+}
+
+spotbugsIntegrationTest {
+    enabled = false
 }
 
 task('jacocoFullReport', type: JacocoReport) {
@@ -175,6 +183,11 @@ task('pmdMainSarif') {
     }
 }
 
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
 task('generateJava', type: Copy) {
     def templateContext = [version: project.version]
     inputs.properties templateContext // Register context as input so that task doesn't skip when props are updated
@@ -202,7 +215,7 @@ distributions {
             from('THIRD-PARTY-LICENSES') { into 'doc' }
             into('lib') {
                 from jar
-                from(project.configurations.runtime)
+                from(project.configurations.runtimeClasspath)
             }
             // from jar
         }

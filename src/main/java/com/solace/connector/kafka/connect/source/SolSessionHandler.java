@@ -166,7 +166,7 @@ public class SolSessionHandler {
 
   /**
    * Connect JCSMPSession.
-   * @throws JCSMPException
+   * @throws JCSMPException In case of JCSMP error
    */
   public void connectSession() throws JCSMPException {
 
@@ -201,7 +201,6 @@ public class SolSessionHandler {
    */
   public boolean shutdown() {
 
-    Context context = JCSMPFactory.onlyInstance().getDefaultContext();
     if ( session != null ) {
       session.closeSession();
     }

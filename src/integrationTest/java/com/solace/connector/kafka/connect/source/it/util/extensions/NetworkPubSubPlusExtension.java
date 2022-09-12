@@ -9,7 +9,7 @@ public class NetworkPubSubPlusExtension extends PubSubPlusExtension {
 	public static final String DOCKER_NET_PUBSUB_ALIAS = "solace-pubsubplus";
 
 	public NetworkPubSubPlusExtension() {
-		super(() -> new PubSubPlusContainer()
+		super(() -> new PubSubPlusContainer("solace/solace-pubsub-standard:latest")
 				.withNetwork(DOCKER_NET)
 				.withNetworkAliases(DOCKER_NET_PUBSUB_ALIAS));
 	}

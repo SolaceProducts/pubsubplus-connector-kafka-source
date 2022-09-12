@@ -26,6 +26,7 @@ import com.solacesystems.jcsmp.XMLMessageListener;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.atomic.AtomicInteger;
 
+import org.apache.kafka.connect.errors.ConnectException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,23 +35,25 @@ public class SolMessageQueueCallbackHandler implements XMLMessageListener {
   private static final Logger log = LoggerFactory.getLogger(SolMessageQueueCallbackHandler.class);
 
   private BlockingQueue<BytesXMLMessage> squeue;
+  private SolaceSourceTask sourceTask;
   private AtomicInteger msgCounter = new AtomicInteger();
 
   /**
    * Asynchronously Save records to Blocking Queue when a new Persistent Message arrives.
    * 
-   * @param squeue Blocking Queue to hold message events
+   * @param solaceSourceTask Reference to the SourceTask object
    */
-  public SolMessageQueueCallbackHandler(BlockingQueue<BytesXMLMessage> squeue) {
+  public SolMessageQueueCallbackHandler(SolaceSourceTask solaceSourceTask) {
 
-    this.squeue = squeue;
+    this.squeue = solaceSourceTask.getIngressMessageQueue();
+    this.sourceTask = solaceSourceTask;
     msgCounter.set(0);
   }
 
   @Override
   public void onException(JCSMPException je) {
-    log.info("JCSMP Exception in SolMessageQueueProcessorCallback {} \n", je.getLocalizedMessage());
-
+    log.warn("Unrecoverable issue reported in JCSMP message listener", je);
+    sourceTask.setListenerException(je);
   }
 
   @Override

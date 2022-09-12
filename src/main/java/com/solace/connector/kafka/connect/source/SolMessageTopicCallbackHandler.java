@@ -25,6 +25,7 @@ import com.solacesystems.jcsmp.XMLMessageListener;
 
 import java.util.concurrent.BlockingQueue;
 
+import org.apache.kafka.connect.errors.ConnectException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,25 +33,26 @@ public class SolMessageTopicCallbackHandler implements XMLMessageListener {
   private static final Logger log = LoggerFactory.getLogger(SolMessageTopicCallbackHandler.class);
 
   private BlockingQueue<BytesXMLMessage> squeue;
+  private SolaceSourceTask sourceTask;
 
   /**
    * Asynchronous Callback for processing Solace Topic data events.
    * 
    * @param lconfig Connector Configuration
-   * @param squeue Blocking Queue
+   * @param solaceSourceTask Reference to the SourceTask object
    */
   public SolMessageTopicCallbackHandler(SolaceSourceConnectorConfig lconfig, 
-      BlockingQueue<BytesXMLMessage> squeue) {
-    this.squeue = squeue;
+      SolaceSourceTask solaceSourceTask) {
+    this.squeue = solaceSourceTask.getIngressMessageQueue();
+    this.sourceTask = solaceSourceTask;
     log.debug("===Constructor for SolMessageTopicProcessor");
 
   }
 
   @Override
   public void onException(JCSMPException je) {
-    log.info("JCSMP Exception in SolaceMessageTopicProcessorCallback "
-        + "{} \n", je.getLocalizedMessage());
-
+    log.warn("Unrecoverable issue reported in JCSMP message listener", je);
+    sourceTask.setListenerException(je);
   }
 
   @Override

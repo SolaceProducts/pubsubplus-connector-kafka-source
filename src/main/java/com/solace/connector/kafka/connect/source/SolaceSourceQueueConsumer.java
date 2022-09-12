@@ -19,7 +19,6 @@
 
 package com.solace.connector.kafka.connect.source;
 
-import com.solacesystems.jcsmp.BytesXMLMessage;
 import com.solacesystems.jcsmp.ConsumerFlowProperties;
 import com.solacesystems.jcsmp.EndpointProperties;
 import com.solacesystems.jcsmp.FlowReceiver;
@@ -27,8 +26,6 @@ import com.solacesystems.jcsmp.JCSMPException;
 import com.solacesystems.jcsmp.JCSMPFactory;
 import com.solacesystems.jcsmp.JCSMPProperties;
 import com.solacesystems.jcsmp.Queue;
-
-import java.util.concurrent.BlockingQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -46,7 +43,7 @@ public class SolaceSourceQueueConsumer {
     this.solSessionHandler = solSessionHandler;
   }
 
-  public void init(BlockingQueue<BytesXMLMessage> squeue) throws JCSMPException {
+  public void init(SolaceSourceTask solaceSourceTask) throws JCSMPException {
     solQueue = JCSMPFactory.onlyInstance().createQueue(lconfig.getString(SolaceSourceConstants.SOL_QUEUE));
     final ConsumerFlowProperties flow_prop = new ConsumerFlowProperties();
     flow_prop.setEndpoint(solQueue);
@@ -54,7 +51,7 @@ public class SolaceSourceQueueConsumer {
     flow_prop.setStartState(true);
     EndpointProperties endpointProps = new EndpointProperties();
     endpointProps.setAccessType(EndpointProperties.ACCESSTYPE_NONEXCLUSIVE);
-    callbackhandler = new SolMessageQueueCallbackHandler(squeue);
+    callbackhandler = new SolMessageQueueCallbackHandler(solaceSourceTask);
     recv = solSessionHandler.getSession().createFlow(callbackhandler, flow_prop, endpointProps,
         new SolFlowEventCallBackHandler());
     recv.start();

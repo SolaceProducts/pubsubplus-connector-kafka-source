@@ -54,7 +54,7 @@ public class SolaceSourceConnectorConfig extends AbstractConfig {
 
     return new ConfigDef()
         .define(SolaceSourceConstants.KAFKA_TOPIC, Type.STRING, "default", Importance.HIGH,
-            "Kafka topic to consume from")
+            "Kafka topic to publish to")
         .define(SolaceSourceConstants.SOL_USERNAME, Type.STRING, "default",
             Importance.HIGH, "Solace username")
         .define(SolaceSourceConstants.SOL_PASSWORD, Type.PASSWORD, "default",

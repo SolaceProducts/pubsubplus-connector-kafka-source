@@ -19,15 +19,11 @@
 
 package com.solace.connector.kafka.connect.source;
 
-import com.solacesystems.jcsmp.BytesXMLMessage;
 import com.solacesystems.jcsmp.JCSMPException;
 import com.solacesystems.jcsmp.JCSMPFactory;
-import com.solacesystems.jcsmp.JCSMPSession;
 import com.solacesystems.jcsmp.Topic;
 import com.solacesystems.jcsmp.TopicProperties;
 import com.solacesystems.jcsmp.XMLMessageConsumer;
-
-import java.util.concurrent.BlockingQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,11 +46,11 @@ public class SolaceSourceTopicListener {
     this.solSessionHandler = solSessionHandler;
   }
 
-  public void init(BlockingQueue<BytesXMLMessage> squeue) throws JCSMPException {
+  public void init(SolaceSourceTask solaceSourceTask) throws JCSMPException {
     solaceTopics = lconfig.getString(SolaceSourceConstants.SOL_TOPICS);
     topics = solaceTopics.split(",");
 
-    callbackhandler = new SolMessageTopicCallbackHandler(lconfig, squeue);
+    callbackhandler = new SolMessageTopicCallbackHandler(lconfig, solaceSourceTask);
     cons = solSessionHandler.getSession().getMessageConsumer(new SolReconnectCallbackHandler(), callbackhandler);
 
     Topic topic;
