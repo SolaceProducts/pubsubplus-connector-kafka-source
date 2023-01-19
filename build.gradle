@@ -14,7 +14,7 @@ plugins {
 }
 
 ext {
-    kafkaVersion = '2.8.1'
+    kafkaVersion = '3.3.2'
     solaceJavaAPIVersion = '10.15.0'
     isSnapshot = project.version.endsWith('-SNAPSHOT')
 }
