@@ -53,7 +53,7 @@ jobs:
 
     - name: Install Test Support
       working-directory: solace-integration-test-support
-      run: ./mvnw clean install -DskipTests
+      run: ./mvnw clean install -DskipTests -Dchangelist=
 
     - name: Build and test with Gradle
       run: ./gradlew clean test integrationTest jacocoFullReport --info

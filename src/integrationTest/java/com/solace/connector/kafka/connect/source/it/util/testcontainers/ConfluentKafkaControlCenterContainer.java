@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ConfluentKafkaControlCenterContainer extends GenericContainer<ConfluentKafkaControlCenterContainer> {
 	private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("confluentinc/cp-enterprise-control-center");
-	private static final String DEFAULT_IMAGE_TAG = "6.2.1";
+	private static final String DEFAULT_IMAGE_TAG = "7.4.1";
 
 	public ConfluentKafkaControlCenterContainer(KafkaContainer kafka,
 												ConfluentKafkaSchemaRegistryContainer schemaRegistry) {
