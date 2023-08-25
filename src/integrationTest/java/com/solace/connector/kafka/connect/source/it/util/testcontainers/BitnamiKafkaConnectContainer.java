@@ -11,6 +11,7 @@ import org.testcontainers.images.builder.Transferable;
 import org.testcontainers.utility.DockerImageName;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Comparator;
 
 public class BitnamiKafkaConnectContainer extends GenericContainer<BitnamiKafkaConnectContainer> {
@@ -47,7 +48,8 @@ public class BitnamiKafkaConnectContainer extends GenericContainer<BitnamiKafkaC
 				BROKER_LISTENER_NAME + "://:" + BROKER_LISTENER_PORT, BOOTSTRAP_LISTENER_NAME + "://:" + BOOTSTRAP_LISTENER_PORT));
 		withClasspathResourceMapping(Tools.getUnzippedConnectorDirName() + "/lib",
 				"/opt/bitnami/kafka/jars/pubsubplus-connector-kafka", BindMode.READ_ONLY);
-		waitingFor(Wait.forLogMessage(".*Finished starting connectors and tasks.*", 1));
+		waitingFor(Wait.forLogMessage(".*Finished starting connectors and tasks.*", 1)
+				.withStartupTimeout(Duration.ofMinutes(10)));
 	}
 
 	@Override

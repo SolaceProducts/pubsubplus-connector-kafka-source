@@ -7,6 +7,8 @@ import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
+import java.time.Duration;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -52,7 +54,8 @@ public class ConfluentKafkaConnectContainer extends GenericContainer<ConfluentKa
 		withEnv("CONNECT_PLUGIN_PATH", "/usr/share/java,/etc/kafka-connect/jars");
 		withClasspathResourceMapping(Tools.getUnzippedConnectorDirName() + "/lib",
 				"/etc/kafka-connect/jars", BindMode.READ_ONLY);
-		waitingFor( Wait.forLogMessage(".*Kafka Connect started.*", 1) );
+		waitingFor(Wait.forLogMessage(".*Kafka Connect started.*", 1)
+				.withStartupTimeout(Duration.ofMinutes(10)));
 	}
 
 	public String getConnectUrl() {
