@@ -7,14 +7,16 @@ import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
+import java.time.Duration;
+
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThanOrEqualTo;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ConfluentKafkaConnectContainer extends GenericContainer<ConfluentKafkaConnectContainer> {
-	public static final int CONNECT_PORT = 28083;
+	public static final int CONNECT_PORT = 8083;
 	private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("confluentinc/cp-kafka-connect-base");
-	private static final String DEFAULT_IMAGE_TAG = "6.2.1";
+	private static final String DEFAULT_IMAGE_TAG = "7.4.1";
 
 	public ConfluentKafkaConnectContainer(KafkaContainer kafka,
 										  ConfluentKafkaSchemaRegistryContainer schemaRegistry) {
@@ -47,14 +49,13 @@ public class ConfluentKafkaConnectContainer extends GenericContainer<ConfluentKa
 		withEnv("CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL", String.format("http://%s:%s",
 				schemaRegistry.getNetworkAliases().get(1), ConfluentKafkaSchemaRegistryContainer.REGISTRY_PORT));
 		withEnv("CONNECT_BOOTSTRAP_SERVERS", String.format("%s:9092", kafka.getNetworkAliases().get(1)));
-		withEnv("CONNECT_INTERNAL_KEY_CONVERTER", "org.apache.kafka.connect.json.JsonConverter");
-		withEnv("CONNECT_INTERNAL_VALUE_CONVERTER", "org.apache.kafka.connect.json.JsonConverter");
 		withEnv("CONNECT_REST_ADVERTISED_HOST_NAME", "localhost");
 		withEnv("CONNECT_LOG4J_ROOT_LOGLEVEL", "INFO");
 		withEnv("CONNECT_PLUGIN_PATH", "/usr/share/java,/etc/kafka-connect/jars");
 		withClasspathResourceMapping(Tools.getUnzippedConnectorDirName() + "/lib",
 				"/etc/kafka-connect/jars", BindMode.READ_ONLY);
-		waitingFor( Wait.forLogMessage(".*Kafka Connect started.*", 1) );
+		waitingFor(Wait.forLogMessage(".*Kafka Connect started.*", 1)
+				.withStartupTimeout(Duration.ofMinutes(10)));
 	}
 
 	public String getConnectUrl() {

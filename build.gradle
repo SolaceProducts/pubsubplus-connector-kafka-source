@@ -14,8 +14,8 @@ plugins {
 }
 
 ext {
-    kafkaVersion = '2.8.1'
-    solaceJavaAPIVersion = '10.15.0'
+    kafkaVersion = '3.5.1'
+    solaceJavaAPIVersion = '10.21.0'
     isSnapshot = project.version.endsWith('-SNAPSHOT')
 }
 
@@ -44,7 +44,7 @@ dependencies {
     integrationTestImplementation 'org.testcontainers:junit-jupiter:1.16.0'
     integrationTestImplementation 'org.testcontainers:kafka:1.16.0'
     integrationTestImplementation 'org.testcontainers:toxiproxy:1.16.0'
-    integrationTestImplementation 'com.solace.test.integration:pubsubplus-junit-jupiter:0.7.1'
+    integrationTestImplementation 'com.solace.test.integration:pubsubplus-junit-jupiter:1.1.0'
     integrationTestImplementation 'org.slf4j:slf4j-api:1.7.32'
     integrationTestImplementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.16.0'
     integrationTestImplementation 'org.apache.commons:commons-configuration2:2.6'
@@ -60,6 +60,7 @@ dependencies {
     testImplementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.16.0'
     implementation "org.apache.kafka:connect-api:$kafkaVersion"
     implementation "com.solacesystems:sol-jcsmp:$solaceJavaAPIVersion"
+    implementation "org.slf4j:slf4j-api:1.7.36"
 }
 
 pmd {
@@ -198,6 +199,18 @@ task('generateJava', type: Copy) {
 
 project.compileJava {
     dependsOn generateJava
+    sourceCompatibility '11'
+    targetCompatibility '11'
+}
+
+project.compileTestJava {
+    sourceCompatibility '11'
+    targetCompatibility '11'
+}
+
+project.compileIntegrationTestJava {
+    sourceCompatibility '11'
+    targetCompatibility '11'
 }
 
 java {

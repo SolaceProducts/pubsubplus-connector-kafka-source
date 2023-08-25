@@ -12,7 +12,7 @@ import static org.junit.jupiter.api.Assertions.assertNotNull;
 public class ConfluentKafkaSchemaRegistryContainer extends GenericContainer<ConfluentKafkaSchemaRegistryContainer> {
 	public static final int REGISTRY_PORT = 8081;
 	private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("confluentinc/cp-schema-registry");
-	private static final String DEFAULT_IMAGE_TAG = "6.2.1";
+	private static final String DEFAULT_IMAGE_TAG = "7.4.1";
 
 	public ConfluentKafkaSchemaRegistryContainer(KafkaContainer kafka) {
 		this(DEFAULT_IMAGE_NAME.withTag(DEFAULT_IMAGE_TAG), kafka);

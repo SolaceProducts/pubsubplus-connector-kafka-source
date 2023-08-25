@@ -7,7 +7,8 @@ import com.solace.connector.kafka.connect.source.SolaceSourceConstants;
 import com.solace.connector.kafka.connect.source.it.util.extensions.KafkaArgumentsProvider;
 import com.solace.connector.kafka.connect.source.it.util.extensions.KafkaArgumentsProvider.KafkaArgumentSource;
 import com.solace.connector.kafka.connect.source.it.util.extensions.KafkaArgumentsProvider.KafkaContext;
-import com.solace.connector.kafka.connect.source.it.util.extensions.NetworkPubSubPlusExtension;
+import com.solace.connector.kafka.connect.source.it.util.extensions.pubsubplus.pubsubplus.NetworkPubSubPlusContainerProvider;
+import com.solace.test.integration.junit.jupiter.extension.PubSubPlusExtension;
 import com.solacesystems.jcsmp.BytesMessage;
 import com.solacesystems.jcsmp.JCSMPException;
 import com.solacesystems.jcsmp.JCSMPProperties;
@@ -44,7 +45,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
-@ExtendWith(NetworkPubSubPlusExtension.class)
+@ExtendWith(PubSubPlusExtension.class)
 @ExtendWith(KafkaArgumentsProvider.AutoDeleteSolaceConnectorDeploymentAfterEach.class)
 public class SourceConnectorIT implements TestConstants {
 
@@ -64,7 +65,7 @@ public class SourceConnectorIT implements TestConstants {
   @BeforeEach
   public void beforeEach(JCSMPProperties jcsmpProperties) {
     connectorProps = new Properties();
-    connectorProps.setProperty(SolaceSourceConstants.SOL_HOST, String.format("tcp://%s:55555", NetworkPubSubPlusExtension.DOCKER_NET_PUBSUB_ALIAS));
+    connectorProps.setProperty(SolaceSourceConstants.SOL_HOST, String.format("tcp://%s:55555", NetworkPubSubPlusContainerProvider.DOCKER_NET_PUBSUB_ALIAS));
     connectorProps.setProperty(SolaceSourceConstants.SOL_USERNAME, jcsmpProperties.getStringProperty(JCSMPProperties.USERNAME));
     connectorProps.setProperty(SolaceSourceConstants.SOL_PASSWORD, jcsmpProperties.getStringProperty(JCSMPProperties.PASSWORD));
     connectorProps.setProperty(SolaceSourceConstants.SOL_VPN_NAME, jcsmpProperties.getStringProperty(JCSMPProperties.VPN_NAME));

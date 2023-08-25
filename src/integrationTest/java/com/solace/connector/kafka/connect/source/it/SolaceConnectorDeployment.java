@@ -47,15 +47,17 @@ public class SolaceConnectorDeployment implements TestConstants {
 
   public void waitForConnectorRestIFUp() {
     Request request = new Request.Builder().url(kafkaConnection.getConnectUrl() + "/connector-plugins").build();
-    Response response = null;
-    do {
-      try {
-        Thread.sleep(1000L);
-        response = client.newCall(request).execute();
-      } catch (IOException | InterruptedException e) {
-        // Continue looping
-      }
-    } while (response == null || !response.isSuccessful());
+    assertTimeoutPreemptively(Duration.ofMinutes(15), () -> {
+      Response response = null;
+      do {
+        try {
+          Thread.sleep(1000L);
+          response = client.newCall(request).execute();
+        } catch (IOException | InterruptedException e) {
+          logger.error("Failed to get connector-plugins", e);
+        }
+      } while (response == null || !response.isSuccessful());
+    });
   }
 
   void startConnector(Properties props) {

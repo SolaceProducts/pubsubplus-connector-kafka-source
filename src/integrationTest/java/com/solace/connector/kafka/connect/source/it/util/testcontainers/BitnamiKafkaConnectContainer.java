@@ -11,6 +11,7 @@ import org.testcontainers.images.builder.Transferable;
 import org.testcontainers.utility.DockerImageName;
 
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
 import java.util.Comparator;
 
 public class BitnamiKafkaConnectContainer extends GenericContainer<BitnamiKafkaConnectContainer> {
@@ -18,12 +19,12 @@ public class BitnamiKafkaConnectContainer extends GenericContainer<BitnamiKafkaC
 	private static final int BROKER_LISTENER_PORT = 9092;
 	private static final String BOOTSTRAP_LISTENER_NAME = "PLAINTEXT_HOST";
 	public static final int BOOTSTRAP_LISTENER_PORT = 29092;
-	public static final int CONNECT_PORT = 28083;
+	public static final int CONNECT_PORT = 8083;
 	private static final int ZOOKEEPER_PORT = 2181;
 	private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("bitnami/kafka");
-	private static final String DEFAULT_IMAGE_TAG = "2";
+	private static final String DEFAULT_IMAGE_TAG = "3.5";
 	private static final String STARTER_SCRIPT = "/testcontainers_start.sh";
-	private DockerImageName zookeeperDockerImageName = DockerImageName.parse("bitnami/zookeeper:3");
+	private DockerImageName zookeeperDockerImageName = DockerImageName.parse("bitnami/zookeeper:3.8");
 	private GenericContainer<?> zookeeperContainer;
 
 	public BitnamiKafkaConnectContainer() {
@@ -47,7 +48,8 @@ public class BitnamiKafkaConnectContainer extends GenericContainer<BitnamiKafkaC
 				BROKER_LISTENER_NAME + "://:" + BROKER_LISTENER_PORT, BOOTSTRAP_LISTENER_NAME + "://:" + BOOTSTRAP_LISTENER_PORT));
 		withClasspathResourceMapping(Tools.getUnzippedConnectorDirName() + "/lib",
 				"/opt/bitnami/kafka/jars/pubsubplus-connector-kafka", BindMode.READ_ONLY);
-		waitingFor(Wait.forLogMessage(".*Finished starting connectors and tasks.*", 1));
+		waitingFor(Wait.forLogMessage(".*Finished starting connectors and tasks.*", 1)
+				.withStartupTimeout(Duration.ofMinutes(10)));
 	}
 
 	@Override
