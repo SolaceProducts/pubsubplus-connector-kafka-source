@@ -218,6 +218,16 @@ java {
     withSourcesJar()
 }
 
+// Generate manifest.json file to be compliant with Confluent Hub client
+tasks.register('generateConfluentConnectManifest', Copy) {
+    def templateContext = [
+            "project": project.properties
+    ]
+    from 'src/template/manifest'
+    into "${buildDir}/generated/manifest"
+    expand templateContext
+}
+
 distributions {
     main {
         contents {
@@ -226,6 +236,7 @@ distributions {
             from('doc/distribution-readme.md') { into 'doc' }
             from('LICENSE') { into 'doc' }
             from('THIRD-PARTY-LICENSES') { into 'doc' }
+            from(generateConfluentConnectManifest) {into ''}
             into('lib') {
                 from jar
                 from(project.configurations.runtimeClasspath)
