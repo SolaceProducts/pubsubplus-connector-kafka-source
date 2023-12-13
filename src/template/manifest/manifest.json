@@ -1,0 +1,43 @@
+{
+    "component_types": [
+        "source"
+    ],
+    "description": "The PubSub+ Kafka Source Connector consumes PubSub+ event broker real-time queue or topic data events and streams them to a Kafka topic as Source Records.",
+    "documentation_url": "https://github.com/SolaceProducts/pubsubplus-connector-kafka-source",
+    "features": {
+        "confluent_control_center_integration": false,
+        "kafka_connect_api": true,
+        "single_message_transforms": true,
+        "supported_encodings": [
+            "any"
+        ]
+    },
+    "license": [
+        {
+            "name": "Apache License, Version 2.0",
+            "url": "https://github.com/SolaceProducts/pubsubplus-connector-kafka-source/blob/master/LICENSE"
+        }
+    ],
+    "name": "${project.name}",
+    "owner": {
+        "name": "Solace",
+        "type": "organization",
+        "url": "https://solace.community",
+        "username": "solace"
+    },
+    "release_date": "${new Date().format('yyyy-MM-dd')}",
+    "source_url": "https://github.com/SolaceProducts/pubsubplus-connector-kafka-source",
+    "support": {
+        "provider_name": "Solace",
+        "summary": "",
+        "url": "https://github.com/SolaceProducts/pubsubplus-connector-kafka-source/issues"
+    },
+    "tags": [
+        "solace",
+        "kafka",
+        "source",
+        "connector"
+    ],
+    "title": "Solace PubSub+ Connector for Kafka: Source",
+    "version": "${project.version}"
+}
