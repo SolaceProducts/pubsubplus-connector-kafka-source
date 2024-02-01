@@ -11,6 +11,8 @@
     "sol.vpn_name": "default",
     "sol.topics": "sourcetest",
     "sol.message_processor_class": "com.solace.connector.kafka.connect.source.msgprocessors.SolSampleSimpleMessageProcessor",
+    "sol.message_processor.map_user_properties": "false",
+    "sol.message_processor.map_solace_standard_properties": "false",
     "value.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
     "key.converter": "org.apache.kafka.connect.storage.StringConverter"	}
 }

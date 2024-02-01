@@ -138,5 +138,33 @@ public class SolaceSourceConstants {
   public static final String SOL_KERBEROS_LOGIN_CONFIG = "sol.kerberos.login.conf";
   public static final String SOL_KERBEROS_KRB5_CONFIG = "sol.kerberos.krb5.conf";
 
+  // Medium Importance Solace Message processor
+  public static final String SOL_MESSAGE_PROCESSOR_MAP_USER_PROPERTIES = "sol.message_processor.map_user_properties";
+  public static final String SOL_MESSAGE_PROCESSOR_MAP_SOLACE_STANDARD_PROPERTIES = "sol.message_processor.map_solace_standard_properties";
 
+
+  //All SOL_SH prefixed constants are Solace Message Standard Headers.
+  public static final String SOL_SH_APPLICATION_MESSAGE_ID = "solace_applicationMessageID";
+  public static final String SOL_SH_APPLICATION_MESSAGE_TYPE = "solace_applicationMessageType";
+  public static final String SOL_SH_CORRELATION_ID = "solace_correlationID";
+  public static final String SOL_SH_COS = "solace_cos";
+  public static final String SOL_SH_DELIVERY_MODE = "solace_deliveryMode";
+  public static final String SOL_SH_DESTINATION = "solace_destination";
+  public static final String SOL_SH_DISCARD_INDICATION = "solace_discardIndication";
+  public static final String SOL_SH_EXPIRATION = "solace_expiration";
+  public static final String SOL_SH_PRIORITY = "solace_priority";
+  public static final String SOL_SH_RECEIVE_TIMESTAMP = "solace_receiveTimestamp";
+  public static final String SOL_SH_REDELIVERED = "solace_redelivered";
+  public static final String SOL_SH_REPLY_TO = "solace_replyTo";
+  public static final String SOL_SH_REPLY_TO_DESTINATION_TYPE = "solace_replyToDestinationType";
+  public static final String SOL_SH_REPLY_TO_DESTINATION = "solace_replyToDestination";
+  public static final String SOL_SH_SENDER_ID = "solace_senderID";
+  public static final String SOL_SH_SENDER_TIMESTAMP = "solace_senderTimestamp";
+  public static final String SOL_SH_TIME_TO_LIVE = "solace_timeToLive";
+  public static final String SOL_SH_IS_DMQ_ELIGIBLE = "solace_DMQEligible";
+  public static final String SOL_SH_IS_ELIDING_ELIGIBLE = "solace_elidingEligible";
+  public static final String SOL_SH_IS_REPLY_MESSAGE = "solace_replyMessage";
+  public static final String SOL_SH_HTTP_CONTENT_ENCODING = "solace_httpContentEncoding";
+  public static final String SOL_SH_HTTP_CONTENT_TYPE = "solace_httpContentType";
+  public static final String SOL_SH_SEQUENCE_NUMBER = "solace_sequenceNumber";
 }

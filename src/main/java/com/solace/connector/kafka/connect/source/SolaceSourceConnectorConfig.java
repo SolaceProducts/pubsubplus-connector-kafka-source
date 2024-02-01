@@ -36,7 +36,7 @@ public class SolaceSourceConnectorConfig extends AbstractConfig {
    * Constructor to create Solace Configuration details for Source Connector.
    * @param properties the configuration properties
    */
-  public SolaceSourceConnectorConfig(Map<String, String> properties) {
+  public SolaceSourceConnectorConfig(Map<String, String>  properties) {
     super(config, properties);
 
     log.info("==================Initialize Connector properties");
@@ -254,7 +254,11 @@ public class SolaceSourceConnectorConfig extends AbstractConfig {
         .define(SolaceSourceConstants.SOL_KERBEROS_LOGIN_CONFIG, Type.STRING, "", Importance.LOW,
             "Location of the Kerberos Login Configuration File")
         .define(SolaceSourceConstants.SOL_KAFKA_MESSAGE_KEY, Type.STRING, "NONE", Importance.MEDIUM,
-            "This propert determines if a Kafka key record is created and the key to be used");
+            "This property determines if a Kafka key record is created and the key to be used")
+        .define(SolaceSourceConstants.SOL_MESSAGE_PROCESSOR_MAP_USER_PROPERTIES, Type.BOOLEAN, false, Importance.MEDIUM,
+            "This property determines if Solace message user properties will be mapped to Kafka record headers")
+        .define(SolaceSourceConstants.SOL_MESSAGE_PROCESSOR_MAP_SOLACE_STANDARD_PROPERTIES, Type.BOOLEAN, false, Importance.MEDIUM,
+            "This property determines if Solace message standard properties will be mapped to Kafka record headers");
 
 
   }
