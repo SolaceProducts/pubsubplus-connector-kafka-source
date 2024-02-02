@@ -24,7 +24,6 @@ import static com.solace.connector.kafka.connect.source.SolaceSourceConstants.SO
 import com.solace.connector.kafka.connect.source.SolMessageProcessorIF;
 import com.solacesystems.jcsmp.BytesXMLMessage;
 import com.solacesystems.jcsmp.TextMessage;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedList;
 import java.util.Map;
@@ -42,6 +41,7 @@ public class SolaceSampleKeyedMessageProcessor implements SolMessageProcessorIF,
   private static final Logger log
       = LoggerFactory.getLogger(SolaceSampleKeyedMessageProcessor.class);
   private Object smsg;
+  private Object sdestination;
   private byte[] messageOut;
   private String skey;
   private BytesXMLMessage msg;
@@ -72,26 +72,24 @@ public class SolaceSampleKeyedMessageProcessor implements SolMessageProcessorIF,
     this.headers.clear();
     this.skey = skey.toUpperCase();
 
+    if (log.isDebugEnabled()) {
+      log.debug("{} received.", msg.getClass().getName());
+    }
     if (msg instanceof TextMessage) {
-      if (log.isDebugEnabled()) {
-        log.debug("Text Message received {}", ((TextMessage) msg).getText());
-      }
       String smsg = ((TextMessage) msg).getText();
       messageOut = smsg.getBytes(StandardCharsets.UTF_8);
     } else {
-      if (log.isDebugEnabled()) {
-        log.debug("Message payload: {}", new String(msg.getBytes(), Charset.defaultCharset()));
-      }
       if (msg.getBytes().length != 0) { // Binary XML pay load
         messageOut = msg.getBytes();
       } else { // Binary attachment pay load
         messageOut = msg.getAttachmentByteBuffer().array();
       }
-
     }
 
+    this.sdestination = msg.getDestination().getName();
     if (log.isDebugEnabled()) {
-      log.debug("processing data for Kafka topic Key: {}; with message {}", skey, msg);
+      log.debug("processing data for destination: {}; with Kafka topic key of: {}",
+          this.sdestination, this.skey);
     }
 
     this.smsg = messageOut;

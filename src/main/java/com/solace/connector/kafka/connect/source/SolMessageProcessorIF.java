@@ -44,57 +44,57 @@ public interface SolMessageProcessorIF {
 
   default ConnectHeaders userPropertiesToKafkaHeaders(BytesXMLMessage message) {
     final ConnectHeaders headers = new ConnectHeaders();
-    final SDTMap msgUserProperties = message.getProperties();
+    final SDTMap userProperties = message.getProperties();
 
-    if (msgUserProperties != null) {
-      for (String propKey : msgUserProperties.keySet()) {
+    if (userProperties != null) {
+      for (String key : userProperties.keySet()) {
         try {
-          Object propValue = msgUserProperties.get(propKey);
-          if (propValue == null) {
-            headers.add(propKey, SchemaAndValue.NULL);
-          } else if (propValue instanceof String) {
-            headers.addString(propKey, (String) propValue);
-          } else if (propValue instanceof Boolean) {
-            headers.addBoolean(propKey, (Boolean) propValue);
-          } else if (propValue instanceof byte[]) {
-            headers.addBytes(propKey, (byte[]) propValue);
-          } else if (propValue instanceof ByteArray) {
-            headers.addBytes(propKey, ((ByteArray) propValue).asBytes());
-          } else if (propValue instanceof Byte) {
-            headers.addByte(propKey, (byte) propValue);
-          } else if (propValue instanceof Integer) {
-            headers.addInt(propKey, (Integer) propValue);
-          } else if (propValue instanceof Short) {
-            headers.addShort(propKey, (Short) propValue);
-          } else if (propValue instanceof Long) {
-            headers.addLong(propKey, (Long) propValue);
-          } else if (propValue instanceof Double) {
-            headers.addDouble(propKey, (Double) propValue);
-          } else if (propValue instanceof Float) {
-            headers.addFloat(propKey, (Float) propValue);
-          } else if (propValue instanceof BigDecimal) {
-            headers.addDecimal(propKey, (BigDecimal) propValue);
-          } else if (propValue instanceof BigInteger) {
-            headers.addDecimal(propKey, new BigDecimal((BigInteger) propValue));
-          } else if (propValue instanceof Date) {
-            headers.addDate(propKey, (Date) propValue);
-          } else if (propValue instanceof Character) {
-            headers.addString(propKey, ((Character) propValue).toString());
-          } else if (propValue instanceof Destination) {
+          Object value = userProperties.get(key);
+          if (value == null) {
+            headers.add(key, SchemaAndValue.NULL);
+          } else if (value instanceof String) {
+            headers.addString(key, (String) value);
+          } else if (value instanceof Boolean) {
+            headers.addBoolean(key, (Boolean) value);
+          } else if (value instanceof byte[]) {
+            headers.addBytes(key, (byte[]) value);
+          } else if (value instanceof ByteArray) {
+            headers.addBytes(key, ((ByteArray) value).asBytes());
+          } else if (value instanceof Byte) {
+            headers.addByte(key, (byte) value);
+          } else if (value instanceof Integer) {
+            headers.addInt(key, (Integer) value);
+          } else if (value instanceof Short) {
+            headers.addShort(key, (Short) value);
+          } else if (value instanceof Long) {
+            headers.addLong(key, (Long) value);
+          } else if (value instanceof Double) {
+            headers.addDouble(key, (Double) value);
+          } else if (value instanceof Float) {
+            headers.addFloat(key, (Float) value);
+          } else if (value instanceof BigDecimal) {
+            headers.addDecimal(key, (BigDecimal) value);
+          } else if (value instanceof BigInteger) {
+            headers.addDecimal(key, new BigDecimal((BigInteger) value));
+          } else if (value instanceof Date) {
+            headers.addDate(key, (Date) value);
+          } else if (value instanceof Character) {
+            headers.addString(key, ((Character) value).toString());
+          } else if (value instanceof Destination) {
             if (log.isTraceEnabled()) {
               log.trace(
-                  String.format("Extracting destination name from user property %s", propKey));
+                  String.format("Extracting destination name from user property %s", key));
             }
-            String destinationName = ((Destination) propValue).getName();
-            headers.addString(propKey, destinationName);
+            String destinationName = ((Destination) value).getName();
+            headers.addString(key, destinationName);
           } else {
-            if (log.isInfoEnabled()) {
-              log.info(String.format("Ignoring user property with key [%s] and type [%s]", propKey,
-                  propValue.getClass().getName()));
+            if (log.isDebugEnabled()) {
+              log.debug(String.format("Ignoring user property with key [%s] and type [%s]", key,
+                  value.getClass().getName()));
             }
           }
         } catch (SDTException e) {
-          log.error(String.format("Ignoring user property with key [%s].", propKey), e);
+          log.error(String.format("Ignoring user property with key [%s].", key), e);
         }
       }
     }

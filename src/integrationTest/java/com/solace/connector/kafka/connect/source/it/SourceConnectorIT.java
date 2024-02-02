@@ -21,6 +21,7 @@ import com.solace.test.integration.junit.jupiter.extension.PubSubPlusExtension;
 import com.solacesystems.common.util.ByteArray;
 import com.solacesystems.jcsmp.BytesMessage;
 import com.solacesystems.jcsmp.JCSMPException;
+import com.solacesystems.jcsmp.JCSMPFactory;
 import com.solacesystems.jcsmp.JCSMPProperties;
 import com.solacesystems.jcsmp.JCSMPSession;
 import com.solacesystems.jcsmp.Message;
@@ -32,7 +33,6 @@ import com.solacesystems.jcsmp.Topic;
 import com.solacesystems.jcsmp.impl.AbstractDestination;
 import com.solacesystems.jcsmp.impl.QueueImpl;
 import com.solacesystems.jcsmp.impl.TopicImpl;
-import com.solacesystems.jcsmp.impl.sdt.MapImpl;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.time.Duration;
@@ -668,7 +668,7 @@ public class SourceConnectorIT implements TestConstants {
   }
 
   private SDTMap getTestUserProperties() throws SDTException {
-    final SDTMap solMsgUserProperties = new MapImpl();
+    final SDTMap solMsgUserProperties = JCSMPFactory.onlyInstance().createMap();
     solMsgUserProperties.putObject("null-value-user-property", null);
     solMsgUserProperties.putBoolean("boolean-user-property", true);
     solMsgUserProperties.putCharacter("char-user-property", 'C');

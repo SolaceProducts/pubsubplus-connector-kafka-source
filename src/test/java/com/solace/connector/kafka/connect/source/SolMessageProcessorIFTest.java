@@ -16,6 +16,7 @@ import com.solace.connector.kafka.connect.source.msgprocessors.SolSampleSimpleMe
 import com.solacesystems.common.util.ByteArray;
 import com.solacesystems.jcsmp.BytesXMLMessage;
 import com.solacesystems.jcsmp.DeliveryMode;
+import com.solacesystems.jcsmp.JCSMPFactory;
 import com.solacesystems.jcsmp.SDTException;
 import com.solacesystems.jcsmp.SDTMap;
 import com.solacesystems.jcsmp.TextMessage;
@@ -23,8 +24,6 @@ import com.solacesystems.jcsmp.User_Cos;
 import com.solacesystems.jcsmp.impl.QueueImpl;
 import com.solacesystems.jcsmp.impl.RawSMFMessageImpl;
 import com.solacesystems.jcsmp.impl.TopicImpl;
-import com.solacesystems.jcsmp.impl.sdt.MapImpl;
-import com.solacesystems.jcsmp.impl.sdt.StreamImpl;
 import java.math.BigInteger;
 import java.util.UUID;
 import org.apache.kafka.connect.header.ConnectHeaders;
@@ -51,7 +50,7 @@ class SolMessageProcessorIFTest {
 
   @Test
   void testUserPropertiesMappingGiveEmptyUserPropertyMap() {
-    final SDTMap solMsgUserProperties = new MapImpl();
+    final SDTMap solMsgUserProperties = JCSMPFactory.onlyInstance().createMap();
     final BytesXMLMessage message = mock(TextMessage.class);
     when(message.getProperties()).thenReturn(solMsgUserProperties);
 
@@ -61,7 +60,7 @@ class SolMessageProcessorIFTest {
 
   @Test
   void testUserPropertiesMappingForGivenUserPropertyMap() throws SDTException {
-    final SDTMap solMsgUserProperties = new MapImpl();
+    final SDTMap solMsgUserProperties = JCSMPFactory.onlyInstance().createMap();
     solMsgUserProperties.putObject("null-value-user-property", null);
     solMsgUserProperties.putBoolean("boolean-user-property", true);
     solMsgUserProperties.putCharacter("char-user-property", 'C');
@@ -94,9 +93,9 @@ class SolMessageProcessorIFTest {
   @Test
   void testUserPropertiesMappingWhenGivenPropertyOfUnsupportedTypes()
       throws SDTException {
-    final SDTMap solMsgUserProperties = new MapImpl();
-    solMsgUserProperties.putMap("map-user-property", new MapImpl());
-    solMsgUserProperties.putStream("stream-user-property", new StreamImpl());
+    final SDTMap solMsgUserProperties = JCSMPFactory.onlyInstance().createMap();
+    solMsgUserProperties.putMap("map-user-property", JCSMPFactory.onlyInstance().createMap());
+    solMsgUserProperties.putStream("stream-user-property", JCSMPFactory.onlyInstance().createStream());
     solMsgUserProperties.putMessage("raw-message-user-property",
         new RawSMFMessageImpl(new ByteArray("hello".getBytes())));
 
