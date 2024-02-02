@@ -91,7 +91,6 @@ public class SolaceSampleKeyedMessageProcessor implements SolMessageProcessorIF,
     }
 
     if (log.isDebugEnabled()) {
-      log.debug("Message Dump:{}", msg.dump());
       log.debug("processing data for Kafka topic Key: {}; with message {}", skey, msg);
     }
 

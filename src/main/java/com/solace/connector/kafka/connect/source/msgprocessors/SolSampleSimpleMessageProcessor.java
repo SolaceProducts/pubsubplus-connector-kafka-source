@@ -80,7 +80,6 @@ public class SolSampleSimpleMessageProcessor implements SolMessageProcessorIF, C
 
     this.sdestination = msg.getDestination().getName();
     if (log.isDebugEnabled()) {
-      log.debug("Message Dump:{}", msg.dump());
       log.debug("processing data for destination: {}; with message {}, with Kafka topic key of: {}",
           (String) this.sdestination, msg, this.skey);
     }
