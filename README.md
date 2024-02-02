@@ -156,7 +156,7 @@ In this case the IP address is one of the nodes running the distributed mode wor
   {
     "class": "com.solace.connector.kafka.connect.source.SolaceSourceConnector",
     "type": "source",
-    "version": "3.0.1"
+    "version": "3.1.0"
   },
 ```
 
@@ -373,6 +373,14 @@ For reference, this project includes two examples which you can use as starting 
 
 * [SolSampleSimpleMessageProcessor](/src/main/java/com/solace/connector/kafka/connect/source/msgprocessors/SolSampleSimpleMessageProcessor.java)
 * [SolaceSampleKeyedMessageProcessor](/src/main/java/com/solace/connector/kafka/connect/source/msgprocessors/SolaceSampleKeyedMessageProcessor.java)
+
+Above two processors by default won't map/forward the Solace message user properties and Solace standard properties. If you want to map/forward them as Kafka record headers set below two properties to `true` in connector configuration. Refer sample [here](/etc/solace_source_properties.json) and [Parameters section](#parameters) section for details.
+
+```
+sol.message_processor.map_user_properties=true
+sol.message_processor.map_solace_standard_properties=true
+```
+
 
 Once you've built the jar file for your custom message processor project, place it into the same directory as this connector, and update the connector's `sol.message_processor_class` config to point to the class of your new message processor.
 
