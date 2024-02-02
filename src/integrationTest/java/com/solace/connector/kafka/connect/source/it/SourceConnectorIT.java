@@ -31,8 +31,6 @@ import com.solacesystems.jcsmp.SDTMap;
 import com.solacesystems.jcsmp.TextMessage;
 import com.solacesystems.jcsmp.Topic;
 import com.solacesystems.jcsmp.impl.AbstractDestination;
-import com.solacesystems.jcsmp.impl.QueueImpl;
-import com.solacesystems.jcsmp.impl.TopicImpl;
 import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.time.Duration;
@@ -684,9 +682,9 @@ public class SourceConnectorIT implements TestConstants {
     solMsgUserProperties.putByteArray("byteArray-user-property",
         new ByteArray("Hello World".getBytes()));
     solMsgUserProperties.putDestination("topic-user-property",
-        TopicImpl.createFastNoValidation("testTopic"));
+        JCSMPFactory.onlyInstance().createTopic("testTopic"));
     solMsgUserProperties.putDestination("queue-user-property",
-        QueueImpl.createFastNoValidation("testQueue"));
+        JCSMPFactory.onlyInstance().createTopic("testQueue"));
 
     return solMsgUserProperties;
   }

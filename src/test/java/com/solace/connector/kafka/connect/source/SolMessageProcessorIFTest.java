@@ -21,9 +21,7 @@ import com.solacesystems.jcsmp.SDTException;
 import com.solacesystems.jcsmp.SDTMap;
 import com.solacesystems.jcsmp.TextMessage;
 import com.solacesystems.jcsmp.User_Cos;
-import com.solacesystems.jcsmp.impl.QueueImpl;
 import com.solacesystems.jcsmp.impl.RawSMFMessageImpl;
-import com.solacesystems.jcsmp.impl.TopicImpl;
 import java.math.BigInteger;
 import java.util.UUID;
 import org.apache.kafka.connect.header.ConnectHeaders;
@@ -76,9 +74,9 @@ class SolMessageProcessorIFTest {
     solMsgUserProperties.putByteArray("byteArray-user-property",
         new ByteArray("Hello World".getBytes()));
     solMsgUserProperties.putDestination("topic-user-property",
-        TopicImpl.createFastNoValidation("testTopic"));
+        JCSMPFactory.onlyInstance().createTopic("testTopic"));
     solMsgUserProperties.putDestination("queue-user-property",
-        QueueImpl.createFastNoValidation("testQueue"));
+        JCSMPFactory.onlyInstance().createQueue("testQueue"));
 
     final BytesXMLMessage message = mock(TextMessage.class);
     when(message.getProperties()).thenReturn(solMsgUserProperties);
@@ -114,9 +112,9 @@ class SolMessageProcessorIFTest {
     when(message.getApplicationMessageType()).thenReturn("testMessageType");
     when(message.getCorrelationId()).thenReturn(UUID.randomUUID().toString());
     when(message.getCos()).thenReturn(User_Cos.USER_COS_1);
-    when(message.getDestination()).thenReturn(QueueImpl.createFastNoValidation("testQueue"));
+    when(message.getDestination()).thenReturn(JCSMPFactory.onlyInstance().createQueue("testQueue"));
     when(message.getDeliveryMode()).thenReturn(DeliveryMode.PERSISTENT);
-    when(message.getReplyTo()).thenReturn(QueueImpl.createFastNoValidation("testQueue"));
+    when(message.getReplyTo()).thenReturn(JCSMPFactory.onlyInstance().createQueue("testQueue"));
 
     ConnectHeaders kafkaHeaders = messageProcessor.solacePropertiesToKafkaHeaders(message);
     assertThat("kafkaHeaders should not be empty", !kafkaHeaders.isEmpty());
