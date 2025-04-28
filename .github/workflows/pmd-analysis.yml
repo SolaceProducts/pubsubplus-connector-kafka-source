@@ -44,7 +44,7 @@ jobs:
           java-version: 11
 
       - name: Validate Gradle wrapper
-        uses: gradle/wrapper-validation-action@v4
+        uses: gradle/actions/wrapper-validation@v4
 
       - name: Run static code analysis
         run: ./gradlew clean pmdMainSarif --info
