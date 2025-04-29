@@ -53,12 +53,17 @@ dependencies {
     integrationTestImplementation 'commons-io:commons-io:2.4'
     integrationTestImplementation 'com.squareup.okhttp3:okhttp:4.9.1'
     integrationTestImplementation "org.apache.kafka:kafka-clients:$kafkaVersion"
+
     testImplementation 'org.apache.commons:commons-lang3:3.12.0'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
     testImplementation 'org.mockito:mockito-junit-jupiter:3.12.4'
     testImplementation 'org.hamcrest:hamcrest-all:1.3'
     testImplementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.16.0'
-    implementation "org.apache.kafka:connect-api:$kafkaVersion"
+    testImplementation "org.apache.kafka:connect-api:$kafkaVersion"
+
+    // Marked as compile-only to prevent conflicts with Kafka runtime, since the runtime already has the Kafka APIs.
+    // See https://docs.confluent.io/platform/current/connect/devguide.html#create-an-archive
+    compileOnly "org.apache.kafka:connect-api:$kafkaVersion"
     implementation "com.solacesystems:sol-jcsmp:$solaceJavaAPIVersion"
     implementation "org.slf4j:slf4j-api:1.7.36"
 }
