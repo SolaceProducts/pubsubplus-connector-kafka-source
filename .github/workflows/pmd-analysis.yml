@@ -58,7 +58,7 @@ jobs:
             **/build/reports/
 
       - name: Upload SARIF file
-        if: success() || failure()
+        if: (success() || failure()) && !(startsWith(github.ref, 'refs/heads/dependabot/') && github.event_name == 'push')
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: build/reports/pmd/main.sarif
