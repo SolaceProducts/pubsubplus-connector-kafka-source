@@ -7,3 +7,4 @@ updates:
     allow:
       - dependency-name: "org.apache.kafka:*"
       - dependency-name: "com.solacesystems:*"
+      - dependency-name: "io.netty:*"
