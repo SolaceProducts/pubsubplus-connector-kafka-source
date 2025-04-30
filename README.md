@@ -156,7 +156,7 @@ In this case the IP address is one of the nodes running the distributed mode wor
   {
     "class": "com.solace.connector.kafka.connect.source.SolaceSourceConnector",
     "type": "source",
-    "version": "3.1.0"
+    "version": "3.2.0"
   },
 ```
 
@@ -358,13 +358,13 @@ To get started, import the following dependency into your project:
 <dependency>
    <groupId>com.solace.connector.kafka.connect</groupId>
    <artifactId>pubsubplus-connector-kafka-source</artifactId>
-   <version>3.0.0</version>
+   <version>3.2.0</version>
 </dependency>
 ```
 
 **Gradle**
 ```groovy
-compile "com.solace.connector.kafka.connect:pubsubplus-connector-kafka-source:3.0.0"
+compile "com.solace.connector.kafka.connect:pubsubplus-connector-kafka-source:3.2.0"
 ```
 
 Now you can implement your custom `SolMessageProcessorIF`.
