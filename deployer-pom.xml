@@ -6,7 +6,7 @@
   <artifactId>solace-deployer</artifactId>
   <name>Solace Deployer</name>
   <version>1.0.0</version>
-  <description>A pom for publishing release version to maven central</description>
+  <description>A pom for publishing release version to maven central via Central Portal</description>
   <packaging>pom</packaging>
 
   <properties>
@@ -86,22 +86,22 @@
           <skip>true</skip>
         </configuration>
       </plugin>
+      <!-- Download artifacts from internal repository -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-dependency-plugin</artifactId>
         <version>3.2.0</version>
         <executions>
           <execution>
-            <id>copy</id>
+            <id>copy-artifacts</id>
             <phase>deploy</phase>
             <goals>
               <goal>copy</goal>
             </goals>
             <configuration>
               <localRepositoryDirectory>${project.build.directory}/tmpRepository</localRepositoryDirectory>
-
               <artifactItems>
-                <!-- JAR -->
+                <!-- Main JAR -->
                 <artifactItem>
                   <groupId>${release.groupId}</groupId>
                   <artifactId>${release.artifactId}</artifactId>
@@ -112,47 +112,6 @@
                     ${local.staging.dir}/${release.install.groupPath}/${release.artifactId}/${release.version}/
                   </outputDirectory>
                 </artifactItem>
-                <artifactItem>
-                  <groupId>${release.groupId}</groupId>
-                  <artifactId>${release.artifactId}</artifactId>
-                  <version>${release.version}</version>
-                  <type>jar.md5</type>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>
-                    ${local.staging.dir}/${release.install.groupPath}/${release.artifactId}/${release.version}/
-                  </outputDirectory>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>${release.groupId}</groupId>
-                  <artifactId>${release.artifactId}</artifactId>
-                  <version>${release.version}</version>
-                  <type>jar.sha1</type>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>
-                    ${local.staging.dir}/${release.install.groupPath}/${release.artifactId}/${release.version}/
-                  </outputDirectory>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>${release.groupId}</groupId>
-                  <artifactId>${release.artifactId}</artifactId>
-                  <version>${release.version}</version>
-                  <type>jar.sha256</type>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>
-                    ${local.staging.dir}/${release.install.groupPath}/${release.artifactId}/${release.version}/
-                  </outputDirectory>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>${release.groupId}</groupId>
-                  <artifactId>${release.artifactId}</artifactId>
-                  <version>${release.version}</version>
-                  <type>jar.sha512</type>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>
-                    ${local.staging.dir}/${release.install.groupPath}/${release.artifactId}/${release.version}/
-                  </outputDirectory>
-                </artifactItem>
-
                 <!-- POM -->
                 <artifactItem>
                   <groupId>${release.groupId}</groupId>
@@ -164,105 +123,7 @@
                     ${local.staging.dir}/${release.install.groupPath}/${release.artifactId}/${release.version}/
                   </outputDirectory>
                 </artifactItem>
-                <artifactItem>
-                  <groupId>${release.groupId}</groupId>
-                  <artifactId>${release.artifactId}</artifactId>
-                  <version>${release.version}</version>
-                  <type>pom.md5</type>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>
-                    ${local.staging.dir}/${release.install.groupPath}/${release.artifactId}/${release.version}/
-                  </outputDirectory>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>${release.groupId}</groupId>
-                  <artifactId>${release.artifactId}</artifactId>
-                  <version>${release.version}</version>
-                  <type>pom.sha1</type>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>
-                    ${local.staging.dir}/${release.install.groupPath}/${release.artifactId}/${release.version}/
-                  </outputDirectory>
-                </artifactItem>
-				  <artifactItem>
-					  <groupId>${release.groupId}</groupId>
-					  <artifactId>${release.artifactId}</artifactId>
-					  <version>${release.version}</version>
-					  <type>pom.sha256</type>
-					  <overWrite>true</overWrite>
-					  <outputDirectory>
-						  ${local.staging.dir}/${release.install.groupPath}/${release.artifactId}/${release.version}/
-					  </outputDirectory>
-				  </artifactItem>
-                <artifactItem>
-                  <groupId>${release.groupId}</groupId>
-                  <artifactId>${release.artifactId}</artifactId>
-                  <version>${release.version}</version>
-                  <type>pom.sha512</type>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>
-                    ${local.staging.dir}/${release.install.groupPath}/${release.artifactId}/${release.version}/
-                  </outputDirectory>
-                </artifactItem>
-
-                <!-- JAVADOC JAR -->
-                <artifactItem>
-                  <groupId>${release.groupId}</groupId>
-                  <artifactId>${release.artifactId}</artifactId>
-                  <version>${release.version}</version>
-                  <type>jar</type>
-                  <classifier>javadoc</classifier>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>
-                    ${local.staging.dir}/${release.install.groupPath}/${release.artifactId}/${release.version}/
-                  </outputDirectory>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>${release.groupId}</groupId>
-                  <artifactId>${release.artifactId}</artifactId>
-                  <version>${release.version}</version>
-                  <type>jar.md5</type>
-                  <classifier>javadoc</classifier>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>
-                    ${local.staging.dir}/${release.install.groupPath}/${release.artifactId}/${release.version}/
-                  </outputDirectory>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>${release.groupId}</groupId>
-                  <artifactId>${release.artifactId}</artifactId>
-                  <version>${release.version}</version>
-                  <type>jar.sha1</type>
-                  <classifier>javadoc</classifier>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>
-                    ${local.staging.dir}/${release.install.groupPath}/${release.artifactId}/${release.version}/
-                  </outputDirectory>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>${release.groupId}</groupId>
-                  <artifactId>${release.artifactId}</artifactId>
-                  <version>${release.version}</version>
-                  <type>jar.sha256</type>
-                  <classifier>javadoc</classifier>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>
-                    ${local.staging.dir}/${release.install.groupPath}/${release.artifactId}/${release.version}/
-                  </outputDirectory>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>${release.groupId}</groupId>
-                  <artifactId>${release.artifactId}</artifactId>
-                  <version>${release.version}</version>
-                  <type>jar.sha512</type>
-                  <classifier>javadoc</classifier>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>
-                    ${local.staging.dir}/${release.install.groupPath}/${release.artifactId}/${release.version}/
-                  </outputDirectory>
-                </artifactItem>
-
-                <!-- SOURCES JAR -->
+                <!-- Sources JAR -->
                 <artifactItem>
                   <groupId>${release.groupId}</groupId>
                   <artifactId>${release.artifactId}</artifactId>
@@ -274,52 +135,19 @@
                     ${local.staging.dir}/${release.install.groupPath}/${release.artifactId}/${release.version}/
                   </outputDirectory>
                 </artifactItem>
+                <!-- Javadoc JAR -->
                 <artifactItem>
                   <groupId>${release.groupId}</groupId>
                   <artifactId>${release.artifactId}</artifactId>
                   <version>${release.version}</version>
-                  <type>jar.md5</type>
-                  <classifier>sources</classifier>
+                  <type>jar</type>
+                  <classifier>javadoc</classifier>
                   <overWrite>true</overWrite>
                   <outputDirectory>
                     ${local.staging.dir}/${release.install.groupPath}/${release.artifactId}/${release.version}/
                   </outputDirectory>
                 </artifactItem>
-                <artifactItem>
-                  <groupId>${release.groupId}</groupId>
-                  <artifactId>${release.artifactId}</artifactId>
-                  <version>${release.version}</version>
-                  <type>jar.sha1</type>
-                  <classifier>sources</classifier>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>
-                    ${local.staging.dir}/${release.install.groupPath}/${release.artifactId}/${release.version}/
-                  </outputDirectory>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>${release.groupId}</groupId>
-                  <artifactId>${release.artifactId}</artifactId>
-                  <version>${release.version}</version>
-                  <type>jar.sha256</type>
-                  <classifier>sources</classifier>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>
-                    ${local.staging.dir}/${release.install.groupPath}/${release.artifactId}/${release.version}/
-                  </outputDirectory>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>${release.groupId}</groupId>
-                  <artifactId>${release.artifactId}</artifactId>
-                  <version>${release.version}</version>
-                  <type>jar.sha512</type>
-                  <classifier>sources</classifier>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>
-                    ${local.staging.dir}/${release.install.groupPath}/${release.artifactId}/${release.version}/
-                  </outputDirectory>
-                </artifactItem>
-
-                <!-- GRADLE MODULE -->
+                <!-- Gradle Module file -->
                 <artifactItem>
                   <groupId>${release.groupId}</groupId>
                   <artifactId>${release.artifactId}</artifactId>
@@ -330,50 +158,24 @@
                     ${local.staging.dir}/${release.install.groupPath}/${release.artifactId}/${release.version}/
                   </outputDirectory>
                 </artifactItem>
-                <artifactItem>
-                  <groupId>${release.groupId}</groupId>
-                  <artifactId>${release.artifactId}</artifactId>
-                  <version>${release.version}</version>
-                  <type>module.md5</type>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>
-                    ${local.staging.dir}/${release.install.groupPath}/${release.artifactId}/${release.version}/
-                  </outputDirectory>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>${release.groupId}</groupId>
-                  <artifactId>${release.artifactId}</artifactId>
-                  <version>${release.version}</version>
-                  <type>module.sha1</type>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>
-                    ${local.staging.dir}/${release.install.groupPath}/${release.artifactId}/${release.version}/
-                  </outputDirectory>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>${release.groupId}</groupId>
-                  <artifactId>${release.artifactId}</artifactId>
-                  <version>${release.version}</version>
-                  <type>module.sha256</type>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>
-                    ${local.staging.dir}/${release.install.groupPath}/${release.artifactId}/${release.version}/
-                  </outputDirectory>
-                </artifactItem>
-                <artifactItem>
-                  <groupId>${release.groupId}</groupId>
-                  <artifactId>${release.artifactId}</artifactId>
-                  <version>${release.version}</version>
-                  <type>module.sha512</type>
-                  <overWrite>true</overWrite>
-                  <outputDirectory>
-                    ${local.staging.dir}/${release.install.groupPath}/${release.artifactId}/${release.version}/
-                  </outputDirectory>
-                </artifactItem>
               </artifactItems>
             </configuration>
           </execution>
         </executions>
+      </plugin>
+      <!-- Central Publishing Maven Plugin -->
+      <plugin>
+        <groupId>org.sonatype.central</groupId>
+        <artifactId>central-publishing-maven-plugin</artifactId>
+        <version>0.7.0</version>
+        <extensions>true</extensions>
+        <configuration>
+          <publishingServerId>central</publishingServerId>
+          <autoPublish>true</autoPublish>
+          <waitUntil>published</waitUntil>
+          <waitMaxTime>3600</waitMaxTime>
+          <checksums>all</checksums>
+        </configuration>
       </plugin>
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -381,14 +183,6 @@
         <version>2.7</version>
         <configuration>
           <skip>true</skip>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-source-plugin</artifactId>
-        <version>3.2.1</version>
-        <configuration>
-          <attach>false</attach>
         </configuration>
       </plugin>
     </plugins>
