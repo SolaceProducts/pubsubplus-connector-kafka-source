@@ -61,7 +61,7 @@ dependencies {
     testImplementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.16.0'
     testImplementation "org.apache.kafka:connect-api:$kafkaVersion"
 
-    implementation platform('io.netty:netty-bom:4.1.121.Final') // override Netty transitive dependencies to latest
+    implementation platform('io.netty:netty-bom:4.2.4.Final') // override Netty transitive dependencies to latest
     // Marked as compile-only to prevent conflicts with Kafka runtime, since the runtime already has the Kafka APIs.
     // See https://docs.confluent.io/platform/current/connect/devguide.html#create-an-archive
     compileOnly "org.apache.kafka:connect-api:$kafkaVersion"
