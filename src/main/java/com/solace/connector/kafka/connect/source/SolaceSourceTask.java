@@ -101,7 +101,8 @@ public class SolaceSourceTask extends SourceTask {
     }
   }
 
-  @SuppressWarnings("java:S1168") // return null instead of empty collection is as per Connect docs
+  // return null instead of empty collection is as per Connect docs
+  @SuppressWarnings({"java:S1168", "PMD.ReturnEmptyCollectionRatherThanNull"})
   @Override
   public synchronized List<SourceRecord> poll() throws InterruptedException {
     JCSMPException listenerException = listenerExceptionReference.getAndSet(null);
