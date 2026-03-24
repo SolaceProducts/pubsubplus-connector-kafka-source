@@ -22,10 +22,7 @@ package com.solace.connector.kafka.connect.source;
 import com.solacesystems.jcsmp.BytesXMLMessage;
 import com.solacesystems.jcsmp.JCSMPException;
 import com.solacesystems.jcsmp.XMLMessageListener;
-
 import java.util.concurrent.BlockingQueue;
-
-import org.apache.kafka.connect.errors.ConnectException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,15 +30,15 @@ public class SolMessageTopicCallbackHandler implements XMLMessageListener {
   private static final Logger log = LoggerFactory.getLogger(SolMessageTopicCallbackHandler.class);
 
   private BlockingQueue<BytesXMLMessage> squeue;
-  private SolaceSourceTask sourceTask;
+  private final SolaceSourceTask sourceTask;
 
   /**
    * Asynchronous Callback for processing Solace Topic data events.
-   * 
+   *
    * @param lconfig Connector Configuration
    * @param solaceSourceTask Reference to the SourceTask object
    */
-  public SolMessageTopicCallbackHandler(SolaceSourceConnectorConfig lconfig, 
+  public SolMessageTopicCallbackHandler(SolaceSourceConnectorConfig lconfig,
       SolaceSourceTask solaceSourceTask) {
     this.squeue = solaceSourceTask.getIngressMessageQueue();
     this.sourceTask = solaceSourceTask;
@@ -56,14 +53,14 @@ public class SolMessageTopicCallbackHandler implements XMLMessageListener {
   }
 
   @Override
-  synchronized public void onReceive(BytesXMLMessage msg) {
+  public synchronized void onReceive(BytesXMLMessage msg) {
     log.debug("=================Received Message");
     if (squeue != null) {
       squeue.add(msg);
     }
   }
-  
-  synchronized public void shutdown() {
+
+  public synchronized void shutdown() {
     squeue = null;
   }
 

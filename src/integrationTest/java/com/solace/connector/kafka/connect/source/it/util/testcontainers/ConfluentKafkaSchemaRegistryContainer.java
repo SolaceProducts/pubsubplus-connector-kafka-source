@@ -5,8 +5,7 @@ import org.testcontainers.containers.KafkaContainer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 public class ConfluentKafkaSchemaRegistryContainer extends GenericContainer<ConfluentKafkaSchemaRegistryContainer> {
@@ -22,7 +21,7 @@ public class ConfluentKafkaSchemaRegistryContainer extends GenericContainer<Conf
 		super(dockerImageName);
 
 		assertNotNull(kafka.getNetwork());
-		assertThat(kafka.getNetworkAliases().size(), greaterThanOrEqualTo(2));
+		assertThat(kafka.getNetworkAliases().size()).isGreaterThanOrEqualTo(2);
 
 		dependsOn(kafka);
 		withNetwork(kafka.getNetwork());

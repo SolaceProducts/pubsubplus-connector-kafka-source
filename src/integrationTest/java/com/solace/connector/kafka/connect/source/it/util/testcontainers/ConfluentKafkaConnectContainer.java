@@ -9,8 +9,7 @@ import org.testcontainers.utility.DockerImageName;
 
 import java.time.Duration;
 
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 public class ConfluentKafkaConnectContainer extends GenericContainer<ConfluentKafkaConnectContainer> {
@@ -27,8 +26,8 @@ public class ConfluentKafkaConnectContainer extends GenericContainer<ConfluentKa
 										  KafkaContainer kafka,
 										  ConfluentKafkaSchemaRegistryContainer schemaRegistry) {
 		super(dockerImageName);
-		assertThat(kafka.getNetworkAliases().size(), greaterThanOrEqualTo(2));
-		assertThat(schemaRegistry.getNetworkAliases().size(), greaterThanOrEqualTo(2));
+		assertThat(kafka.getNetworkAliases().size()).isGreaterThanOrEqualTo(2);
+		assertThat(schemaRegistry.getNetworkAliases().size()).isGreaterThanOrEqualTo(2);
 		assertEquals(kafka.getNetwork(), schemaRegistry.getNetwork());
 
 		dependsOn(kafka, schemaRegistry);
