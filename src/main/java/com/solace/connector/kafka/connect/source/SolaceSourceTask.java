@@ -23,11 +23,13 @@ import com.solacesystems.jcsmp.BytesXMLMessage;
 import com.solacesystems.jcsmp.JCSMPException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.atomic.AtomicReference;
 import org.apache.kafka.clients.producer.RecordMetadata;
@@ -275,8 +277,15 @@ public class SolaceSourceTask extends SourceTask {
    */
   static class MessageTracker {
 
-    private final Map<SourceRecord, BytesXMLMessage> recordToMessage = new ConcurrentHashMap<>();
-    private final Map<BytesXMLMessage, Set<SourceRecord>> messagePendingRecords = new ConcurrentHashMap<>();
+    // Use HashMap: Rely on SourceRecord.equals()/hashCode() contract defined by Kafka Connect API.
+    // The framework does not guarantee passing the same SourceRecord instance to commitRecord()
+    // that was returned from poll(), so we use value-based equality instead of identity.
+    private final Map<SourceRecord, BytesXMLMessage> recordToMessage = new HashMap<>();
+
+    // Use IdentityHashMap: BytesXMLMessage lifecycle is fully encapsulated within MessageTracker.
+    // We control both insertion (track) and lookup (commitRecord), guaranteeing same instance.
+    // Also doesn't rely on BytesXMLMessage having correct equals()/hashCode() implementations.
+    private final Map<BytesXMLMessage, Set<SourceRecord>> messagePendingRecords = new IdentityHashMap<>();
 
     private static final Logger log = LoggerFactory.getLogger(MessageTracker.class);
 
@@ -290,7 +299,8 @@ public class SolaceSourceTask extends SourceTask {
      * @param records the SourceRecords produced from this message
      */
     void track(BytesXMLMessage message, SourceRecord[] records) {
-      Set<SourceRecord> pendingRecords = ConcurrentHashMap.newKeySet(records.length);
+      // Use HashSet: Matches HashMap semantics for recordToMessage, relies on SourceRecord.equals()
+      Set<SourceRecord> pendingRecords = new HashSet<>(records.length);
       for (SourceRecord sourceRecord : records) {
         recordToMessage.put(sourceRecord, message);
         pendingRecords.add(sourceRecord);
