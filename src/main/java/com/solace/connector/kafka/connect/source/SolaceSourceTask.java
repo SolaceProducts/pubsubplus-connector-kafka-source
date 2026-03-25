@@ -323,12 +323,14 @@ public class SolaceSourceTask extends SourceTask {
 
       Set<SourceRecord> pendingRecords = messagePendingRecords.get(message);
       if (pendingRecords == null) {
-        log.warn("Inconsistent state: SourceRecord maps to message, but message has no pending records set");
+        // Defensive check: should never happen if track() maintains consistency - indicates a coding bug
+        log.error("Inconsistent state: SourceRecord maps to message, but message has no pending records set");
         return null;
       }
 
       if (!pendingRecords.remove(sourceRecord)) {
-        log.warn("Inconsistent state: SourceRecord not found in message's pending set (possible duplicate commitRecord call)");
+        // Defensive check: should never happen if track() maintains consistency - indicates a coding bug
+        log.error("Inconsistent state: SourceRecord found in recordToMessage but not in message's pending set");
         return null;
       }
 
