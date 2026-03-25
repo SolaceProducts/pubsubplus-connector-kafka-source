@@ -17,6 +17,7 @@ import com.solace.connector.kafka.connect.source.SolaceSourceConstants;
 import com.solace.connector.kafka.connect.source.it.util.extensions.KafkaArgumentsProvider;
 import com.solace.connector.kafka.connect.source.it.util.extensions.KafkaArgumentsProvider.KafkaArgumentSource;
 import com.solace.connector.kafka.connect.source.it.util.extensions.KafkaArgumentsProvider.KafkaContext;
+import com.solace.connector.kafka.connect.source.it.util.extensions.KafkaArgumentsProvider.ResetKafkaContextAfterEach;
 import com.solace.connector.kafka.connect.source.it.util.extensions.pubsubplus.pubsubplus.NetworkPubSubPlusContainerProvider;
 import com.solace.test.integration.junit.jupiter.extension.PubSubPlusExtension;
 import com.solace.test.integration.semp.v2.SempV2Api;
@@ -60,7 +61,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @ExtendWith(PubSubPlusExtension.class)
-@ExtendWith(KafkaArgumentsProvider.AutoDeleteSolaceConnectorDeploymentAfterEach.class)
+@ExtendWith(ResetKafkaContextAfterEach.class)
 public class SourceConnectorIT implements TestConstants {
 
   private Properties connectorProps;
@@ -868,12 +869,25 @@ public class SourceConnectorIT implements TestConstants {
         solaceProducer.sendMessageToQueue(solaceProducer.defineQueue(SOL_QUEUE), msg);
       }
 
-      // STEP 3: Verify transformed messages appear in Kafka with header
+      // STEP 3: Wait for messages to be ACKed (ensures Kafka writes are complete)
+      LOG.info("Waiting for all messages to be ACKed");
+      await("all messages to be ACKed")
+          .atMost(30, SECONDS)
+          .pollInterval(1, SECONDS)
+          .until(() -> {
+            LOG.info("Waiting for message to be delivered to connector on queue {}", SOL_QUEUE);
+            List<MonitorMsgVpnQueueTxFlow> txFlows = sempV2Api.monitor()
+                .getMsgVpnQueueTxFlows(vpnName, SOL_QUEUE, null, null, null, null)
+                .getData();
+            return !txFlows.isEmpty() && txFlows.get(0).getAckedMsgCount() >= messageCount;
+          });
+
+      // STEP 4: Verify transformed messages appear in Kafka with header
       LOG.info("Verifying transformed messages in Kafka with header");
       ConsumerRecords<Object, Object> records =
           kafkaContext.getConsumer().poll(Duration.ofSeconds(10));
 
-      // STEP 4: Verify each record has the transformation header
+      // STEP 5: Verify each record has the transformation header
       assertThat(records)
           .as("Expected %d messages to be received by Kafka consumer", messageCount)
           .hasSize(messageCount)
@@ -885,19 +899,6 @@ public class SourceConnectorIT implements TestConstants {
             assertThat(new String(sourceRecord.headers().lastHeader("transformed_by").value()))
                 .as("Expected 'transformed_by' header value")
                 .isEqualTo("solace-connector");
-          });
-
-      // STEP 5: Verify Solace messages are ACKed (unacked count becomes 0)
-      LOG.info("Verifying Solace messages are ACKed");
-      await("all messages to be ACKed")
-          .atMost(30, SECONDS)
-          .pollInterval(1, SECONDS)
-          .until(() -> {
-            LOG.info("Waiting for message to be delivered to connector on queue {}", SOL_QUEUE);
-            List<MonitorMsgVpnQueueTxFlow> txFlows = sempV2Api.monitor()
-                .getMsgVpnQueueTxFlows(vpnName, SOL_QUEUE, null, null, null, null)
-                .getData();
-            return !txFlows.isEmpty() && txFlows.get(0).getAckedMsgCount() >= messageCount;
           });
 
       assertThat(sempV2Api.monitor()
