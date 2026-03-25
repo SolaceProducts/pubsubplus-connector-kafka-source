@@ -22,6 +22,7 @@ import java.io.IOException;
 import java.util.Iterator;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import okhttp3.MediaType;
 import okhttp3.OkHttpClient;
@@ -156,8 +157,24 @@ public class SolaceConnectorDeployment implements TestConstants {
     Request request = new Request.Builder().url(kafkaConnection.getConnectUrl() + "/connectors/solaceSourceConnector")
             .delete().build();
     try (Response response = client.newCall(request).execute()) {
-      logger.info("Delete response: " + response);
+      logger.info("Delete response: {}", response);
     }
+
+    // Wait until connector is fully removed
+    Request statusRequest = new Request.Builder()
+            .url(kafkaConnection.getConnectUrl() + "/connectors/solaceSourceConnector")
+            .get().build();
+    await("connector to be fully deleted")
+            .atMost(30, SECONDS)
+            .pollInterval(500, TimeUnit.MILLISECONDS)
+            .ignoreExceptions()
+            .until(() -> {
+              try (Response response = client.newCall(statusRequest).execute()) {
+                // Connector is deleted when we get 404 or other error
+                return !response.isSuccessful();
+              }
+            });
+    logger.info("Connector fully deleted");
   }
 
   public JsonObject getConnectorStatus() {

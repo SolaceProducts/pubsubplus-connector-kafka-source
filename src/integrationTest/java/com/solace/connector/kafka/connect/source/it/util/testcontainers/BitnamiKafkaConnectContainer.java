@@ -3,9 +3,12 @@ package com.solace.connector.kafka.connect.source.it.util.testcontainers;
 import com.github.dockerjava.api.command.InspectContainerResponse;
 import com.solace.connector.kafka.connect.source.SolaceSourceTask;
 import com.solace.connector.kafka.connect.source.it.Tools;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.Network;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.images.builder.Transferable;
 import org.testcontainers.utility.DockerImageName;
@@ -15,6 +18,7 @@ import java.time.Duration;
 import java.util.Comparator;
 
 public class BitnamiKafkaConnectContainer extends GenericContainer<BitnamiKafkaConnectContainer> {
+	private static final Logger logger = LoggerFactory.getLogger(BitnamiKafkaConnectContainer.class);
 	private static final String BROKER_LISTENER_NAME = "PLAINTEXT";
 	private static final int BROKER_LISTENER_PORT = 9092;
 	private static final String BOOTSTRAP_LISTENER_NAME = "PLAINTEXT_HOST";
@@ -48,6 +52,7 @@ public class BitnamiKafkaConnectContainer extends GenericContainer<BitnamiKafkaC
 				BROKER_LISTENER_NAME + "://:" + BROKER_LISTENER_PORT, BOOTSTRAP_LISTENER_NAME + "://:" + BOOTSTRAP_LISTENER_PORT));
 		withClasspathResourceMapping(Tools.getUnzippedConnectorDirName() + "/lib",
 				"/opt/bitnami/kafka/jars/pubsubplus-connector-kafka", BindMode.READ_ONLY);
+		withLogConsumer(new Slf4jLogConsumer(logger));
 		waitingFor(Wait.forLogMessage(".*Finished starting connectors and tasks.*", 1)
 				.withStartupTimeout(Duration.ofMinutes(10)));
 	}
@@ -81,7 +86,7 @@ public class BitnamiKafkaConnectContainer extends GenericContainer<BitnamiKafkaC
 				"set -e\n" +
 				"echo 'plugin.path=/opt/bitnami/kafka/jars' >> /opt/bitnami/kafka/config/connect-distributed.properties\n" +
 				"echo 'rest.port=" + CONNECT_PORT + "' >> /opt/bitnami/kafka/config/connect-distributed.properties\n" +
-				"echo 'log4j.logger.org.apache.kafka.connect.runtime.WorkerSinkTask=DEBUG' >> /opt/bitnami/kafka/config/connect-log4j.properties\n" +
+				"echo 'log4j.logger.org.apache.kafka.connect.runtime.WorkerSourceTask=DEBUG' >> /opt/bitnami/kafka/config/connect-log4j.properties\n" +
 				"echo 'log4j.logger." + SolaceSourceTask.class.getName() + "=TRACE' >> /opt/bitnami/kafka/config/connect-log4j.properties\n" +
 				"export KAFKA_CFG_ADVERTISED_LISTENERS=" + advertisedListeners(containerInfo) + "\n" +
 				"/opt/bitnami/scripts/kafka/setup.sh\n" +
