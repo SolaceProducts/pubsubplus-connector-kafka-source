@@ -38,7 +38,6 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.EnumSource;
-import org.junit.jupiter.params.provider.ValueSource;
 import org.junitpioneer.jupiter.cartesian.CartesianTest;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -110,13 +109,32 @@ class SolaceSourceTaskTest {
   @CartesianTest
   void testCommitRecord_MultipleRecordMessage_AcksAfterAllCommitted(
       @CartesianTest.Values(ints = {2, 3, 5}) int recordCount,
-      @CartesianTest.Enum(CommitOrder.class) CommitOrder order) throws Exception {
+      @CartesianTest.Enum(CommitOrder.class) CommitOrder order,
+      @CartesianTest.Values(booleans = {true, false}) boolean identicalRecords) throws Exception {
     sourceTask.start(createTestProps("test-topic"));
 
     SourceRecord[] records = IntStream.range(0, recordCount)
-        .mapToObj(i -> createSourceRecord("topic", "value" + i))
+        .mapToObj(i -> createSourceRecord("topic",
+            identicalRecords ? "same-value" : "value" + i))
         .toArray(SourceRecord[]::new);
     when(sourceTask.getMockProcessor().getRecords(anyString())).thenReturn(records);
+
+    // Verify test data expectations based on identicalRecords parameter
+    assertThat(IntStream.range(0, recordCount - 1))
+        .as("Test Setup Error: Expected test records to be %s identity-different",
+            identicalRecords ? "value-equal but" : "both value-different and")
+        .allSatisfy(i -> {
+          if (identicalRecords) {
+            // When true: records are value-equal but identity-different
+            // This tests that IdentityHashMap correctly handles the HashMap collision scenario
+            assertThat(records[i]).isEqualTo(records[i + 1]);      // value-equal
+            assertThat(records[i]).isNotSameAs(records[i + 1]);    // identity-different
+          } else {
+            // When false: records are both value-different and identity-different
+            assertThat(records[i]).isNotEqualTo(records[i + 1]);   // value-different
+            assertThat(records[i]).isNotSameAs(records[i + 1]);    // identity-different
+          }
+        });
 
     BytesXMLMessage smfMessage = spy(JCSMPFactory.onlyInstance().createMessage(TextMessage.class));
     sourceTask.getIngressMessageQueue().add(smfMessage);
@@ -164,15 +182,34 @@ class SolaceSourceTaskTest {
     assertThat(sourceTask.getMessageTracker()).satisfies(assertMessageTrackerEmpty());
   }
 
-  @ParameterizedTest
-  @ValueSource(ints = {1, 2, 5})
-  void testPoll_NormalFlow_TracksRecords(int recordCount) throws Exception {
+  @CartesianTest
+  void testPoll_NormalFlow_TracksRecords(
+      @CartesianTest.Values(ints = {1, 2, 5}) int recordCount,
+      @CartesianTest.Values(booleans = {true, false}) boolean identicalRecords) throws Exception {
     sourceTask.start(createTestProps("test-topic"));
 
     SourceRecord[] records = IntStream.range(0, recordCount)
-        .mapToObj(i -> createSourceRecord("test-topic", "value" + i))
+        .mapToObj(i -> createSourceRecord("test-topic",
+            identicalRecords ? "same-value" : "value" + i))
         .toArray(SourceRecord[]::new);
     when(sourceTask.getMockProcessor().getRecords(anyString())).thenReturn(records);
+
+    // Verify test data expectations based on identicalRecords parameter
+    assertThat(IntStream.range(0, recordCount - 1))
+        .as("Test Setup Error: Expected test records to be %s identity-different",
+            identicalRecords ? "value-equal but" : "both value-different and")
+        .allSatisfy(i -> {
+          if (identicalRecords) {
+            // When true: records are value-equal but identity-different
+            // This tests that IdentityHashMap correctly maintains separate entries for each instance
+            assertThat(records[i]).isEqualTo(records[i + 1]);      // value-equal
+            assertThat(records[i]).isNotSameAs(records[i + 1]);    // identity-different
+          } else {
+            // When false: records are both value-different and identity-different
+            assertThat(records[i]).isNotEqualTo(records[i + 1]);   // value-different
+            assertThat(records[i]).isNotSameAs(records[i + 1]);    // identity-different
+          }
+        });
 
     BytesXMLMessage smfMessage = spy(JCSMPFactory.onlyInstance().createMessage(TextMessage.class));
     sourceTask.getIngressMessageQueue().add(smfMessage);
@@ -184,6 +221,8 @@ class SolaceSourceTaskTest {
     verify(smfMessage, never()).ackMessage();
 
     // Verify context contains correct pending records
+    // With IdentityHashMap, this should be recordCount even when records are value-equal
+    // With HashMap, this would be 1 if records were value-equal (BUG!)
     assertThat(sourceTask.getMessageTracker().getRecordToContextMap())
         .hasSize(recordCount)
         .extracting(Map::values)

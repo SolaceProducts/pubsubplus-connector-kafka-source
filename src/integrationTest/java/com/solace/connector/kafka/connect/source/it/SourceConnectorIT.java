@@ -831,6 +831,89 @@ public class SourceConnectorIT implements TestConstants {
           .extracting(ConsumerRecord::value)
           .containsExactly("1", "3", "5");
     }
+
+    /**
+     * This test verifies that message acknowledgment works correctly when Kafka Connect
+     * transformations are applied. The framework creates new SourceRecord instances during
+     * transformation but passes the original preTransformRecord to commitRecord(), which
+     * relies on IdentityHashMap in MessageTracker.
+     */
+    @DisplayName("Transformation Does Not Prevent Message Acknowledgment")
+    @ParameterizedTest
+    @KafkaArgumentSource
+    void testTransformationDoesNotPreventMessageAcknowledgment(
+        KafkaContext kafkaContext,
+        SempV2Api sempV2Api,
+        JCSMPSession jcsmpSession) throws Exception {
+
+      // SETUP: Get VPN name for SEMP API calls
+      String vpnName = (String) jcsmpSession.getProperty(JCSMPProperties.VPN_NAME);
+
+      // SETUP: Configure connector with InsertHeader transformation
+      // This transformation creates new SourceRecord instances, but framework
+      // passes original preTransformRecord to commitRecord()
+      connectorProps.setProperty("transforms", "insertHeader");
+      connectorProps.setProperty("transforms.insertHeader.type",
+          "org.apache.kafka.connect.transforms.InsertHeader");
+      connectorProps.setProperty("transforms.insertHeader.header", "transformed_by");
+      connectorProps.setProperty("transforms.insertHeader.value.literal", "solace-connector");
+
+      // STEP 1: Start connector with transformation
+      kafkaContext.getSolaceConnectorDeployment().startConnector(connectorProps);
+
+      // STEP 2: Send test messages to Solace queue
+      int messageCount = 3;
+      for (int i = 1; i <= messageCount; i++) {
+        TextMessage msg = solaceProducer.createTextMessage("test-message-" + i);
+        solaceProducer.sendMessageToQueue(solaceProducer.defineQueue(SOL_QUEUE), msg);
+      }
+
+      // STEP 3: Verify transformed messages appear in Kafka with header
+      LOG.info("Verifying transformed messages in Kafka with header");
+      ConsumerRecords<Object, Object> records =
+          kafkaContext.getConsumer().poll(Duration.ofSeconds(10));
+
+      // STEP 4: Verify each record has the transformation header
+      assertThat(records)
+          .as("Expected %d messages to be received by Kafka consumer", messageCount)
+          .hasSize(messageCount)
+          .allSatisfy(sourceRecord -> {
+            assertThat(sourceRecord.headers().lastHeader("transformed_by"))
+                .as("Expected 'transformed_by' header to be present")
+                .isNotNull();
+
+            assertThat(new String(sourceRecord.headers().lastHeader("transformed_by").value()))
+                .as("Expected 'transformed_by' header value")
+                .isEqualTo("solace-connector");
+          });
+
+      // STEP 5: Verify Solace messages are ACKed (unacked count becomes 0)
+      LOG.info("Verifying Solace messages are ACKed");
+      await("all messages to be ACKed")
+          .atMost(30, SECONDS)
+          .pollInterval(1, SECONDS)
+          .until(() -> {
+            LOG.info("Waiting for message to be delivered to connector on queue {}", SOL_QUEUE);
+            List<MonitorMsgVpnQueueTxFlow> txFlows = sempV2Api.monitor()
+                .getMsgVpnQueueTxFlows(vpnName, SOL_QUEUE, null, null, null, null)
+                .getData();
+            return !txFlows.isEmpty() && txFlows.get(0).getAckedMsgCount() >= messageCount;
+          });
+
+      assertThat(sempV2Api.monitor()
+          .getMsgVpnQueueMsgs(vpnName, SOL_QUEUE, null, null, null, null)
+          .getData())
+          .as("Expected queue to be empty")
+          .isEmpty();
+
+      // STEP 6: Verify connector remains RUNNING
+      LOG.info("Verifying connector is still RUNNING");
+      assertThat(kafkaContext.getSolaceConnectorDeployment().getConnectorStatus())
+          .extracting(status -> status.getAsJsonArray("tasks").get(0).getAsJsonObject())
+          .extracting(status -> status.get("state").getAsString())
+          .as("Expected connector to stay RUNNING after transformations")
+          .isEqualTo("RUNNING");
+    }
   }
 
   private SDTMap getTestUserProperties() throws SDTException {
