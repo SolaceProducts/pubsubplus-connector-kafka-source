@@ -15,7 +15,7 @@ plugins {
 
 ext {
     kafkaVersion = '3.9.1'
-    solaceJavaAPIVersion = '10.27.0'
+    solaceJavaAPIVersion = '10.29.1'
     isSnapshot = project.version.endsWith('-SNAPSHOT')
 }
 
@@ -68,7 +68,7 @@ dependencies {
     testImplementation 'org.apache.logging.log4j:log4j-slf4j2-impl'
     testImplementation "org.apache.kafka:connect-api:$kafkaVersion"
 
-    implementation platform('io.netty:netty-bom:4.1.121.Final') // override Netty transitive dependencies to latest
+    implementation platform('io.netty:netty-bom:4.2.11.Final') // override Netty transitive dependencies to latest
     // Marked as compile-only to prevent conflicts with Kafka runtime, since the runtime already has the Kafka APIs.
     // See https://docs.confluent.io/platform/current/connect/devguide.html#create-an-archive
     compileOnly "org.apache.kafka:connect-api:$kafkaVersion"
