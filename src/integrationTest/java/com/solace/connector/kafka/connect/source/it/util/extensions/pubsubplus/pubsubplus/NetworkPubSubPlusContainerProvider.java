@@ -16,18 +16,22 @@ public class NetworkPubSubPlusContainerProvider extends SimpleContainerProvider 
 
 	@Override
 	public Supplier<PubSubPlusContainer> containerSupplier(ExtensionContext extensionContext) {
-		return () -> new PubSubPlusContainer()
-				.withNetwork(DOCKER_NET)
-				.withNetworkAliases(DOCKER_NET_PUBSUB_ALIAS)
+		return () -> {
+			PubSubPlusContainer container = new PubSubPlusContainer()
+					.withNetwork(DOCKER_NET)
+					.withNetworkAliases(DOCKER_NET_PUBSUB_ALIAS)
 
-				// Workaround for PubSub+ ulimit requirements until we update to a fixed version of test support
-				.withCreateContainerCmdModifier(cmd -> cmd.getHostConfig()
-						.withUlimits(new Ulimit[] {new Ulimit("nofile", 2448, 1048576L)}))
-				// Workaround for inadequate wait strategy until we update to a fixed version of test support
-				.withExposedPorts(5550)  // Expose health check port
-				.waitingFor(Wait.forHttp("/health-check/guaranteed-active")
-						.forPort(5550)
-						.forStatusCode(200)
-						.withStartupTimeout(Duration.ofMinutes(5)));
+					// Workaround for PubSub+ ulimit requirements until we update to a fixed version of test support
+					.withCreateContainerCmdModifier(cmd -> cmd.getHostConfig()
+							.withUlimits(new Ulimit[]{new Ulimit("nofile", 2448, 1048576L)}))
+					// Workaround for inadequate wait strategy until we update to a fixed version of test support
+					.waitingFor(Wait.forHttp("/health-check/guaranteed-active")
+							.forPort(5550)
+							.forStatusCode(200)
+							.withStartupTimeout(Duration.ofMinutes(5)));
+
+			container.addExposedPort(5550);  // Expose health check port
+			return container;
+		};
 	}
 }
