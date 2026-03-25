@@ -148,7 +148,7 @@ public class SolaceSourceTask extends SourceTask {
       if (sourceRecords == null || sourceRecords.length == 0) {
         // Message successfully processed but produced no records - ACK immediately
         // This prevents infinite redelivery of messages that legitimately produce no output
-        log.trace("Message produced no records, ACKing immediately");
+        log.debug("Message produced no records, ACKing immediately");
         msg.ackMessage();
         continue;
       }
@@ -166,8 +166,8 @@ public class SolaceSourceTask extends SourceTask {
    * Called when the framework confirms a record was successfully processed
    * (sent to Kafka, filtered by transformation, or dropped with errors.tolerance=all).</p>
    *
-   * <p>This is the correct API for acknowledgment-based sources. The framework
-   * controls when this is called based on producer callbacks and error handling.</p>
+   * <p>The framework controls when this is called based on producer callbacks and error handling.
+   * </p>
    *
    * <p><b>Note:</b> A single BytesXMLMessage may produce multiple SourceRecords. We only
    * ACK the Solace message after ALL its SourceRecords have been committed.</p>
@@ -215,8 +215,7 @@ public class SolaceSourceTask extends SourceTask {
 
     // Clear unpolled messages from ingress queue
     // Note: These messages are intentionally NOT ACKed - they were received but never
-    // polled, so Kafka never knew about them. They'll be redelivered on restart, which
-    // is the correct at-least-once semantics.
+    // polled, so Kafka never knew about them. They'll be redelivered on restart.
     ingressMessages.clear();
 
     // Clear message tracking data
