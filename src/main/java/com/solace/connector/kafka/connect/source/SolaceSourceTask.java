@@ -23,8 +23,6 @@ import com.solacesystems.jcsmp.BytesXMLMessage;
 import com.solacesystems.jcsmp.JCSMPException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
@@ -268,43 +266,66 @@ public class SolaceSourceTask extends SourceTask {
   }
 
   /**
-   * Encapsulates tracking of SourceRecords to Solace messages correlation. Maintains consistency
-   * between forward (record→message) and reverse (message→records) lookups.
+   * Tracks the correlation between {@link SourceRecord}s and their originating
+   * {@link BytesXMLMessage}s to enable acknowledgment after framework commit.
+   *
+   * <p>A single Solace message may produce multiple SourceRecords. All records from the
+   * same message share a {@link MessageToRecordsContext} that groups the message with its
+   * pending records. When all records are committed, the shared pending set becomes empty,
+   * indicating the message is ready for acknowledgment.
    *
    * <p><b>Thread Safety:</b> Methods are NOT thread-safe. Caller must provide external
    * synchronization (SolaceSourceTask's synchronized methods provide this).
    */
-  static class MessageTracker {
+  static final class MessageTracker {
 
-    // Use HashMap: Rely on SourceRecord.equals()/hashCode() contract defined by Kafka Connect API.
-    // The framework does not guarantee passing the same SourceRecord instance to commitRecord()
-    // that was returned from poll(), so we use value-based equality instead of identity.
-    private final Map<SourceRecord, BytesXMLMessage> recordToMessage = new HashMap<>();
+    /**
+     * Context object that groups a Solace message with its pending SourceRecords.
+     * Multiple SourceRecords from the same message share the same context instance,
+     * enabling automatic tracking of when all records are committed.
+     */
+    static final class MessageToRecordsContext {
+      final BytesXMLMessage message;
+      final Set<SourceRecord> pendingRecords;
 
-    // Use IdentityHashMap: BytesXMLMessage lifecycle is fully encapsulated within MessageTracker.
-    // We control both insertion (track) and lookup (commitRecord), guaranteeing same instance.
-    // Also doesn't rely on BytesXMLMessage having correct equals()/hashCode() implementations.
-    private final Map<BytesXMLMessage, Set<SourceRecord>> messagePendingRecords = new IdentityHashMap<>();
+      MessageToRecordsContext(BytesXMLMessage message, Set<SourceRecord> pendingRecords) {
+        this.message = message;
+        this.pendingRecords = pendingRecords;
+      }
+    }
+
+    // Use IdentityHashMap: Kafka Connect framework guarantees passing the same SourceRecord instance
+    // to commitRecord() that was returned from poll() (verified in AbstractWorkerSourceTask.sendRecords).
+    // Must use identity-based equality because sample processors set sourcePartition/sourceOffset to null,
+    // which means SourceRecords with identical content would be value-equal and cause HashMap collisions,
+    // leading to message tracking corruption and ACK failures.
+    // All SourceRecords from the same message share the same MessageToRecordsContext instance.
+    private final Map<SourceRecord, MessageToRecordsContext> recordToContext = new IdentityHashMap<>();
 
     private static final Logger log = LoggerFactory.getLogger(MessageTracker.class);
 
     private MessageTracker() {}
 
     /**
-     * Track a Solace message and its associated SourceRecords atomically. Both maps are updated
-     * together to maintain consistency.
-     * *
+     * Track a Solace message and its associated SourceRecords. Creates a shared context
+     * that all records point to, enabling automatic tracking of completion.
+     *
      * @param message the BytesXMLMessage that produced the records
      * @param records the SourceRecords produced from this message
      */
     void track(BytesXMLMessage message, SourceRecord[] records) {
-      // Use HashSet: Matches HashMap semantics for recordToMessage, relies on SourceRecord.equals()
-      Set<SourceRecord> pendingRecords = new HashSet<>(records.length);
+      // Use identity-based Set: Must match IdentityHashMap semantics for recordToContext.
+      // When commitRecord() removes from this Set, it must use instance identity, not value equality.
+      Set<SourceRecord> pendingRecords = Collections.newSetFromMap(new IdentityHashMap<>(records.length));
+      Collections.addAll(pendingRecords, records);
+
+      // Create single context instance shared by all records from this message
+      MessageToRecordsContext context = new MessageToRecordsContext(message, pendingRecords);
+
+      // All records point to the same context instance
       for (SourceRecord sourceRecord : records) {
-        recordToMessage.put(sourceRecord, message);
-        pendingRecords.add(sourceRecord);
+        recordToContext.put(sourceRecord, context);
       }
-      messagePendingRecords.put(message, pendingRecords);
     }
 
     /**
@@ -315,56 +336,48 @@ public class SolaceSourceTask extends SourceTask {
      * @return the BytesXMLMessage to ACK, or null if more records are pending
      */
     BytesXMLMessage commitRecord(SourceRecord sourceRecord) {
-      BytesXMLMessage message = recordToMessage.remove(sourceRecord);
-      if (message == null) {
+      MessageToRecordsContext context = recordToContext.remove(sourceRecord);
+      if (context == null) {
         log.debug("SourceRecord already processed or unknown, skipping");
         return null;
       }
 
-      Set<SourceRecord> pendingRecords = messagePendingRecords.get(message);
-      if (pendingRecords == null) {
+      // Remove from shared pendingRecords set
+      if (!context.pendingRecords.remove(sourceRecord)) {
         // Defensive check: should never happen if track() maintains consistency - indicates a coding bug
-        log.error("Inconsistent state: SourceRecord maps to message, but message has no pending records set");
+        log.error("Inconsistent state: SourceRecord found in map but not in context's pending set");
         return null;
       }
 
-      if (!pendingRecords.remove(sourceRecord)) {
-        // Defensive check: should never happen if track() maintains consistency - indicates a coding bug
-        log.error("Inconsistent state: SourceRecord found in recordToMessage but not in message's pending set");
-        return null;
-      }
-
-      if (!pendingRecords.isEmpty()) {
-        log.trace("Solace message has {} more record(s) pending commit", pendingRecords.size());
+      if (!context.pendingRecords.isEmpty()) {
+        log.trace("Solace message has {} more record(s) pending commit", context.pendingRecords.size());
         return null;
       }
 
       log.trace("All SourceRecords for a Solace message have been committed, ready to ACK");
-      messagePendingRecords.remove(message);
-      return message;
+      return context.message;
     }
 
     /**
      * Clear all tracking data. Called during shutdown.
      */
     void clear() {
-      int pendingCount = messagePendingRecords.size();
+      // Count unique messages (using Set since multiple records may share same context)
+      int pendingCount = (int) recordToContext.values().stream()
+          .map(ctx -> ctx.message)
+          .distinct()
+          .count();
+
       if (pendingCount > 0) {
         log.debug("Stopping with {} messages pending framework acknowledgment", pendingCount);
       }
 
-      recordToMessage.clear();
-      messagePendingRecords.clear();
+      recordToContext.clear();
     }
 
     // exposed for testing
-    Map<SourceRecord, BytesXMLMessage> getRecordToMessageMap() {
-      return recordToMessage;
-    }
-
-    // exposed for testing
-    Map<BytesXMLMessage, Set<SourceRecord>> getMessagePendingRecords() {
-      return messagePendingRecords;
+    Map<SourceRecord, MessageToRecordsContext> getRecordToContextMap() {
+      return recordToContext;
     }
   }
 }

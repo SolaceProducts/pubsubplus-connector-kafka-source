@@ -12,14 +12,18 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.solace.connector.kafka.connect.source.SolaceSourceTask.MessageTracker;
+import com.solace.connector.kafka.connect.source.SolaceSourceTask.MessageTracker.MessageToRecordsContext;
 import com.solace.connector.kafka.connect.source.msgprocessors.SolSampleSimpleMessageProcessor;
 import com.solacesystems.jcsmp.BytesXMLMessage;
 import com.solacesystems.jcsmp.JCSMPException;
 import com.solacesystems.jcsmp.JCSMPFactory;
 import com.solacesystems.jcsmp.TextMessage;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.function.Consumer;
 import java.util.stream.IntStream;
@@ -27,6 +31,7 @@ import org.apache.kafka.common.KafkaException;
 import org.apache.kafka.connect.data.Schema;
 import org.apache.kafka.connect.errors.ConnectException;
 import org.apache.kafka.connect.source.SourceRecord;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -175,13 +180,21 @@ class SolaceSourceTaskTest {
     assertThat(sourceTask.poll())
         .isNotNull()
         .hasSize(recordCount)
-        .containsExactlyInAnyOrder(records);
+        .containsExactly(records);
     verify(smfMessage, never()).ackMessage();
 
-    MessageTracker tracker = sourceTask.getMessageTracker();
-    assertThat(tracker.getRecordToMessageMap()).hasSize(recordCount);
-    assertThat(tracker.getMessagePendingRecords()).hasSize(1);
-    assertThat(tracker.getMessagePendingRecords().get(smfMessage)).isNotNull().hasSize(recordCount);
+    // Verify context contains correct pending records
+    assertThat(sourceTask.getMessageTracker().getRecordToContextMap())
+        .hasSize(recordCount)
+        .extracting(Map::values)
+        .extracting(SolaceSourceTaskTest::collectionToIdentityHashSet,
+            InstanceOfAssertFactories.collection(MessageToRecordsContext.class))
+        .singleElement()
+        .isNotNull()
+        .satisfies(
+            context -> assertThat(context.message).isSameAs(smfMessage),
+            context -> assertThat(context.pendingRecords)
+                .containsExactlyInAnyOrder(records));
   }
 
   @Test
@@ -222,13 +235,11 @@ class SolaceSourceTaskTest {
     sourceTask.poll();
 
     MessageTracker tracker = sourceTask.getMessageTracker();
-    assertThat(tracker.getRecordToMessageMap()).hasSize(2);
-    assertThat(tracker.getMessagePendingRecords()).hasSize(2);
+    assertThat(tracker.getRecordToContextMap()).hasSize(2);
 
     sourceTask.stop();
 
-    assertThat(tracker.getRecordToMessageMap()).isEmpty();
-    assertThat(tracker.getMessagePendingRecords()).isEmpty();
+    assertThat(tracker.getRecordToContextMap()).isEmpty();
   }
 
   @Test
@@ -263,14 +274,14 @@ class SolaceSourceTaskTest {
 
       tracker.track(message, new SourceRecord[]{sourceRecord});
 
-      assertThat(tracker.getRecordToMessageMap())
+      assertThat(tracker.getRecordToContextMap())
           .hasSize(1)
-          .containsEntry(sourceRecord, message);
-      assertThat(tracker.getMessagePendingRecords()).hasSize(1);
-      assertThat(tracker.getMessagePendingRecords().get(message))
+          .extractingByKey(sourceRecord)
           .isNotNull()
-          .singleElement()
-          .isEqualTo(sourceRecord);
+          .satisfies(
+              context -> assertThat(context.message).isSameAs(message),
+              context -> assertThat(context.pendingRecords)
+                  .containsExactly(sourceRecord));
     }
 
     @Test
@@ -282,16 +293,18 @@ class SolaceSourceTaskTest {
 
       tracker.track(message, new SourceRecord[]{record1, record2, record3});
 
-      assertThat(tracker.getRecordToMessageMap())
+      // Verify all records share the same context instance
+      assertThat(tracker.getRecordToContextMap())
           .hasSize(3)
-          .containsEntry(record1, message)
-          .containsEntry(record2, message)
-          .containsEntry(record3, message);
-      assertThat(tracker.getMessagePendingRecords()).hasSize(1);
-      assertThat(tracker.getMessagePendingRecords().get(message))
+          .extracting(Map::values)
+          .extracting(SolaceSourceTaskTest::collectionToIdentityHashSet,
+              InstanceOfAssertFactories.collection(MessageToRecordsContext.class))
+          .singleElement()
           .isNotNull()
-          .hasSize(3)
-          .containsExactlyInAnyOrder(record1, record2, record3);
+          .satisfies(
+              context -> assertThat(context.message).isSameAs(message),
+              context -> assertThat(context.pendingRecords)
+                  .containsExactlyInAnyOrder(record1, record2, record3));
     }
 
     @Test
@@ -314,14 +327,20 @@ class SolaceSourceTaskTest {
           .toArray(SourceRecord[]::new);
       tracker.track(message, records);
 
+      // Get context from any record to check pending count
+      MessageToRecordsContext context = tracker.getRecordToContextMap()
+          .values()
+          .stream()
+          .findFirst()
+          .orElseThrow();
+
       int[] commitOrder = order.generateCommitOrder(recordCount);
 
       for (int i = 0; i < recordCount - 1; i++) {
         assertThat(tracker.commitRecord(records[commitOrder[i]]))
             .as("Should return null when records are still pending (order: %s)", order)
             .isNull();
-        assertThat(tracker.getMessagePendingRecords().get(message)).isNotNull()
-            .hasSize(recordCount - i - 1);
+        assertThat(context.pendingRecords).hasSize(recordCount - i - 1);
       }
 
       assertThat(tracker.commitRecord(records[commitOrder[recordCount - 1]]))
@@ -349,28 +368,24 @@ class SolaceSourceTaskTest {
     }
 
     @Test
-    void testCommitRecordInconsistentState_NoPendingRecordsSet() {
-      BytesXMLMessage message = JCSMPFactory.onlyInstance().createMessage(TextMessage.class);
-      SourceRecord sourceRecord = createSourceRecord("test-topic", "test-value");
-
-      tracker.getRecordToMessageMap().put(sourceRecord, message);
-
-      assertThat(tracker.commitRecord(sourceRecord)).isNull();
-      assertThat(tracker.getRecordToMessageMap()).isEmpty();
-    }
-
-    @Test
     void testCommitRecordInconsistentState_RecordNotInPendingSet() {
       BytesXMLMessage message = JCSMPFactory.onlyInstance().createMessage(TextMessage.class);
       SourceRecord sourceRecord = createSourceRecord("test-topic", "test-value");
       SourceRecord otherSourceRecord = createSourceRecord("other-topic", "other-value");
 
-      tracker.getRecordToMessageMap().put(sourceRecord, message);
-      tracker.getMessagePendingRecords().put(message, Collections.singleton(otherSourceRecord));
+      // Manually create an inconsistent state: record maps to a context, but the context's
+      // pending set doesn't contain the record
+      MessageToRecordsContext context =
+          new MessageToRecordsContext(message, Collections.singleton(otherSourceRecord));
+      tracker.getRecordToContextMap().put(sourceRecord, context);
 
-      assertThat(tracker.commitRecord(sourceRecord)).isNull();
-      assertThat(tracker.getRecordToMessageMap()).isEmpty();
-      assertThat(tracker.getMessagePendingRecords().get(message)).hasSize(1);
+      assertThat(tracker.commitRecord(sourceRecord))
+          .as("Should return null when records are inconsistent")
+          .isNull();
+      assertThat(tracker.getRecordToContextMap()).isEmpty();
+      assertThat(context.pendingRecords)
+          .as("pending set should still contain the other record since it was never committed")
+          .containsExactly(otherSourceRecord);
     }
 
     // ========== Clear Tests ==========
@@ -394,8 +409,7 @@ class SolaceSourceTaskTest {
       tracker.track(message1, new SourceRecord[]{record1a, record1b});
       tracker.track(message2, new SourceRecord[]{record2a, record2b});
 
-      assertThat(tracker.getRecordToMessageMap()).hasSize(4);
-      assertThat(tracker.getMessagePendingRecords()).hasSize(2);
+      assertThat(tracker.getRecordToContextMap()).hasSize(4);
 
       tracker.clear();
 
@@ -414,9 +428,13 @@ class SolaceSourceTaskTest {
       assertThat(tracker.commitRecord(record1)).isNull();
       assertThat(tracker.commitRecord(record2)).isNull();
 
-      assertThat(tracker.getRecordToMessageMap()).hasSize(1);
-      assertThat(tracker.getMessagePendingRecords()).hasSize(1);
-      assertThat(tracker.getMessagePendingRecords().get(message)).hasSize(1);
+      assertThat(tracker.getRecordToContextMap())
+          .hasSize(1)
+          .extractingByKey(record3)
+          .isNotNull()
+          .extracting(context -> context.pendingRecords,
+              InstanceOfAssertFactories.collection(SourceRecord.class))
+          .containsExactly(record3);
 
       tracker.clear();
 
@@ -549,13 +567,16 @@ class SolaceSourceTaskTest {
   // ========== Helper Methods ==========
 
   /**
-   * Asserts that a MessageTracker has no pending messages (both maps are empty).
+   * Asserts that a MessageTracker has no pending messages (map is empty).
    */
   private static Consumer<MessageTracker> assertMessageTrackerEmpty() {
-    return tracker -> {
-      assertThat(tracker.getRecordToMessageMap()).isEmpty();
-      assertThat(tracker.getMessagePendingRecords()).isEmpty();
-    };
+    return tracker -> assertThat(tracker.getRecordToContextMap()).isEmpty();
+  }
+
+  private static <T> Set<T> collectionToIdentityHashSet(Collection<T> collection) {
+    Set<T> objects = Collections.newSetFromMap(new IdentityHashMap<>(collection.size()));
+    objects.addAll(collection);
+    return objects;
   }
 
   /**
