@@ -37,6 +37,8 @@ testSets {
 }
 
 dependencies {
+    integrationTestImplementation platform('org.apache.logging.log4j:log4j-bom:2.25.3')
+    integrationTestImplementation platform('org.slf4j:slf4j-bom:2.0.17')
     integrationTestImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
     integrationTestImplementation 'org.junit-pioneer:junit-pioneer:1.5.0'
     integrationTestImplementation 'org.mockito:mockito-junit-jupiter:3.12.4'
@@ -45,8 +47,8 @@ dependencies {
     integrationTestImplementation 'org.testcontainers:kafka:1.16.0'
     integrationTestImplementation 'org.testcontainers:toxiproxy:1.16.0'
     integrationTestImplementation 'com.solace.test.integration:pubsubplus-junit-jupiter:1.1.0'
-    integrationTestImplementation 'org.slf4j:slf4j-api:1.7.32'
-    integrationTestImplementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.16.0'
+    integrationTestImplementation 'org.slf4j:slf4j-api'
+    integrationTestImplementation 'org.apache.logging.log4j:log4j-slf4j2-impl'
     integrationTestImplementation 'org.apache.commons:commons-configuration2:2.6'
     integrationTestImplementation 'commons-beanutils:commons-beanutils:1.9.4'
     integrationTestImplementation 'com.google.code.gson:gson:2.3.1'
@@ -55,13 +57,15 @@ dependencies {
     integrationTestImplementation "org.apache.kafka:kafka-clients:$kafkaVersion"
     integrationTestImplementation 'org.awaitility:awaitility:4.3.0'
 
+    testImplementation platform('org.apache.logging.log4j:log4j-bom:2.25.3')
     testImplementation platform('org.assertj:assertj-bom:3.24.2')
+    testImplementation platform('org.slf4j:slf4j-bom:2.0.17')
     testImplementation 'org.assertj:assertj-core'
     testImplementation 'org.apache.commons:commons-lang3:3.12.0'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
     testImplementation 'org.mockito:mockito-junit-jupiter:3.12.4'
     testImplementation 'org.junit-pioneer:junit-pioneer:1.5.0'
-    testImplementation 'org.apache.logging.log4j:log4j-slf4j-impl:2.16.0'
+    testImplementation 'org.apache.logging.log4j:log4j-slf4j2-impl'
     testImplementation "org.apache.kafka:connect-api:$kafkaVersion"
 
     implementation platform('io.netty:netty-bom:4.1.121.Final') // override Netty transitive dependencies to latest
