@@ -37,18 +37,11 @@ testSets {
 }
 
 dependencies {
-    integrationTestImplementation platform('org.apache.logging.log4j:log4j-bom:2.25.3')
-    integrationTestImplementation platform('org.slf4j:slf4j-bom:2.0.17')
-    integrationTestImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
-    integrationTestImplementation 'org.junit-pioneer:junit-pioneer:1.5.0'
-    integrationTestImplementation 'org.mockito:mockito-junit-jupiter:3.12.4'
-    integrationTestImplementation 'org.testcontainers:testcontainers:1.16.0'
-    integrationTestImplementation 'org.testcontainers:junit-jupiter:1.16.0'
-    integrationTestImplementation 'org.testcontainers:kafka:1.16.0'
-    integrationTestImplementation 'org.testcontainers:toxiproxy:1.16.0'
+    integrationTestImplementation platform('org.testcontainers:testcontainers-bom:1.16.0')
+    integrationTestImplementation 'org.testcontainers:junit-jupiter'
+    integrationTestImplementation 'org.testcontainers:kafka'
+    integrationTestImplementation 'org.testcontainers:toxiproxy'
     integrationTestImplementation 'com.solace.test.integration:pubsubplus-junit-jupiter:1.1.0'
-    integrationTestImplementation 'org.slf4j:slf4j-api'
-    integrationTestImplementation 'org.apache.logging.log4j:log4j-slf4j2-impl'
     integrationTestImplementation 'org.apache.commons:commons-configuration2:2.6'
     integrationTestImplementation 'commons-beanutils:commons-beanutils:1.9.4'
     integrationTestImplementation 'com.google.code.gson:gson:2.3.1'
@@ -59,21 +52,23 @@ dependencies {
 
     testImplementation platform('org.apache.logging.log4j:log4j-bom:2.25.3')
     testImplementation platform('org.assertj:assertj-bom:3.24.2')
-    testImplementation platform('org.slf4j:slf4j-bom:2.0.17')
+    testImplementation platform('org.junit:junit-bom:5.8.1')
+    testImplementation platform('org.mockito:mockito-bom:3.12.4')
     testImplementation 'org.assertj:assertj-core'
     testImplementation 'org.apache.commons:commons-lang3:3.12.0'
-    testImplementation 'org.junit.jupiter:junit-jupiter:5.8.1'
-    testImplementation 'org.mockito:mockito-junit-jupiter:3.12.4'
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'org.mockito:mockito-junit-jupiter'
     testImplementation 'org.junit-pioneer:junit-pioneer:1.5.0'
     testImplementation 'org.apache.logging.log4j:log4j-slf4j2-impl'
     testImplementation "org.apache.kafka:connect-api:$kafkaVersion"
 
     implementation platform('io.netty:netty-bom:4.2.11.Final') // override Netty transitive dependencies to latest
+    implementation platform('org.slf4j:slf4j-bom:2.0.17')
     // Marked as compile-only to prevent conflicts with Kafka runtime, since the runtime already has the Kafka APIs.
     // See https://docs.confluent.io/platform/current/connect/devguide.html#create-an-archive
     compileOnly "org.apache.kafka:connect-api:$kafkaVersion"
     implementation "com.solacesystems:sol-jcsmp:$solaceJavaAPIVersion"
-    implementation "org.slf4j:slf4j-api:1.7.36"
+    implementation "org.slf4j:slf4j-api"
 }
 
 pmd {
