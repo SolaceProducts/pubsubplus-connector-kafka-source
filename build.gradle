@@ -37,25 +37,25 @@ testSets {
 }
 
 dependencies {
-    integrationTestImplementation platform('org.testcontainers:testcontainers-bom:1.16.0')
+    integrationTestImplementation platform('org.testcontainers:testcontainers-bom:1.21.4')
     integrationTestImplementation 'org.testcontainers:junit-jupiter'
     integrationTestImplementation 'org.testcontainers:kafka'
     integrationTestImplementation 'org.testcontainers:toxiproxy'
     integrationTestImplementation 'com.solace.test.integration:pubsubplus-junit-jupiter:1.1.0'
-    integrationTestImplementation 'org.apache.commons:commons-configuration2:2.6'
-    integrationTestImplementation 'commons-beanutils:commons-beanutils:1.9.4'
-    integrationTestImplementation 'com.google.code.gson:gson:2.3.1'
-    integrationTestImplementation 'commons-io:commons-io:2.4'
-    integrationTestImplementation 'com.squareup.okhttp3:okhttp:4.9.1'
+    integrationTestImplementation 'org.apache.commons:commons-configuration2:2.13.0'
+    integrationTestImplementation 'commons-beanutils:commons-beanutils:1.11.0'
+    integrationTestImplementation 'com.google.code.gson:gson:2.13.2'
+    integrationTestImplementation 'commons-io:commons-io:2.21.0'
+    integrationTestImplementation 'com.squareup.okhttp3:okhttp:4.12.0'
     integrationTestImplementation "org.apache.kafka:kafka-clients:$kafkaVersion"
     integrationTestImplementation 'org.awaitility:awaitility:4.3.0'
 
     testImplementation platform('org.apache.logging.log4j:log4j-bom:2.25.3')
-    testImplementation platform('org.assertj:assertj-bom:3.24.2')
-    testImplementation platform('org.junit:junit-bom:5.8.1')
-    testImplementation platform('org.mockito:mockito-bom:3.12.4')
+    testImplementation platform('org.assertj:assertj-bom:3.27.7')
+    testImplementation platform('org.junit:junit-bom:6.0.3')
+    testImplementation platform('org.mockito:mockito-bom:5.23.0')
     testImplementation 'org.assertj:assertj-core'
-    testImplementation 'org.apache.commons:commons-lang3:3.12.0'
+    testImplementation 'org.apache.commons:commons-lang3:3.20.0'
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testImplementation 'org.mockito:mockito-junit-jupiter'
     testImplementation 'org.junit-pioneer:junit-pioneer:1.5.0'
