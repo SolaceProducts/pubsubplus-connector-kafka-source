@@ -14,7 +14,6 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.JsonObject;
 import com.solace.connector.kafka.connect.source.SolaceSourceConstants;
-import com.solace.connector.kafka.connect.source.it.util.extensions.KafkaArgumentsProvider;
 import com.solace.connector.kafka.connect.source.it.util.extensions.KafkaArgumentsProvider.KafkaArgumentSource;
 import com.solace.connector.kafka.connect.source.it.util.extensions.KafkaArgumentsProvider.KafkaContext;
 import com.solace.connector.kafka.connect.source.it.util.extensions.KafkaArgumentsProvider.ResetKafkaContextAfterEach;
