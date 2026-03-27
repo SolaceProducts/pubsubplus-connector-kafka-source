@@ -7,6 +7,7 @@ import com.solace.connector.kafka.connect.source.it.util.testcontainers.BitnamiK
 import com.solace.connector.kafka.connect.source.it.util.testcontainers.ConfluentKafkaConnectContainer;
 import com.solace.connector.kafka.connect.source.it.util.testcontainers.ConfluentKafkaControlCenterContainer;
 import com.solace.connector.kafka.connect.source.it.util.testcontainers.ConfluentKafkaSchemaRegistryContainer;
+import java.time.Duration;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.DeleteTopicsResult;
@@ -181,7 +182,18 @@ public class KafkaArgumentsProvider implements ArgumentsProvider,
 
 	}
 
-	public static class AutoDeleteSolaceConnectorDeploymentAfterEach implements AfterEachCallback {
+	/**
+	 * JUnit extension to reset Kafka context after each test, ensuring clean state for subsequent
+	 * tests.
+	 * <p>This includes:</p>
+	 * <ul>
+	 *   <li>Closing and removing any existing connector deployment to prevent interference with
+	 *   new deployments.</li>
+	 *   <li>Seeking the consumer to the end of the topic to avoid consuming messages from previous
+	 *   tests, ensuring that each test starts with a clean slate.</li>
+	 * </ul>
+	 */
+	public static class ResetKafkaContextAfterEach implements AfterEachCallback {
 		@Override
 		public void afterEach(ExtensionContext context) throws Exception {
 			for (KafkaNamespace namespace : KafkaNamespace.values()) {
@@ -190,6 +202,16 @@ public class KafkaArgumentsProvider implements ArgumentsProvider,
 						.get(ConnectorDeploymentResource.class, ConnectorDeploymentResource.class);
 				if (deploymentResource != null) {
 					deploymentResource.close();
+				}
+
+				ConsumerResource consumerResource = context.getRoot()
+						.getStore(namespace.getNamespace())
+						.get(ConsumerResource.class, ConsumerResource.class);
+				if (consumerResource != null) {
+					LOG.info("Seeking consumer to end for {}", namespace);
+					KafkaConsumer<Object, Object> consumer = consumerResource.getConsumer();
+					consumer.seekToEnd(Collections.emptySet());
+					consumer.poll(Duration.ZERO);  // Manually trigger lazy seek
 				}
 			}
 		}

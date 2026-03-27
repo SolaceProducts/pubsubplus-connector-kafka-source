@@ -17,12 +17,26 @@ Contents:
   * [Quick Start](#quick-start)
   * [Parameters](#parameters)
   * [User Guide](#user-guide)
+    + [Understanding the Connector's Role](#understanding-the-connectors-role)
     + [Deployment](#deployment)
     + [Troubleshooting](#troubleshooting)
-    + [Message Processors](#message-processors)
-    + [Performance Considerations](#performance-considerations)
-    + [Security Considerations](#security-considerations)  
+    + [Event Processing](#event-processing)
+      - [Message Processors](#message-processors)
+      - [Message Replay](#message-replay)
+    + [Performance and Reliability Considerations](#performance-and-reliability-considerations)
+      - [Ingesting from PubSub+ Topics](#ingesting-from-pubsub-topics)
+      - [Ingesting from PubSub+ Queues](#ingesting-from-pubsub-queues)
+      - [Message Acknowledgment](#message-acknowledgment)
+      - [Multiple Workers](#multiple-workers)
+    + [Security Considerations](#security-considerations)
   * [Developers Guide](#developers-guide)
+    + [Build the Project](#build-the-project)
+    + [Test the Project](#test-the-project)
+    + [Build a New Message Processor](#build-a-new-message-processor)
+  * [Additional Information](#additional-information)
+  * [Contributing](#contributing)
+  * [License](#license)
+  * [Resources](#resources)
 
 ## Overview
 
@@ -127,6 +141,42 @@ Refer to the in-line documentation of the [sample PubSub+ Kafka Source Connector
 
 ## User Guide
 
+### Understanding the Connector's Role
+
+The PubSub+ Kafka Source Connector is a **plugin** that runs within the Kafka Connect framework. As an implementation of Kafka Connect's Source API, the connector focuses solely on PubSub+ message handling while Kafka Connect provides the reliability and scalability infrastructure.
+
+Understanding this boundary helps you find the right documentation and know where to configure behavior:
+
+- **Connector properties** start with `sol.*` (e.g., `sol.host`, `sol.queue`, `sol.message_processor_class`)
+- **Kafka Connect properties** are everything else (e.g., `errors.tolerance`, `transforms.*`, `producer.override.*`)
+
+**What the Connector Handles:**
+
+The connector responds to requests from Kafka Connect through specific integration points:
+
+* **Initialization**: When Kafka Connect starts the task, the connector establishes a connection to the PubSub+ broker and subscribes to the configured queues or topics
+
+* **Polling**: When Kafka Connect asks for messages, the connector retrieves messages from the PubSub+ broker, converts them into Kafka records using the configured message processor, and returns them to Kafka Connect
+
+* **Acknowledgment**: When Kafka Connect finishes processing records, it directs the connector to acknowledge the corresponding PubSub+ message back to the broker (see [Message Acknowledgment](#message-acknowledgment) for details)
+
+* **Shutdown**: When Kafka Connect stops the task, the connector closes its connection to the PubSub+ broker
+
+**Kafka Connect Handles the Complex Parts (Everything Else):**
+
+Kafka Connect manages the heavy lifting of data pipeline operations:
+
+* When to direct the connector to acknowledge messages
+* How frequently to poll the connector for messages
+* Error handling and retry behavior
+* Writing records to Kafka topics
+* Producer configuration (compression, batching, timeouts, etc.)
+* Record filtering and transformations
+* Task lifecycle (starting, stopping, restarting after failures)
+* Worker distribution and load balancing
+* Offset management
+* All other aspects of record processing and runtime behavior
+
 ### Deployment
 
 The PubSub+ Source Connector deployment has been tested on Apache Kafka 3.5 and Confluent Kafka 7.4 platforms. The Kafka software is typically placed under the root directory: `/opt/<provider>/<kafka or confluent-version>`.
@@ -156,7 +206,7 @@ In this case the IP address is one of the nodes running the distributed mode wor
   {
     "class": "com.solace.connector.kafka.connect.source.SolaceSourceConnector",
     "type": "source",
-    "version": "3.2.0"
+    "version": "3.3.0"
   },
 ```
 
@@ -242,13 +292,18 @@ When a Kafka Topic is configured with its highest quality-of-service with respec
 
 Note that one connector can ingest from only one queue.
 
-##### Recovery from Kafka Connect API or Kafka Broker Failure
+##### Message Acknowledgment
 
-When the connector is consuming from a PubSub+ queue, a timed Kafka Connect process commits the source records and offset to disk on the Kafka broker and calls the connector to acknowledge the messages that were processed so far, which removes these event messages from the event broker queue. 
+When consuming from a PubSub+ queue, **Kafka Connect directs when to acknowledge messages**. After the connector produces Kafka records from a Solace message, Kafka Connect determines when those records have been processed (written to Kafka, filtered, failed with `errors.tolerance=all`, etc) and directs acknowledgment.
 
-If the Kafka Connect API or the Kafka broker goes down, unacknowledged messages are not lost; they will be retransmitted as soon as the Connect API or Kafka broker is restarted. It is important to note that while the Connect API or the Kafka Broker are off-line, the PubSub+ queue continues to add event messages, so there is no loss of new data from the PubSub+ Event Mesh.
+**Connector-Initiated Acknowledgment:**
 
-The commit time interval is configurable via the `offset.flush.interval.ms` parameter (default 60,000 ms) in the worker's `connect-distributed.properties` configuration file. If high message rate is expected the parameter shall be tuned, taking into consideration that each task (in case of [Multiple Workers](#multiple-workers)) shall not allow excessively large (for example, 10,000 or more) amount of unacknowledged messages.
+The connector will acknowledge a message **without waiting for Kafka Connect's direction** in these specific cases:
+
+* **No records produced**: If the message processor (`SolMessageProcessorIF`) returns no records (0 records), the message is immediately acknowledged
+* **Message processor error with tolerance**: If the message processor throws an exception and `sol.message_processor.ignore.error=true` is configured, the message is immediately acknowledged
+
+**Recovery:** As of the time of writing, when the connector task enters a `FAILED` state (e.g., when a message fails to be processed and `errors.tolerance=none`, unhandled exceptions, etc.), Kafka Connect's observed behavior is to NOT direct the connector to acknowledge unprocessed messages. Because these messages are not acknowledged to the PubSub+ broker, they will be retransmitted when the task is restarted according to the broker's redelivery configuration. The PubSub+ queue continues to accept messages during outages.
 
 ##### Queue Handling of Data Bursts
 
@@ -358,13 +413,13 @@ To get started, import the following dependency into your project:
 <dependency>
    <groupId>com.solace.connector.kafka.connect</groupId>
    <artifactId>pubsubplus-connector-kafka-source</artifactId>
-   <version>3.2.0</version>
+   <version>3.3.0</version>
 </dependency>
 ```
 
 **Gradle**
 ```groovy
-compile "com.solace.connector.kafka.connect:pubsubplus-connector-kafka-source:3.2.0"
+compile "com.solace.connector.kafka.connect:pubsubplus-connector-kafka-source:3.3.0"
 ```
 
 Now you can implement your custom `SolMessageProcessorIF`.

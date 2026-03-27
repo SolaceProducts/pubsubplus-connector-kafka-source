@@ -22,11 +22,7 @@ package com.solace.connector.kafka.connect.source;
 import com.solacesystems.jcsmp.BytesXMLMessage;
 import com.solacesystems.jcsmp.JCSMPException;
 import com.solacesystems.jcsmp.XMLMessageListener;
-
 import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.atomic.AtomicInteger;
-
-import org.apache.kafka.connect.errors.ConnectException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,19 +31,17 @@ public class SolMessageQueueCallbackHandler implements XMLMessageListener {
   private static final Logger log = LoggerFactory.getLogger(SolMessageQueueCallbackHandler.class);
 
   private BlockingQueue<BytesXMLMessage> squeue;
-  private SolaceSourceTask sourceTask;
-  private AtomicInteger msgCounter = new AtomicInteger();
+  private final SolaceSourceTask sourceTask;
 
   /**
    * Asynchronously Save records to Blocking Queue when a new Persistent Message arrives.
-   * 
+   *
    * @param solaceSourceTask Reference to the SourceTask object
    */
   public SolMessageQueueCallbackHandler(SolaceSourceTask solaceSourceTask) {
 
     this.squeue = solaceSourceTask.getIngressMessageQueue();
     this.sourceTask = solaceSourceTask;
-    msgCounter.set(0);
   }
 
   @Override
@@ -57,12 +51,12 @@ public class SolMessageQueueCallbackHandler implements XMLMessageListener {
   }
 
   @Override
-  synchronized public void onReceive(BytesXMLMessage msg) {
+  public synchronized void onReceive(BytesXMLMessage msg) {
     log.debug("=================Received Queue Message");
     squeue.add(msg);
   }
 
-  synchronized public void shutdown() {
+  public synchronized void shutdown() {
     squeue = null;
   }
 

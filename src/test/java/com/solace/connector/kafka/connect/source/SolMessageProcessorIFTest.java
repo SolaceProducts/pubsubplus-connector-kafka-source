@@ -8,10 +8,9 @@ import static com.solace.connector.kafka.connect.source.SolaceSourceConstants.SO
 import static com.solace.connector.kafka.connect.source.SolaceSourceConstants.SOL_SH_DESTINATION;
 import static com.solace.connector.kafka.connect.source.SolaceSourceConstants.SOL_SH_REPLY_TO_DESTINATION;
 import static com.solace.connector.kafka.connect.source.SolaceSourceConstants.SOL_SH_REPLY_TO_DESTINATION_TYPE;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.equalTo;
-import static org.mockito.Mockito.mock;
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.when;
+
 import com.solace.connector.kafka.connect.source.msgprocessors.SolSampleSimpleMessageProcessor;
 import com.solacesystems.common.util.ByteArray;
 import com.solacesystems.jcsmp.BytesXMLMessage;
@@ -27,7 +26,11 @@ import java.util.UUID;
 import org.apache.kafka.connect.header.ConnectHeaders;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 class SolMessageProcessorIFTest {
 
   private SolMessageProcessorIF messageProcessor;
@@ -39,21 +42,19 @@ class SolMessageProcessorIFTest {
 
   @Test
   void testUserPropertiesMappingGivenNullUserPropertyMap() {
-    final BytesXMLMessage message = mock(TextMessage.class);
-    when(message.getProperties()).thenReturn(null);
-
-    ConnectHeaders kafkaHeaders = messageProcessor.userPropertiesToKafkaHeaders(message);
-    assertThat("getProperties() is null", kafkaHeaders.isEmpty());
+    BytesXMLMessage message = JCSMPFactory.onlyInstance().createMessage(TextMessage.class);
+    assertThat(messageProcessor.userPropertiesToKafkaHeaders(message))
+        .as("getProperties() is null")
+        .isEmpty();
   }
 
   @Test
   void testUserPropertiesMappingGiveEmptyUserPropertyMap() {
-    final SDTMap solMsgUserProperties = JCSMPFactory.onlyInstance().createMap();
-    final BytesXMLMessage message = mock(TextMessage.class);
-    when(message.getProperties()).thenReturn(solMsgUserProperties);
-
-    ConnectHeaders kafkaHeaders = messageProcessor.userPropertiesToKafkaHeaders(message);
-    assertThat("solMsgUserProperties is empty", kafkaHeaders.isEmpty());
+    BytesXMLMessage message = JCSMPFactory.onlyInstance().createMessage(TextMessage.class);
+    message.setProperties(JCSMPFactory.onlyInstance().createMap());
+    assertThat(messageProcessor.userPropertiesToKafkaHeaders(message))
+        .as("solMsgUserProperties is empty")
+        .isEmpty();
   }
 
   @Test
@@ -78,14 +79,13 @@ class SolMessageProcessorIFTest {
     solMsgUserProperties.putDestination("queue-user-property",
         JCSMPFactory.onlyInstance().createQueue("testQueue"));
 
-    final BytesXMLMessage message = mock(TextMessage.class);
-    when(message.getProperties()).thenReturn(solMsgUserProperties);
+    BytesXMLMessage message = JCSMPFactory.onlyInstance().createMessage(TextMessage.class);
+    message.setProperties(solMsgUserProperties);
 
-    final ConnectHeaders kafkaHeaders = messageProcessor.userPropertiesToKafkaHeaders(message);
-    assertThat(kafkaHeaders.size(), equalTo(message.getProperties().size()));
-
-    kafkaHeaders.iterator().forEachRemaining(
-        header -> assertThat(header.key(), solMsgUserProperties.containsKey(header.key())));
+    assertThat(messageProcessor.userPropertiesToKafkaHeaders(message))
+        .hasSize(message.getProperties().size())
+        .allSatisfy(header -> assertThat(solMsgUserProperties.containsKey(header.key()))
+            .isTrue());
   }
 
   @Test
@@ -97,17 +97,16 @@ class SolMessageProcessorIFTest {
     solMsgUserProperties.putMessage("raw-message-user-property",
         new RawSMFMessageImpl(new ByteArray("hello".getBytes())));
 
-    final BytesXMLMessage message = mock(TextMessage.class);
-    when(message.getProperties()).thenReturn(solMsgUserProperties);
+    BytesXMLMessage message = JCSMPFactory.onlyInstance().createMessage(TextMessage.class);
+    message.setProperties(solMsgUserProperties);
 
     ConnectHeaders kafkaHeaders = messageProcessor.userPropertiesToKafkaHeaders(message);
-    assertThat(solMsgUserProperties.size(), equalTo(message.getProperties().size()));
-    assertThat(kafkaHeaders.size(), equalTo(0));
+    assertThat(solMsgUserProperties.size()).isEqualTo(message.getProperties().size());
+    assertThat(kafkaHeaders.size()).isZero();
   }
 
   @Test
-  void testSolaceStandardPropertiesMappingGivenSolaceMessage() {
-    final BytesXMLMessage message = mock(TextMessage.class);
+  void testSolaceStandardPropertiesMappingGivenSolaceMessage(@Mock BytesXMLMessage message) {
     when(message.getApplicationMessageId()).thenReturn(UUID.randomUUID().toString());
     when(message.getApplicationMessageType()).thenReturn("testMessageType");
     when(message.getCorrelationId()).thenReturn(UUID.randomUUID().toString());
@@ -117,23 +116,24 @@ class SolMessageProcessorIFTest {
     when(message.getReplyTo()).thenReturn(JCSMPFactory.onlyInstance().createQueue("testQueue"));
 
     ConnectHeaders kafkaHeaders = messageProcessor.solacePropertiesToKafkaHeaders(message);
-    assertThat("kafkaHeaders should not be empty", !kafkaHeaders.isEmpty());
-    assertThat(message.getApplicationMessageId(),
-        equalTo(kafkaHeaders.lastWithName(SOL_SH_APPLICATION_MESSAGE_ID).value()));
-    assertThat(message.getApplicationMessageType(),
-        equalTo(kafkaHeaders.lastWithName(SOL_SH_APPLICATION_MESSAGE_TYPE).value()));
-    assertThat(message.getCorrelationId(),
-        equalTo(kafkaHeaders.lastWithName(SOL_SH_CORRELATION_ID).value()));
-    assertThat(message.getCos().value(),
-        equalTo(kafkaHeaders.lastWithName(SOL_SH_COS).value()));
-    assertThat(message.getDestination().getName(),
-        equalTo(kafkaHeaders.lastWithName(SOL_SH_DESTINATION).value()));
-    assertThat(message.getDeliveryMode().name(),
-        equalTo(kafkaHeaders.lastWithName(SOL_SH_DELIVERY_MODE).value()));
-
-    assertThat(message.getReplyTo().getName(),
-        equalTo(kafkaHeaders.lastWithName(SOL_SH_REPLY_TO_DESTINATION).value()));
-    assertThat("queue",
-        equalTo(kafkaHeaders.lastWithName(SOL_SH_REPLY_TO_DESTINATION_TYPE).value()));
+    assertThat(kafkaHeaders)
+        .as("kafkaHeaders should not be empty")
+        .isNotEmpty();
+    assertThat(kafkaHeaders.lastWithName(SOL_SH_APPLICATION_MESSAGE_ID).value())
+        .isEqualTo(message.getApplicationMessageId());
+    assertThat(kafkaHeaders.lastWithName(SOL_SH_APPLICATION_MESSAGE_TYPE).value())
+        .isEqualTo(message.getApplicationMessageType());
+    assertThat(kafkaHeaders.lastWithName(SOL_SH_CORRELATION_ID).value())
+        .isEqualTo(message.getCorrelationId());
+    assertThat(kafkaHeaders.lastWithName(SOL_SH_COS).value())
+        .isEqualTo(message.getCos().value());
+    assertThat(kafkaHeaders.lastWithName(SOL_SH_DESTINATION).value())
+        .isEqualTo(message.getDestination().getName());
+    assertThat(kafkaHeaders.lastWithName(SOL_SH_DELIVERY_MODE).value())
+        .isEqualTo(message.getDeliveryMode().name());
+    assertThat(kafkaHeaders.lastWithName(SOL_SH_REPLY_TO_DESTINATION).value())
+        .isEqualTo(message.getReplyTo().getName());
+    assertThat(kafkaHeaders.lastWithName(SOL_SH_REPLY_TO_DESTINATION_TYPE).value())
+        .isEqualTo("queue");
   }
 }

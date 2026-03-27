@@ -1,5 +1,10 @@
 package com.solace.connector.kafka.connect.source.it;
 
+import static java.util.concurrent.TimeUnit.SECONDS;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.awaitility.Awaitility.await;
+
 import com.solace.connector.kafka.connect.source.SolMessageProcessorIF;
 import com.solace.connector.kafka.connect.source.SolaceSourceConstants;
 import com.solace.connector.kafka.connect.source.SolaceSourceTask;
@@ -21,10 +26,18 @@ import com.solacesystems.jcsmp.JCSMPStreamingPublishCorrelatingEventHandler;
 import com.solacesystems.jcsmp.Queue;
 import com.solacesystems.jcsmp.TextMessage;
 import com.solacesystems.jcsmp.XMLMessageProducer;
+import java.io.BufferedReader;
+import java.time.Duration;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.kafka.connect.errors.ConnectException;
+import org.assertj.core.api.InstanceOfAssertFactories;
 import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,23 +45,6 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.containsString;
-import static org.hamcrest.Matchers.empty;
-import static org.hamcrest.Matchers.instanceOf;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertThrows;
-import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 
 @ExtendWith(ExecutorServiceExtension.class)
 @ExtendWith(LogCaptorExtension.class)
@@ -81,22 +77,26 @@ public class SolaceSourceTaskIT {
 		String topicName = RandomStringUtils.randomAlphanumeric(100);
 		connectorProperties.put(SolaceSourceConstants.SOL_TOPICS, String.join(",", topicName, topicName));
 
-		ConnectException thrown = Assertions.assertThrows(ConnectException.class, () -> solaceSourceTask.start(connectorProperties));
-		assertThat(thrown.getMessage(), containsString("Failed to start topic consumer"));
-		assertThat(thrown.getCause(), instanceOf(JCSMPErrorResponseException.class));
-		assertEquals(JCSMPErrorResponseSubcodeEx.SUBSCRIPTION_ALREADY_PRESENT,
-				((JCSMPErrorResponseException)thrown.getCause()).getSubcodeEx());
+		assertThatThrownBy(() -> solaceSourceTask.start(connectorProperties))
+				.isInstanceOf(ConnectException.class)
+				.hasMessageContaining("Failed to start topic consumer")
+				.cause()
+				.asInstanceOf(InstanceOfAssertFactories.throwable(JCSMPErrorResponseException.class))
+				.extracting(JCSMPErrorResponseException::getSubcodeEx)
+				.isEqualTo(JCSMPErrorResponseSubcodeEx.SUBSCRIPTION_ALREADY_PRESENT);
 	}
 
 	@Test
 	public void testFailQueueConsumerInit() {
 		connectorProperties.put(SolaceSourceConstants.SOL_QUEUE, RandomStringUtils.randomAlphanumeric(10));
 
-		ConnectException thrown = Assertions.assertThrows(ConnectException.class, () -> solaceSourceTask.start(connectorProperties));
-		assertThat(thrown.getMessage(), containsString("Failed to start queue consumer"));
-		assertThat(thrown.getCause(), instanceOf(JCSMPErrorResponseException.class));
-		assertEquals(JCSMPErrorResponseSubcodeEx.UNKNOWN_QUEUE_NAME,
-				((JCSMPErrorResponseException)thrown.getCause()).getSubcodeEx());
+		assertThatThrownBy(() -> solaceSourceTask.start(connectorProperties))
+				.isInstanceOf(ConnectException.class)
+				.hasMessageContaining("Failed to start queue consumer")
+				.cause()
+				.asInstanceOf(InstanceOfAssertFactories.throwable(JCSMPErrorResponseException.class))
+				.extracting(JCSMPErrorResponseException::getSubcodeEx)
+				.isEqualTo(JCSMPErrorResponseSubcodeEx.UNKNOWN_QUEUE_NAME);
 	}
 
 	@ParameterizedTest(name = "[{index}] ignoreMessageProcessorError={0}")
@@ -117,12 +117,12 @@ public class SolaceSourceTaskIT {
 		XMLMessageProducer messageProducer = jcsmpSession.getMessageProducer(new JCSMPStreamingPublishCorrelatingEventHandler() {
 			@Override
 			public void responseReceivedEx(Object o) {
-
+				// not used
 			}
 
 			@Override
 			public void handleErrorEx(Object o, JCSMPException e, long l) {
-
+				// not used
 			}
 		});
 
@@ -134,46 +134,48 @@ public class SolaceSourceTaskIT {
 			messageProducer.close();
 		}
 
-		assertTimeoutPreemptively(Duration.ofSeconds(30), () -> {
-			while (sempV2Api.monitor().getMsgVpnQueue(vpnName, queue.getName(), null)
-					.getData().getTxUnackedMsgCount() == 0) {
-				logger.info("Waiting for queue {} to deliver messages", queue.getName());
-				Thread.sleep(Duration.ofSeconds(1).toMillis());
-			}
-		}, String.format("Timed out while waiting for queue %s to deliver its messages", queue.getName()));
+		await(String.format("queue %s to deliver messages", queue.getName()))
+				.atMost(30, SECONDS)
+				.pollInterval(1, SECONDS)
+				.until(() -> {
+					logger.info("Waiting for queue {} to deliver messages", queue.getName());
+					return sempV2Api.monitor().getMsgVpnQueue(vpnName, queue.getName(), null)
+							.getData().getTxUnackedMsgCount() > 0;
+				});
 
 		if (ignoreMessageProcessorError) {
-			Future<?> future = executorService.submit(() -> {
+			Future<?> future = executorService.submit((Callable<Void>) () -> {
 				String logLine;
 				do {
-					try {
-						logger.info("Waiting for error log message");
-						logLine = logReader.readLine();
-					} catch (IOException e) {
-						throw new RuntimeException(e);
-					}
+					logger.info("Waiting for error log message");
+					logLine = logReader.readLine();
 				} while (!logLine.contains("Encountered exception in message processing"));
+				return null;
 			});
-			assertThat(solaceSourceTask.poll(), empty());
+			assertThat(solaceSourceTask.poll()).isEmpty();
 			future.get(30, TimeUnit.SECONDS);
 			solaceSourceTask.commit();
-			assertTimeoutPreemptively(Duration.ofSeconds(30), () -> {
-				while (!sempV2Api.monitor()
-						.getMsgVpnQueueMsgs(vpnName, queue.getName(), 1, null, null, null)
-						.getData()
-						.isEmpty()) {
-					logger.info("Waiting for queue {} to be empty", queue.getName());
-					Thread.sleep(Duration.ofSeconds(1).toMillis());
-				}
-			});
+			await(String.format("queue %s to be empty", queue.getName()))
+					.atMost(30, SECONDS)
+					.pollInterval(1, SECONDS)
+					.until(() -> {
+						logger.info("Waiting for queue {} to be empty", queue.getName());
+						return sempV2Api.monitor()
+								.getMsgVpnQueueMsgs(vpnName, queue.getName(), 1, null, null, null)
+								.getData()
+								.isEmpty();
+					});
 		} else {
-			ConnectException thrown = assertThrows(ConnectException.class, () -> solaceSourceTask.poll());
-			assertThat(thrown.getMessage(), containsString("Encountered exception in message processing"));
-			assertEquals(BadMessageProcessor.TEST_EXCEPTION, thrown.getCause());
+			assertThatThrownBy(() -> solaceSourceTask.poll())
+					.isInstanceOf(ConnectException.class)
+					.hasMessageContaining("Encountered exception in message processing")
+					.hasCause(BadMessageProcessor.TEST_EXCEPTION);
 			solaceSourceTask.commit();
 			Thread.sleep(Duration.ofSeconds(5).toMillis());
-			assertEquals(1, sempV2Api.monitor().getMsgVpnQueue(vpnName, queue.getName(), null)
-					.getData().getTxUnackedMsgCount());
+			assertThat(sempV2Api.monitor().getMsgVpnQueue(vpnName, queue.getName(), null)
+					.getData()
+					.getTxUnackedMsgCount())
+					.isEqualTo(1);
 		}
 	}
 

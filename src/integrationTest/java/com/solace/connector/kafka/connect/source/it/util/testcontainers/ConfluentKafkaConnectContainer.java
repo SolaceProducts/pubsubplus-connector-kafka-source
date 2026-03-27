@@ -1,19 +1,22 @@
 package com.solace.connector.kafka.connect.source.it.util.testcontainers;
 
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import com.solace.connector.kafka.connect.source.SolaceSourceTask;
 import com.solace.connector.kafka.connect.source.it.Tools;
+import java.time.Duration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.testcontainers.containers.BindMode;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.containers.KafkaContainer;
+import org.testcontainers.containers.output.Slf4jLogConsumer;
 import org.testcontainers.containers.wait.strategy.Wait;
 import org.testcontainers.utility.DockerImageName;
 
-import java.time.Duration;
-
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.greaterThanOrEqualTo;
-import static org.junit.jupiter.api.Assertions.assertEquals;
-
 public class ConfluentKafkaConnectContainer extends GenericContainer<ConfluentKafkaConnectContainer> {
+	private static final Logger logger = LoggerFactory.getLogger(ConfluentKafkaConnectContainer.class);
 	public static final int CONNECT_PORT = 8083;
 	private static final DockerImageName DEFAULT_IMAGE_NAME = DockerImageName.parse("confluentinc/cp-kafka-connect-base");
 	private static final String DEFAULT_IMAGE_TAG = "7.4.1";
@@ -27,8 +30,8 @@ public class ConfluentKafkaConnectContainer extends GenericContainer<ConfluentKa
 										  KafkaContainer kafka,
 										  ConfluentKafkaSchemaRegistryContainer schemaRegistry) {
 		super(dockerImageName);
-		assertThat(kafka.getNetworkAliases().size(), greaterThanOrEqualTo(2));
-		assertThat(schemaRegistry.getNetworkAliases().size(), greaterThanOrEqualTo(2));
+		assertThat(kafka.getNetworkAliases().size()).isGreaterThanOrEqualTo(2);
+		assertThat(schemaRegistry.getNetworkAliases().size()).isGreaterThanOrEqualTo(2);
 		assertEquals(kafka.getNetwork(), schemaRegistry.getNetwork());
 
 		dependsOn(kafka, schemaRegistry);
@@ -51,9 +54,12 @@ public class ConfluentKafkaConnectContainer extends GenericContainer<ConfluentKa
 		withEnv("CONNECT_BOOTSTRAP_SERVERS", String.format("%s:9092", kafka.getNetworkAliases().get(1)));
 		withEnv("CONNECT_REST_ADVERTISED_HOST_NAME", "localhost");
 		withEnv("CONNECT_LOG4J_ROOT_LOGLEVEL", "INFO");
+		withEnv("CONNECT_LOG4J_LOGGERS", "org.apache.kafka.connect.runtime.WorkerSourceTask=DEBUG," +
+				SolaceSourceTask.class.getName() + "=TRACE");
 		withEnv("CONNECT_PLUGIN_PATH", "/usr/share/java,/etc/kafka-connect/jars");
 		withClasspathResourceMapping(Tools.getUnzippedConnectorDirName() + "/lib",
 				"/etc/kafka-connect/jars", BindMode.READ_ONLY);
+		withLogConsumer(new Slf4jLogConsumer(logger));
 		waitingFor(Wait.forLogMessage(".*Kafka Connect started.*", 1)
 				.withStartupTimeout(Duration.ofMinutes(10)));
 	}
