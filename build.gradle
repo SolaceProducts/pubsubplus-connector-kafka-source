@@ -291,7 +291,7 @@ publishing {
     }
     repositories {
         maven {
-            url = uri(System.getenv('INTERNAL_PUBLISH_URL'))
+            url = uri(System.getenv('INTERNAL_PUBLISH_URL') ?: 'https://not-configured')
             allowInsecureProtocol = true
             name = 'internal'
             credentials {
