@@ -291,9 +291,7 @@ publishing {
     }
     repositories {
         maven {
-            def releasesUrl = uri('http://apps-jenkins:9090/nexus/content/repositories/releases')
-            def snapshotRepositoryUrl = uri('http://apps-jenkins:9090/nexus/content/repositories/snapshots')
-            url = isSnapshot ? snapshotRepositoryUrl : releasesUrl
+            url = uri(System.getenv('INTERNAL_PUBLISH_URL'))
             allowInsecureProtocol = true
             name = 'internal'
             credentials {
