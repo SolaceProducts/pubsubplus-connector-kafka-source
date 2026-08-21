@@ -1,9 +1,9 @@
 version: 3
 
 project:
-  locator: SolaceProducts_solace-connector-kafka-source
-  id: SolaceProducts_solace-connector-kafka-source
-  name: solace-connector-kafka-source
+  locator: SolaceProducts_pubsubplus-connector-kafka-source
+  id: SolaceProducts_pubsubplus-connector-kafka-source
+  name: pubsubplus-connector-kafka-source
   teams: []
   labels:
     - java
